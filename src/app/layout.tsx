@@ -1,17 +1,26 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+const ibmPlex = IBM_Plex_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin", "latin-ext"],
+  weight: ["600", "700"],
+  variable: "--font-display",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Culturama",
-  description: "Descoberta de eventos culturais — mapa, rotas e comunidade.",
+  description: "Descubra eventos culturais no mapa. Rota, Uber e 99 até o destino.",
 };
 
 export default function RootLayout({
@@ -21,15 +30,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} ${inter.className} min-h-screen bg-background font-sans antialiased`}>
+      <body
+        className={`${ibmPlex.variable} ${spaceGrotesk.variable} ${ibmPlex.className} flex min-h-dvh flex-col bg-background font-sans antialiased`}
+      >
         <a
           href="#conteudo"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-pill focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-accent-gradient focus:px-3 focus:py-2 focus:text-on-dark"
         >
           Pular para o conteúdo
         </a>
         <SiteHeader />
-        <div id="conteudo">{children}</div>
+        <div id="conteudo" className="flex-1">
+          {children}
+        </div>
+        <SiteFooter />
       </body>
     </html>
   );

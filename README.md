@@ -14,8 +14,8 @@ Repositório privado: pode (e deve) ser compartilhado com sócios. **Não** suba
 | 2. Eventos (CRUD interno, listagem, Ticketmaster) | Feita |
 | 3. Mapa, filtros, rotas, Uber/99 | Feita no código. Mapa e tempos de rota só ligam com chave Google. Filtros e deep links já funcionam sem ela. |
 | 4. Painel admin | Feita |
-| 5. Favoritos, comentários, denúncia, interesses | Próxima |
-| 6. Anúncios no site, Mercado Pago sandbox, polimento Skiper | Depois da 5 |
+| 5. Favoritos, comentários, denúncia, interesses | Feita |
+| 6. Anúncios no site, Mercado Pago sandbox, polimento Skiper | Próxima |
 
 ## Stack
 

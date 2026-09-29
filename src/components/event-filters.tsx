@@ -1,14 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState, type MouseEvent } from "react";
 import type { Category } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { EventSearchParams } from "@/lib/event-filters";
 import { DISTANCIAS_KM } from "@/lib/event-filters";
+import { mensagemGeolocalizacao } from "@/lib/geo";
 
 const selectClass = "h-9 w-full rounded-pill border border-input bg-card px-3 text-sm";
+
+function hojeISO(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+}
+
+function paramsFromForm(form: HTMLFormElement, values: EventSearchParams): URLSearchParams {
+  const data = new FormData(form);
+  const next = new URLSearchParams();
+  for (const key of ["categoria", "de", "ate", "preco", "distancia"] as const) {
+    const raw = String(data.get(key) ?? values[key] ?? "").trim();
+    if (raw) next.set(key, raw);
+  }
+  return next;
+}
 
 export function EventFilters({
   categorias,
@@ -19,36 +34,52 @@ export function EventFilters({
   values: EventSearchParams;
   action: "/eventos" | "/mapa";
 }) {
-  const router = useRouter();
+  const [buscando, setBuscando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
-  function usarLocalizacao() {
-    if (!navigator.geolocation) {
-      window.alert("Seu navegador não informa localização.");
+  function usarLocalizacao(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    const form = event.currentTarget.form;
+    if (!form) return;
+
+    if (!window.isSecureContext) {
+      setErro("A localização só funciona em http://localhost ou em um site com HTTPS.");
       return;
     }
+    if (!navigator.geolocation) {
+      setErro("Seu navegador não informa localização.");
+      return;
+    }
+
+    setErro(null);
+    setBuscando(true);
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const next = new URLSearchParams();
-        if (values.categoria) next.set("categoria", values.categoria);
-        if (values.de) next.set("de", values.de);
-        if (values.ate) next.set("ate", values.ate);
-        if (values.preco) next.set("preco", values.preco);
-        next.set("distancia", values.distancia && values.distancia !== "todas" ? values.distancia : "10");
-        next.set("lat", String(pos.coords.latitude));
-        next.set("lng", String(pos.coords.longitude));
-        router.push(`${action}?${next.toString()}`);
+        const next = paramsFromForm(form, values);
+        const distancia = next.get("distancia");
+        if (!distancia || distancia === "todas") next.set("distancia", "10");
+        next.set("lat", pos.coords.latitude.toFixed(6));
+        next.set("lng", pos.coords.longitude.toFixed(6));
+        window.location.assign(`${action}?${next.toString()}`);
       },
-      () => {
-        window.alert("Não consegui ler a localização. Permita o acesso só nesta vez, para filtrar por distância.");
+      (geoError) => {
+        setBuscando(false);
+        setErro(mensagemGeolocalizacao(geoError.code));
       },
-      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 10_000 },
+      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 20_000 },
     );
   }
 
+  const hoje = hojeISO();
+
   return (
-    <form action={action} method="get" className="grid gap-3 rounded-card bg-card p-4 shadow-card sm:grid-cols-2 lg:grid-cols-6">
+    <form action={action} method="get" className="grid gap-3 rounded-card bg-card p-3 shadow-card sm:grid-cols-2 lg:grid-cols-5">
       <div className="grid gap-1.5">
-        <Label htmlFor="categoria">Categoria</Label>
+        <Label htmlFor="categoria" className="text-xs text-muted-foreground">
+          Categoria
+        </Label>
         <select id="categoria" name="categoria" defaultValue={values.categoria ?? ""} className={selectClass}>
           <option value="">Todas</option>
           {categorias.map((cat) => (
@@ -59,15 +90,21 @@ export function EventFilters({
         </select>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="de">A partir de</Label>
-        <Input id="de" name="de" type="date" defaultValue={values.de ?? ""} />
+        <Label htmlFor="de" className="text-xs text-muted-foreground">
+          A partir de
+        </Label>
+        <Input id="de" name="de" type="date" min={hoje} defaultValue={values.de ?? ""} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="ate">Até</Label>
-        <Input id="ate" name="ate" type="date" defaultValue={values.ate ?? ""} />
+        <Label htmlFor="ate" className="text-xs text-muted-foreground">
+          Até
+        </Label>
+        <Input id="ate" name="ate" type="date" min={hoje} defaultValue={values.ate ?? ""} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="preco">Entrada</Label>
+        <Label htmlFor="preco" className="text-xs text-muted-foreground">
+          Entrada
+        </Label>
         <select id="preco" name="preco" defaultValue={values.preco ?? "todos"} className={selectClass}>
           <option value="todos">Todas</option>
           <option value="gratuito">Gratuita</option>
@@ -75,7 +112,9 @@ export function EventFilters({
         </select>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="distancia">Distância</Label>
+        <Label htmlFor="distancia" className="text-xs text-muted-foreground">
+          Distância
+        </Label>
         <select id="distancia" name="distancia" defaultValue={values.distancia ?? "todas"} className={selectClass}>
           <option value="todas">Qualquer</option>
           {DISTANCIAS_KM.map((km) => (
@@ -87,14 +126,19 @@ export function EventFilters({
       </div>
       <input type="hidden" name="lat" defaultValue={values.lat ?? ""} />
       <input type="hidden" name="lng" defaultValue={values.lng ?? ""} />
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-5">
         <Button type="submit">Filtrar</Button>
-        <Button type="button" variant="outline" onClick={usarLocalizacao}>
-          Perto de mim
+        <Button type="button" variant="outline" onClick={usarLocalizacao} disabled={buscando}>
+          {buscando ? "Buscando sua localização…" : "Perto de mim"}
         </Button>
       </div>
-      {values.distancia && values.distancia !== "todas" && !values.lat ? (
-        <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-6">
+      {erro ? <p className="text-sm text-destructive sm:col-span-2 lg:col-span-5">{erro}</p> : null}
+      {values.lat && values.lng ? (
+        <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-5">
+          Mostrando o que está perto da sua posição atual. A localização não fica salva.
+        </p>
+      ) : values.distancia && values.distancia !== "todas" ? (
+        <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-5">
           Distância só vale depois de Perto de mim.
         </p>
       ) : null}

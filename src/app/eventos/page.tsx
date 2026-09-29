@@ -1,11 +1,14 @@
-import Link from "next/link";
-import { EventCard } from "@/components/event-card";
+import { auth } from "@/auth";
+import { EventMosaic } from "@/components/event-mosaic";
 import { EventFilters } from "@/components/event-filters";
+import { PageHeading } from "@/components/page-heading";
 import { ensureCategorias } from "@/lib/categorias";
+import { uniqueByCapa } from "@/lib/eventos";
 import { eventWhereFromParams, filterPublishedEvents, normalizeSearchParams } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
 export default async function EventosPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
+  const session = await auth();
   const filters = normalizeSearchParams(searchParams);
   const categorias = await ensureCategorias();
   const raw = await prisma.event.findMany({
@@ -15,36 +18,42 @@ export default async function EventosPage({ searchParams }: { searchParams: Reco
   });
   const events = filterPublishedEvents(raw, filters);
 
-  return (
-    <main className="mx-auto max-w-page px-4 py-12">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-medium tracking-display">Eventos</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Eventos locais e shows da Ticketmaster. Use data, entrada e distância, ou veja no mapa.
-          </p>
-        </div>
-        <Link href="/mapa" className="text-sm underline underline-offset-4">
-          Abrir mapa
-        </Link>
-      </div>
+  const interesses = session?.user?.id
+    ? ((await prisma.user.findUnique({ where: { id: session.user.id }, select: { interesses: true } }))?.interesses ?? [])
+    : [];
+  const ranked = [...events].sort((a, b) => {
+    const score = (event: (typeof events)[number]) => (event.category && interesses.includes(event.category.nome) ? 1 : 0);
+    return score(b) - score(a);
+  });
+  const paraVoce = interesses.length > 0;
+  const visual = uniqueByCapa(ranked);
+  const destaque = visual[0];
+  const demais = visual.slice(1);
 
-      <div className="mt-6">
+  return (
+    <main className="mx-auto max-w-page px-4 py-16">
+      <PageHeading
+        title="Eventos"
+        description={
+          paraVoce
+            ? "O que combina com seus interesses vem primeiro. Filtre por data, entrada e distância."
+            : "Shows oficiais e a cena de rua. Filtre por data, entrada e distância, ou abra o mapa."
+        }
+        action={{ href: "/mapa", label: "Abrir mapa" }}
+      />
+
+      <div className="mt-8">
         <EventFilters categorias={categorias} values={filters} action="/eventos" />
       </div>
 
-      {events.length === 0 ? (
-        <p className="mt-16 text-sm text-muted-foreground">
-          Nenhum evento neste filtro. Organizadores podem cadastrar; a Ticketmaster entra pelo cron.
+      {ranked.length === 0 ? (
+        <p className="mt-16 max-w-md text-caption text-muted-foreground">
+          {filters.lat && filters.lng
+            ? "Nenhum evento nesta distância. Aumente o raio em Distância e clique em Filtrar."
+            : "Nenhum evento neste recorte. Organizadores podem cadastrar; a Ticketmaster entra pelo cron."}
         </p>
       ) : (
-        <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <li key={event.id}>
-              <EventCard event={event} />
-            </li>
-          ))}
-        </ul>
+        <EventMosaic destaque={destaque} demais={demais} />
       )}
     </main>
   );

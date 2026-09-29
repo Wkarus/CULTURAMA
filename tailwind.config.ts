@@ -9,7 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "ui-sans-serif", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "sans-serif"],
       },
       colors: {
         background: "var(--background)",
@@ -37,6 +38,10 @@ const config: Config = {
         accent: {
           DEFAULT: "var(--accent)",
           foreground: "var(--accent-foreground)",
+          from: "var(--color-accent-from)",
+          to: "var(--color-accent-to)",
+          solid: "var(--color-accent-solid)",
+          hover: "var(--color-accent-hover-text)",
         },
         destructive: {
           DEFAULT: "var(--destructive)",
@@ -54,12 +59,19 @@ const config: Config = {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
-        violet: {
-          DEFAULT: "var(--color-shop-violet)",
-          wash: "var(--color-violet-wash)",
+        "surface-dark": "var(--color-surface-dark)",
+        "surface-light": "var(--color-surface-light)",
+        "on-dark": "var(--color-on-dark)",
+        "on-light": "var(--color-on-light)",
+        "muted-on-dark": "var(--color-muted-on-dark)",
+        success: {
+          DEFAULT: "var(--color-success-fg)",
+          bg: "var(--color-success-bg)",
         },
-        canvas: "var(--color-canvas-mist)",
-        ink: "var(--color-ink-black)",
+        warning: {
+          DEFAULT: "var(--color-warning-fg)",
+          bg: "var(--color-warning-bg)",
+        },
       },
       maxWidth: {
         page: "1200px",
@@ -70,14 +82,15 @@ const config: Config = {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "20px",
-        sm: "16px",
+        md: "var(--radius-control)",
+        sm: "12px",
         card: "var(--radius-card)",
         pill: "var(--radius-pill)",
+        control: "var(--radius-control)",
       },
       letterSpacing: {
-        shop: "-0.031em",
-        display: "-0.05em",
+        shop: "-0.02em",
+        display: "-0.03em",
       },
     },
   },

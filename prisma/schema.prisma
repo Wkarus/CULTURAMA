@@ -65,6 +65,7 @@ model User {
   organizer Organizer?
   favorites Favorite[]
   comments  Comment[]
+  commentReports CommentReport[]
 
   @@map("users")
 }
@@ -139,12 +140,28 @@ model Comment {
   eventId  String   @map("event_id")
   texto    String
   nota     Int
+  oculto   Boolean  @default(false)
   criadoEm DateTime @default(now()) @map("criado_em")
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reports CommentReport[]
 
   @@map("comments")
+}
+
+model CommentReport {
+  id        String   @id @default(cuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  motivo    String
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@map("comment_reports")
 }
 
 model AdSlot {

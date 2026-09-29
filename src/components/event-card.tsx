@@ -1,36 +1,44 @@
 import Link from "next/link";
 import type { Category, Event } from "@prisma/client";
-import { labelRestricao } from "@/lib/eventos";
+import { formatEventoQuando, labelRestricao } from "@/lib/eventos";
+import { cn } from "@/lib/utils";
 
 type EventoCard = Event & { category: Category | null };
 
-export function EventCard({ event }: { event: EventoCard }) {
-  const data = event.dataHora.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+export function EventCard({ event, featured = false }: { event: EventoCard; featured?: boolean }) {
+  const data = formatEventoQuando(event.dataHora);
+  const selo = event.fonte === "ticketmaster" ? "via Ticketmaster" : "Na rua";
 
   return (
-    <Link href={`/eventos/${event.id}`} className="block overflow-hidden rounded-card bg-card shadow-card transition-transform hover:-translate-y-0.5">
-      <div className="aspect-[4/3] bg-muted">
+    <Link
+      href={`/eventos/${event.id}`}
+      className={cn(
+        "group relative block overflow-hidden rounded-card bg-surface-dark shadow-card transition-transform duration-300 hover:-translate-y-0.5 motion-reduce:transform-none",
+        featured && "h-full min-h-[280px]",
+      )}
+    >
+      <div className={cn("relative bg-surface-dark", featured ? "aspect-[16/10] min-h-[280px]" : "aspect-[4/5]")}>
         {event.imagemCapa ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={event.imagemCapa} alt="" className="size-full object-cover" />
+          <img
+            src={event.imagemCapa}
+            alt=""
+            className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
+          />
         ) : (
-          <div className="flex size-full items-center justify-center text-sm text-muted-foreground">Sem imagem</div>
+          <div className="size-full bg-surface-dark" />
         )}
-      </div>
-      <div className="grid gap-2 p-4">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          {event.fonte === "ticketmaster" ? (
-            <span className="rounded-pill bg-muted px-2 py-0.5">via Ticketmaster</span>
-          ) : (
-            <span className="rounded-pill bg-muted px-2 py-0.5">evento local</span>
-          )}
-          {event.category ? <span>{event.category.nome}</span> : null}
-          <span>{labelRestricao(event.restricaoIdade)}</span>
-          <span>{event.gratuito ? "Entrada franca" : "Pago"}</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-[color-mix(in_srgb,var(--color-surface-dark)_42%,transparent)] to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 grid gap-2 p-4 text-on-dark">
+          <p className="text-caption text-muted-on-dark">
+            {selo}
+            {event.category ? ` · ${event.category.nome}` : ""}
+            {` · ${event.gratuito ? "Entrada franca" : "Pago"}`}
+            {` · ${labelRestricao(event.restricaoIdade)}`}
+          </p>
+          <h2 className="font-display text-xl font-semibold tracking-display">{event.titulo}</h2>
+          <p className="text-caption text-muted-on-dark">{data}</p>
         </div>
-        <h2 className="text-base font-medium tracking-shop">{event.titulo}</h2>
-        <p className="text-sm text-muted-foreground">{data}</p>
-        <p className="line-clamp-2 text-sm text-muted-foreground">{event.endereco}</p>
       </div>
     </Link>
   );

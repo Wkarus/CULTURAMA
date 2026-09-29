@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useFormState, useFormStatus } from "react-dom";
 import { cadastrarUsuario, completarPerfil, loginGoogle, loginUsuario, type FormState } from "@/actions/auth";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function SubmitButton({ children }: { children: React.ReactNode }) {
+function SubmitButton({ children }: { children: ReactNode }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full">
@@ -20,7 +21,7 @@ function SubmitButton({ children }: { children: React.ReactNode }) {
 function FieldError({ state }: { state: FormState }) {
   if (!state.error) return null;
   return (
-    <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+    <p role="alert" className="rounded-card bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {state.error}
     </p>
   );
@@ -70,7 +71,7 @@ export function LoginForm({ callbackUrl, googleErro }: { callbackUrl: string; go
   return (
     <div className="grid gap-4">
       {googleErro ? (
-        <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p role="alert" className="rounded-card bg-destructive/10 px-3 py-2 text-sm text-destructive">
           Login com Google ainda não está configurado. Coloque AUTH_GOOGLE_ID e AUTH_GOOGLE_SECRET no .env.
         </p>
       ) : null}
@@ -128,7 +129,7 @@ export function OrganizadorForm() {
 
   if (state.ok) {
     return (
-      <p className="rounded-md border bg-muted px-3 py-2 text-sm">
+      <p className="rounded-card bg-muted px-4 py-3 text-sm">
         Cadastro enviado. Seu status é <strong>pendente</strong> — a aprovação manual entra no painel admin (Fase 4).
         Você já consegue entrar, mas ainda não poderá publicar eventos.
       </p>
@@ -148,7 +149,7 @@ export function OrganizadorForm() {
           id="tipoDocumento"
           name="tipoDocumento"
           required
-          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          className="h-10 w-full rounded-pill border border-input bg-card px-3 text-sm"
         >
           <option value="CNPJ">CNPJ (validação automática)</option>
           <option value="CPF">CPF (dígito verificador + fila manual)</option>

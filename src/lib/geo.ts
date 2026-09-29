@@ -20,3 +20,16 @@ export function parseCoord(raw: string | undefined): number | null {
   const value = Number(raw);
   return Number.isFinite(value) ? value : null;
 }
+
+export function mensagemGeolocalizacao(code?: number): string {
+  if (code === 1) {
+    return "O navegador bloqueou a localização. Clique no cadeado ao lado do endereço, permita a localização e tente de novo.";
+  }
+  if (code === 2) {
+    return "Não achei sua posição. No Windows, ligue a localização em Configurações > Privacidade e tente de novo.";
+  }
+  if (code === 3) {
+    return "A localização demorou demais. Tente de novo.";
+  }
+  return "Não consegui ler a localização. Permita o acesso só nesta vez, para filtrar por distância.";
+}

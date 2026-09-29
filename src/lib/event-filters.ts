@@ -38,20 +38,18 @@ export function normalizeSearchParams(params: Record<string, string | string[] |
 }
 
 export function eventWhereFromParams(params: EventSearchParams): Prisma.EventWhereInput {
+  const agora = new Date();
   const de = parseDateBound(params.de, false);
   const ate = parseDateBound(params.ate, true);
+  const inicio = de && de > agora ? de : agora;
 
   return {
     status: "publicado",
     ...(params.categoria ? { categoriaId: params.categoria } : {}),
-    ...(de || ate
-      ? {
-          dataHora: {
-            ...(de ? { gte: de } : {}),
-            ...(ate ? { lte: ate } : {}),
-          },
-        }
-      : {}),
+    dataHora: {
+      gte: inicio,
+      ...(ate ? { lte: ate } : {}),
+    },
   };
 }
 
@@ -75,7 +73,7 @@ function filterByDistance<T extends { latitude: number; longitude: number }>(
   const km = Number(params.distancia);
   const lat = parseCoord(params.lat);
   const lng = parseCoord(params.lng);
-  if (!lat || !lng || !DISTANCIAS_KM.includes(km as (typeof DISTANCIAS_KM)[number])) {
+  if (lat === null || lng === null || !DISTANCIAS_KM.includes(km as (typeof DISTANCIAS_KM)[number])) {
     return events;
   }
 

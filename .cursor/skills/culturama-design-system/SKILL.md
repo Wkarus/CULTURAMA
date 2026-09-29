@@ -1,65 +1,59 @@
 ---
 name: culturama-design-system
-description: Linguagem visual do Culturama — tokens Shop (Refero) adaptados a descoberta de eventos. Use ao criar ou revisar UI, tema, cards, CTAs e motion.
+description: Linguagem visual do Culturama — paleta escuro/claro, accent rosa-roxo, Space Grotesk + IBM Plex Sans. Use ao criar ou revisar UI, tema, cards, CTAs e motion.
 ---
 
 # Culturama — design system
 
-Fonte de verdade visual do projeto. Ancorado no [Shop / Refero](https://styles.refero.design/style/4fa67bd1-f01d-454a-b522-4a0359ff9815). Detalhe versionado em `docs/design-shop-refero.md`.
+Fonte de verdade visual. Taste Skill (`.cursor/skills/design-taste-frontend`) cuida de composição e anti-template. **Esta** skill define paleta, tipo, forma e bibliotecas.
 
-Promly foi citado em conversa e **não** tem dump no repo. Não invente tokens Promly. Se entrar um arquivo depois, mescle aqui.
-
-Antes de gerar UI, releia este arquivo. A Taste Skill (`.cursor/skills/design-taste-frontend`) cuida de “não parecer template”; **esta** skill define paleta, forma e o que pode entrar de biblioteca.
+Não invente tokens Promly. Não misture a paleta antiga Shop (`#5433eb`, Inter, canvas `#f2f4f5`).
 
 ## Vibe
 
-Canvas branco-névoa, cards grandes flutuando (não grade dura), cantos pillow-soft, um único violeta saturado. Densidade compacta (12px) entre elementos; 64–80px entre seções. Commerce no Shop vira **descoberta de evento** no Culturama: card = evento, CTA = descobrir / rota / ingresso — nunca “comprar” como identidade.
+Hero e destaques em superfície escura; conteúdo padrão em papel quente-frio. Um accent em gradiente rosa → roxo. Cards com foto, cantos 16–24px, sombra difusa. Motion discreto (hover scale/translate, um fundo animado por página).
 
-## Tokens
+## Tokens (`:root` em `src/app/globals.css`)
 
 | Token | Valor | Uso |
 |---|---|---|
-| `--color-shop-violet` | `#5433eb` | Único accent: wordmark, CTA primário, sombra do CTA |
-| `--color-violet-wash` | `#c0b5f3` | Halo atrás do CTA, nunca segundo accent |
-| `--color-canvas-mist` | `#f2f4f5` | Fundo da página |
-| `--color-pure-white` | `#ffffff` | Cards, inputs, header |
-| `--color-ink-black` | `#000000` | Texto e ícones primários |
-| `--color-muted-gray` | `#787574` | Texto secundário, nav idle |
-| `--color-faint-border` | `#ebebeb` | Outline de input/pill; evite borda em card elevado |
-| `--color-cool-stone` | `#cccccc` | Disabled / placeholder |
-| `--radius-card` | `28px` | Cards de evento e painéis |
-| `--radius-pill` | `9999px` | Botões, chips, inputs |
-| `--shadow-card` | `0 4px 6px -1px rgb(0 0 0 / 0.10), 0 2px 4px -2px rgb(0 0 0 / 0.10)` | Todo card elevado |
-| `--shadow-cta` | `0 8px 20px -4px rgb(69 36 219 / 0.34)` | Só no botão primário |
+| `--color-surface-dark` | `#161A2E` | Hero, seções de destaque |
+| `--color-surface-light` | `#FAF9F6` | Fundo padrão |
+| `--color-on-dark` | `#F6F5FA` | Texto sobre escuro |
+| `--color-on-light` | `#171B2E` | Texto sobre claro |
+| `--color-accent-from` | `#EC4899` | Início do gradiente (CTA, Aurora) |
+| `--color-accent-to` | `#8B5CF6` | Fim do gradiente |
+| `--color-accent-solid` | `#6934B5` | Texto pequeno / links sobre claro |
+| `--color-accent-hover-text` | `#F472B6` | Nome ativo no Hover Members |
+| `--color-muted-on-dark` | `#9198B8` | Texto idle sobre escuro |
+| `--color-success-fg` / `--color-success-bg` | `#1E7A42` / `#EAF6EE` | Positivo |
+| `--color-warning-fg` / `--color-warning-bg` | `#A16A1B` / `#FBF2E3` | Alerta |
+| `--radius-card` | `20px` | Cards e painéis (faixa 16–24) |
+| `--radius-control` | `16px` | Botões e inputs |
+| `--shadow-card` | blur alto, opacidade ~0.06–0.10 | Elevação |
 | Max width | `1200px` | Conteúdo |
-| Element gap | `12px` | |
-| Section gap | `64px`–`80px` | |
 
-Tipo: **Inter** (substituto gratuito do GT Standard). Body 16px, tracking ~`-0.031em`. Hierarquia por tracking e tamanho, não por bold gritante. Piso de label secundário: 12px.
+Espelho JS (Maps / WebGL / Skiper): `src/lib/visual-tokens.ts`.
+
+Tipo: **Space Grotesk** 600–700 nos títulos (`font-display`); **IBM Plex Sans** 400–600 no corpo (`font-sans`). Fallback de sistema só depois das webfonts.
 
 ## Faça
 
-- Um só accent saturado (`#5433eb`).
-- Cards 28px; pills/inputs/botões 9999px (ou 20px se pill curto). Sem raio 0 em controle (0px só em recorte de imagem).
-- Card branco sobre canvas; elevação por sombra, não por borda pesada.
+- Hex só nos tokens. Componentes usam `var(--…)` ou `visual.*`.
+- Um fundo animado pesado por página (Aurora no hero). Mobile: estático se `pointer: coarse` ou `prefers-reduced-motion`.
 - `prefers-reduced-motion: reduce` em toda animação.
 
 ## Não faça
 
-- Segundo accent (laranja, teal, gradiente arco-íris).
-- Canto vivo em card, botão ou input.
-- Instalar **21st Dev MCP** / puxar componente de marketplace sem pedido explícito.
-- Misturar Skiper + React Bits + outra lib na mesma tela.
+- Segunda paleta (Shop violeta, teal, laranja).
+- Empilhar Aurora + outro WebGL na mesma página.
+- Fontes do sistema nos títulos, exceto fallback.
 
-## Bibliotecas permitidas
+## Bibliotecas
 
 | Fonte | Quando |
 |---|---|
-| **shadcn/ui** | Base de formulário, header, card, botão. Restilizar com estes tokens. |
-| **React Bits** | No máximo 1–2 momentos (hero ou card de evento). Copiar o bloco e pintar com estes tokens. Não instalar o kit inteiro. |
-| **Skiper UI** | Só na Fase 6, mesma regra: restilizar, não trazer a paleta original. |
-| **21st.dev** | Proibido até a dona do projeto pedir. |
-
-## Taste Skill + guidelines
-
-Taste Skill = composição e anti-template. Guidelines Vercel (`.cursor/rules/web-design-guidelines.mdc`) = a11y no **fim da fase**, não a cada commit.
+| **shadcn/ui** | Form, header, botão. Restilizar com estes tokens. |
+| **React Bits** | Aurora (hero), BlurText (H1), SpotlightCard (grid), CountUp (stats), ScrollReveal (como funciona). Pintar com estes tokens. |
+| **Skiper UI** | Hover Members (`skiper6`) na faixa escura de destaques. Restilizar. Atribuição no rodapé se for a versão free. |
+| **21st.dev** | Proibido até pedido explícito. |
