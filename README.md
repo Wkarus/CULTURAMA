@@ -1,36 +1,132 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Culturama
 
-## Getting Started
+Plataforma web de descoberta de eventos culturais (TCC). Junta shows oficiais (Ticketmaster) com eventos de rua cadastrados por organizadores, com filtros, mapa, rotas e painel de moderação.
 
-First, run the development server:
+A fonte de verdade do produto está em [`culturama-especificacao-cursor.md`](culturama-especificacao-cursor.md).
+
+Repositório privado: pode (e deve) ser compartilhado com sócios. **Não** suba senha, chave de API nem o arquivo `.env`.
+
+## Em que fase estamos
+
+| Fase | Status |
+|---|---|
+| 1. Fundação (auth, 18+, LGPD, organizador CPF/CNPJ) | Feita |
+| 2. Eventos (CRUD interno, listagem, Ticketmaster) | Feita |
+| 3. Mapa, filtros, rotas, Uber/99 | Feita no código. Mapa e tempos de rota só ligam com chave Google. Filtros e deep links já funcionam sem ela. |
+| 4. Painel admin | Feita |
+| 5. Favoritos, comentários, denúncia, interesses | Próxima |
+| 6. Anúncios no site, Mercado Pago sandbox, polimento Skiper | Depois da 5 |
+
+## Stack
+
+- Next.js 14 (App Router) + TypeScript + Tailwind + shadcn
+- Prisma + PostgreSQL (Supabase)
+- Auth.js: e-mail/senha e Google
+- Ticketmaster Discovery API (job diário)
+- Google Maps JavaScript + Directions (opcional na Fase 3)
+
+## O que sobe no GitHub e o que não sobe
+
+**Sobe:** código, Prisma (schema + migrations), `.env.example`, spec, skills do Cursor, `vercel.json`.
+
+**Não sobe (já está no `.gitignore`):**
+
+- `.env` (senha do banco, `AUTH_SECRET`, chaves Ticketmaster/Google)
+- `node_modules/`, `.next/`
+- `uploads/` (CPF/CNPJ e imagens enviadas)
+- `data/` (contador local de cota do Maps)
+
+Cada sócio clona o repo, copia `.env.example` para `.env` e preenche as chaves **no próprio computador**. Quem já tem o banco do grupo pode reutilizar as URIs do Supabase, mas a senha se passa **fora** do Git (WhatsApp/1Password), nunca no commit.
+
+Se uma chave já vazou em chat ou print, troque no painel (Supabase, Ticketmaster, Google, Auth).
+
+## Como rodar local
+
+Requisitos: Node.js 20+, conta no [Supabase](https://supabase.com) (ou o projeto já usado pelo grupo).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Wkarus/CULTURAMA.git
+cd CULTURAMA
+npm install
+copy .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No Linux/macOS use `cp .env.example .env`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Preencha no `.env` pelo menos:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DATABASE_URL` e `DIRECT_URL` (Supabase → Connect → Prisma; pooler na 6543, direto na 5432)
+- `AUTH_SECRET` (`npx auth secret`)
+- `TICKETMASTER_API_KEY` (Consumer Key da Discovery API) para importar shows
+- `ADMIN_EMAIL` com o e-mail da conta que vai moderar; depois saia e entre de novo, ou `npm run db:admin`
 
-## Learn More
+Opcional:
 
-To learn more about Next.js, take a look at the following resources:
+- `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` (callback `http://localhost:3000/api/auth/callback/google`)
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` e `GOOGLE_MAPS_API_KEY` (Maps JavaScript + Directions). Sem isso, `/mapa` mostra aviso; lista, Uber e 99 seguem ok.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Banco e app:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx prisma migrate deploy
+npx prisma generate
+npm run db:seed
+npm run dev
+```
 
-## Deploy on Vercel
+Abra [http://localhost:3000](http://localhost:3000). Se a 3000 estiver ocupada, o Next usa 3001.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev          # desenvolvimento
+npm test             # CPF + distância (haversine)
+npm run db:seed      # categorias
+npm run db:admin     # promove ADMIN_EMAIL a admin
+npx prisma studio    # ver tabelas
+```
+
+Sincronizar Ticketmaster (dev, sem `CRON_SECRET`):
+
+`GET http://localhost:3000/api/cron/ticketmaster`
+
+Na Vercel, o cron diário está em `vercel.json`. Lá defina `CRON_SECRET` e chame com `Authorization: Bearer ...`.
+
+## Rotas úteis
+
+| Rota | Quem usa |
+|---|---|
+| `/cadastro`, `/login`, `/privacidade` | Conta 18+ com aceite LGPD |
+| `/cadastro/organizador` | CNPJ (BrasilAPI, auto-aprova se ativo) ou CPF (fila admin) |
+| `/eventos`, `/eventos/[id]` | Lista e detalhe (interno + Ticketmaster) |
+| `/conta/eventos` | CRUD do organizador aprovado |
+| `/mapa` | Mapa + mesmos filtros da lista |
+| `/admin` | Moderação, fila de organizadores, anúncios (cadastro; vitrine pública é Fase 6) |
+
+Regras importantes:
+
+- Organizador `pendente` só salva rascunho.
+- Cancelar/adiar **não apaga** o evento; muda `status`.
+- Evento `ticketmaster` não é editável pelo organizador. Admin só oculta e anota `nota_admin` (campo interno, nunca no site público).
+- Ads no admin ainda **não** aparecem na home. Quando aparecerem, a etiqueta "Patrocinado" é obrigatória.
+
+## Design
+
+Tokens Shop/Refero em `src/app/globals.css` e `.cursor/skills/culturama-design-system`. Não instalar 21st Dev sem combinado do grupo. Skiper UI só na Fase 6.
+
+## Próximos passos (Fase 5)
+
+1. Favoritos (tabela `Favorite` já existe no schema).
+2. Comentários/avaliações com **denúncia** (admin precisa poder remover).
+3. Tags de interesse no perfil e listagem simples por correspondência categoria/interesse. Sem LLM.
+
+Depois, Fase 6: banners no front com "Patrocinado", checkout Mercado Pago **sandbox** (só evento interno; Ticketmaster usa o link dela), polimento visual.
+
+Hospedagem prevista: Vercel + o mesmo Supabase. Variáveis da Vercel = as do `.env`, nunca commitadas.
+
+## Sócios: fluxo de trabalho
+
+1. Clone, `.env` local, `npm install`, migrate + seed.
+2. Trabalhe em branch (`feat/favoritos`), abra pull request no GitHub.
+3. Não force push em `master`/`main` sem combinado.
+4. Não commite `.env`, prints de chave, nem pasta `uploads/`.

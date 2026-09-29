@@ -1,0 +1,127 @@
+"use server";
+
+import type { AdSlotTipo, EventStatus, StatusVerificacao } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import type { FormState } from "@/actions/auth";
+import { requireAdmin } from "@/lib/admin";
+import { prisma } from "@/lib/prisma";
+import { saveImagemLocal } from "@/lib/upload";
+
+const EVENT_STATUS = new Set<EventStatus>(["rascunho", "publicado", "cancelado", "adiado"]);
+const AD_TIPOS = new Set<AdSlotTipo>(["banner_home", "banner_categoria", "destaque_evento"]);
+
+function refreshAdmin() {
+  revalidatePath("/admin");
+  revalidatePath("/admin/eventos");
+  revalidatePath("/admin/organizadores");
+  revalidatePath("/admin/anuncios");
+  revalidatePath("/eventos");
+  revalidatePath("/mapa");
+}
+
+export async function moderarEvento(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "") as EventStatus;
+  const notaAdmin = String(formData.get("notaAdmin") ?? "").trim() || null;
+
+  if (!id || !EVENT_STATUS.has(status)) {
+    return { error: "Evento ou status inválido." };
+  }
+
+  const existing = await prisma.event.findUnique({ where: { id } });
+  if (!existing) return { error: "Evento não encontrado." };
+
+  await prisma.event.update({
+    where: { id },
+    data: { status, notaAdmin },
+  });
+
+  revalidatePath(`/eventos/${id}`);
+  refreshAdmin();
+  return { ok: true };
+}
+
+export async function decidirOrganizador(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const decisao = String(formData.get("decisao") ?? "") as StatusVerificacao;
+
+  if (!id || (decisao !== "aprovado" && decisao !== "rejeitado")) {
+    return { error: "Decisão inválida." };
+  }
+
+  const organizer = await prisma.organizer.findUnique({ where: { id } });
+  if (!organizer) return { error: "Organizador não encontrado." };
+
+  await prisma.organizer.update({
+    where: { id },
+    data: { statusVerificacao: decisao, dataVerificacao: new Date() },
+  });
+
+  refreshAdmin();
+  return { ok: true };
+}
+
+export async function salvarAnuncio(_prev: FormState, formData: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const tipo = String(formData.get("tipo") ?? "") as AdSlotTipo;
+  const patrocinador = String(formData.get("patrocinador") ?? "").trim();
+  const link = String(formData.get("link") ?? "").trim();
+  const inicioRaw = String(formData.get("dataInicio") ?? "");
+  const fimRaw = String(formData.get("dataFim") ?? "");
+  const ativo = formData.get("ativo") === "true";
+  const arquivo = formData.get("imagem");
+
+  if (!AD_TIPOS.has(tipo) || !patrocinador || !link || !inicioRaw || !fimRaw) {
+    return { error: "Preencha tipo, patrocinador, link e o período." };
+  }
+
+  const dataInicio = new Date(inicioRaw);
+  const dataFim = new Date(fimRaw);
+  if (Number.isNaN(dataInicio.getTime()) || Number.isNaN(dataFim.getTime()) || dataFim <= dataInicio) {
+    return { error: "Período inválido. A data final precisa ser depois da inicial." };
+  }
+
+  let imagem: string | undefined;
+  if (arquivo instanceof File && arquivo.size > 0) {
+    const saved = await saveImagemLocal(arquivo);
+    if (!saved.ok) return { error: saved.message };
+    imagem = saved.url;
+  }
+
+  if (id) {
+    const existing = await prisma.adSlot.findUnique({ where: { id } });
+    if (!existing) return { error: "Anúncio não encontrado." };
+    await prisma.adSlot.update({
+      where: { id },
+      data: {
+        tipo,
+        patrocinador,
+        link,
+        dataInicio,
+        dataFim,
+        ativo,
+        ...(imagem ? { imagem } : {}),
+      },
+    });
+  } else {
+    if (!imagem) return { error: "Envie a imagem do banner." };
+    await prisma.adSlot.create({
+      data: { tipo, patrocinador, imagem, link, dataInicio, dataFim, ativo },
+    });
+  }
+
+  refreshAdmin();
+  return { ok: true };
+}
+
+export async function alternarAnuncio(id: string): Promise<FormState> {
+  await requireAdmin();
+  const existing = await prisma.adSlot.findUnique({ where: { id } });
+  if (!existing) return { error: "Anúncio não encontrado." };
+  await prisma.adSlot.update({ where: { id }, data: { ativo: !existing.ativo } });
+  refreshAdmin();
+  return { ok: true };
+}

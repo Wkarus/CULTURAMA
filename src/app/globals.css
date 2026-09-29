@@ -2,26 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --color-shop-violet: #5433eb;
+    --color-violet-wash: #c0b5f3;
+    --color-canvas-mist: #f2f4f5;
+    --color-pure-white: #ffffff;
+    --color-ink-black: #000000;
+    --color-slate-ink: #332f2d;
+    --color-ash-veil: #665a54;
+    --color-muted-gray: #787574;
+    --color-warm-fog: #acb0aa;
+    --color-cool-stone: #cccccc;
+    --color-faint-border: #ebebeb;
+    --radius-card: 28px;
+    --radius-pill: 9999px;
+    --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-cta: 0 8px 20px -4px rgb(69 36 219 / 0.34);
+
+    --background: var(--color-canvas-mist);
+    --foreground: var(--color-ink-black);
+    --card: var(--color-pure-white);
+    --card-foreground: var(--color-ink-black);
+    --popover: var(--color-pure-white);
+    --popover-foreground: var(--color-ink-black);
+    --primary: var(--color-shop-violet);
+    --primary-foreground: var(--color-pure-white);
+    --secondary: var(--color-pure-white);
+    --secondary-foreground: var(--color-ink-black);
+    --muted: #e8eaeb;
+    --muted-foreground: var(--color-muted-gray);
+    --accent: var(--color-violet-wash);
+    --accent-foreground: var(--color-ink-black);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: var(--color-faint-border);
+    --input: var(--color-faint-border);
+    --ring: var(--color-shop-violet);
+    --radius: var(--radius-card);
+    --sidebar: var(--color-pure-white);
+    --sidebar-foreground: var(--color-ink-black);
+    --sidebar-primary: var(--color-shop-violet);
+    --sidebar-primary-foreground: var(--color-pure-white);
+    --sidebar-accent: #e8eaeb;
+    --sidebar-accent-foreground: var(--color-ink-black);
+    --sidebar-border: var(--color-faint-border);
+    --sidebar-ring: var(--color-shop-violet);
+  }
+
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    letter-spacing: -0.031em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

@@ -1,0 +1,66 @@
+---
+description: Diretrizes de acessibilidade e boas práticas de interface web — baseado nas Vercel Web Interface Guidelines (snapshot fixo, não busca online)
+globs: ["**/*.tsx", "**/*.jsx"]
+alwaysApply: false
+---
+
+# Web Design Guidelines — Culturama
+
+Antes de considerar um componente de UI pronto, revise contra os pontos
+abaixo. Isso é um retrato fixo das diretrizes públicas da Vercel para
+interfaces web — fixado deliberadamente (não busca a versão mais nova
+online) para manter os critérios de revisão consistentes durante todo o
+desenvolvimento do TCC.
+
+## Acessibilidade
+- Prefira elementos semânticos nativos (`button`, `a`, `label`, `table`)
+  antes de recorrer a `aria-*`.
+- Botões que só têm ícone precisam de `aria-label`.
+- Todo campo de formulário precisa de `label` associado (ou `aria-label`).
+- Elementos interativos precisam funcionar por teclado (`onKeyDown`/`onKeyUp`
+  além de `onClick`), inclusive com foco visível (`:focus-visible`).
+- Use `<button>` para ações e `<a>`/`<Link>` para navegação — nunca
+  `<div onClick>`.
+- Imagens sempre com `alt` (ou `alt=""` se for puramente decorativa);
+  ícones decorativos com `aria-hidden="true"`.
+- Atualizações assíncronas (toasts, validação de formulário) precisam de
+  `aria-live="polite"` para leitores de tela.
+- Hierarquia de headings correta (`h1`–`h6`) e um link "pular para o
+  conteúdo" nas páginas principais.
+
+## Toque e mobile
+- Alvo de toque mínimo: 24px no desktop, 44px no mobile.
+- Campo de input no mobile com fonte ≥16px (evita zoom automático do
+  iOS ao focar o campo).
+- Nunca desabilite o zoom da página.
+- `touch-action: manipulation` em botões/controles (evita delay de
+  duplo toque).
+
+## Estado de carregamento
+- Botão em estado de carregamento mantém o texto original + indicador
+  visual (não troca o label por "Carregando...", só adiciona o spinner).
+- Se usar spinner/skeleton, aplique um delay de exibição de ~150–300ms
+  e tempo mínimo visível de ~300–500ms, pra evitar "flicker" em respostas
+  rápidas.
+
+## Estado e navegação
+- Persista filtros, abas e paginação na URL (ex: query params), assim
+  compartilhar/atualizar a página/voltar funciona como esperado.
+- Links devem ser `<a>`/`<Link>` de verdade (suporte a abrir em nova aba,
+  clique do meio) — nunca `onClick` disfarçado de link.
+
+## Ações destrutivas
+- Toda ação destrutiva (cancelar evento, excluir conta, remover
+  organizador) precisa de confirmação explícita ou de uma janela de
+  "desfazer".
+
+## Modais e overlays
+- `overscroll-behavior: contain` em modais/drawers, pra evitar que o
+  scroll "vaze" pra página de trás.
+
+## Motion
+- Toda animação relevante deve respeitar `prefers-reduced-motion`.
+
+---
+Fonte: vercel-labs/web-interface-guidelines (github.com/vercel-labs/web-interface-guidelines).
+Conteúdo parafraseado e fixado nesta data para uso no projeto Culturama.

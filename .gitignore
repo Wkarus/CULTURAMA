@@ -26,7 +26,14 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+
+# uploads de documentos (Fase 1, local)
+/uploads
+
+# cota local do Google Maps (Fase 3)
+/data
 
 # vercel
 .vercel
