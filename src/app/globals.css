@@ -57,6 +57,37 @@
     );
   }
 
+  .phone-card {
+    background-color: color-mix(in srgb, var(--color-on-dark) 7%, var(--color-surface-dark));
+    border: 1px solid color-mix(in srgb, var(--color-on-dark) 10%, transparent);
+  }
+
+  .phone-chip {
+    background-color: color-mix(in srgb, var(--color-on-dark) 9%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-on-dark) 12%, transparent);
+  }
+
+  .phone-skeleton {
+    background-color: color-mix(in srgb, var(--color-on-dark) 10%, transparent);
+  }
+
+  .phone-handle {
+    background-color: color-mix(in srgb, var(--color-on-dark) 22%, transparent);
+  }
+
+  .phone-ring {
+    background-color: color-mix(in srgb, var(--color-accent-to) 50%, transparent);
+  }
+
+  .phone-shadow {
+    background-color: color-mix(in srgb, var(--color-surface-dark) 60%, black);
+    filter: blur(2px);
+  }
+
+  .phone-pulse {
+    animation: phone-pulse 1.8s ease-out infinite;
+  }
+
   .hero-orb {
     position: absolute;
     border-radius: 9999px;
@@ -102,6 +133,17 @@
   }
 }
 
+@keyframes phone-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
 @keyframes hero-marquee {
   from {
     transform: translateX(0);
@@ -133,6 +175,8 @@
     --radius-pill: 16px;
     --shadow-card: 0 24px 48px -16px rgb(22 26 46 / 0.1), 0 8px 16px -8px rgb(22 26 46 / 0.06);
     --shadow-cta: 0 16px 40px -12px color-mix(in srgb, var(--color-accent-from) 42%, transparent);
+    --phone-map-park: color-mix(in srgb, var(--color-on-dark) 5%, var(--color-surface-dark));
+    --phone-map-water: color-mix(in srgb, var(--color-accent-to) 16%, var(--color-surface-dark));
 
     --background: var(--color-surface-light);
     --foreground: var(--color-on-light);

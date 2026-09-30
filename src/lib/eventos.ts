@@ -19,6 +19,12 @@ export function formatEventoQuando(date: Date): string {
   });
 }
 
+export function formatEventoCurto(date: Date): string {
+  const dia = date.toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" });
+  const hora = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${dia.replace(/\./g, "")} · ${hora}`;
+}
+
 export function labelRestricao(value: RestricaoIdade): string {
   return RESTRICOES.find((item) => item.value === value)?.label ?? value;
 }

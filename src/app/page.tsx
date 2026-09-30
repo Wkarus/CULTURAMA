@@ -1,10 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { HomeEventGrid } from "@/components/home-event-grid";
-import { HomeFeaturedMembers } from "@/components/home-featured-members";
+import { HomeFeaturedParticles } from "@/components/home-featured-particles";
 import { HomeHero } from "@/components/home-hero";
 import { HomeHowItWorks } from "@/components/home-how-it-works";
 import { HomeStats } from "@/components/home-stats";
-import { cidadeDeEndereco, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
+import { cidadeDeEndereco, formatEventoCurto, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
 import { eventWhereFromParams } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
@@ -45,6 +45,14 @@ export default async function HomePage() {
   const featuredIds = new Set(featuredList.map((event) => event.id));
   const grid = unique.filter((event) => !featuredIds.has(event.id)).slice(0, 6);
   const cidades = new Set(addresses.map((row) => cidadeDeEndereco(row.endereco)).filter(Boolean)).size;
+  const proximos = unique.slice(0, 3).map((event) => ({
+    id: event.id,
+    titulo: nomeCurtoEvento(event.titulo, 40),
+    categoria: event.category?.nome ?? null,
+    quando: formatEventoCurto(event.dataHora),
+    gratuito: event.gratuito,
+    imagemCapa: event.imagemCapa,
+  }));
   const pathEvents = unique.slice(0, 14).map((event) => nomeCurtoEvento(event.titulo));
   const pathSponsors = [
     ...(events.some((event) => event.fonte === "ticketmaster") ? ["Ticketmaster"] : []),
@@ -54,15 +62,24 @@ export default async function HomePage() {
   return (
     <main>
       <HomeHero events={pathEvents} sponsors={pathSponsors} />
-      <HomeFeaturedMembers
-        events={featuredList.map((event) => ({
-          name: event.titulo,
-          image: event.imagemCapa ?? "",
-          href: `/eventos/${event.id}`,
-        }))}
+      <HomeFeaturedParticles
+        events={featuredList.flatMap((event) =>
+          event.imagemCapa
+            ? [
+                {
+                  id: event.id,
+                  titulo: event.titulo,
+                  imagemCapa: event.imagemCapa,
+                  href: `/eventos/${event.id}`,
+                  quando: formatEventoCurto(event.dataHora),
+                  categoria: event.category?.nome ?? null,
+                },
+              ]
+            : [],
+        )}
       />
       <HomeStats eventos={eventCount} cidades={cidades} organizadores={organizerCount} />
-      <HomeHowItWorks />
+      <HomeHowItWorks events={proximos} />
       {grid.length > 0 ? (
         <section className="mx-auto max-w-page px-4 pb-24">
           <div className="grid gap-3">

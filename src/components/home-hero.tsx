@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import Aurora from "@/components/Aurora";
 import BlurText from "@/components/BlurText";
@@ -9,6 +9,7 @@ import CurvedLoop from "@/components/CurvedLoop";
 import { buttonVariants } from "@/components/ui/button";
 import { visual } from "@/lib/visual-tokens";
 import { cn } from "@/lib/utils";
+import { useWebglSlot } from "@/lib/webgl-slot";
 
 const SPONSOR_PATH = "M 300 72 A 228 228 0 1 1 299.99 72";
 
@@ -56,6 +57,8 @@ export function HomeHero({ events, sponsors }: { events: string[]; sponsors: str
   const reduce = useReducedMotion();
   const [allowAurora, setAllowAurora] = useState(false);
   const [allowType, setAllowType] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const auroraOn = useWebglSlot("hero-aurora", sectionRef, allowAurora);
 
   useEffect(() => {
     const fine = window.matchMedia("(pointer: fine)").matches;
@@ -69,10 +72,11 @@ export function HomeHero({ events, sponsors }: { events: string[]; sponsors: str
 
   return (
     <section
+      ref={sectionRef}
       className="relative isolate flex min-h-[calc(100dvh-4rem)] items-center overflow-hidden"
       style={{ backgroundColor: "var(--color-surface-dark)", color: "var(--color-on-dark)" }}
     >
-      {allowAurora ? (
+      {auroraOn ? (
         <div className="pointer-events-none absolute inset-0 mix-blend-screen opacity-80" aria-hidden>
           <Aurora
             colorStops={[visual.accentFrom, visual.accentTo, visual.accentFrom]}
