@@ -1,4 +1,4 @@
-import type { EventStatus, RestricaoIdade } from "@prisma/client";
+import type { EventFonte, EventStatus, RestricaoIdade } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const RESTRICOES: { value: RestricaoIdade; label: string }[] = [
@@ -71,6 +71,20 @@ export function cidadeDeEndereco(endereco: string): string {
     .map((part) => part.replace(/\d{5}-?\d{3}/g, "").replace(/\s*-?\s*[A-Z]{2}\s*$/i, "").trim())
     .filter(Boolean);
   return parts[parts.length - 1] ?? endereco.trim();
+}
+
+/** Bairro quando o endereço segue "…, 123 - Bairro, Cidade"; senão a cidade. Ticketmaster grava "Local, rua, Cidade, Estado". */
+export function localDoEvento(event: { endereco: string; fonte: EventFonte }): string | null {
+  const endereco = event.endereco.trim();
+  const bairro = endereco.match(/,\s*\d+[A-Za-z]?\s*-\s*([^,]+?)\s*,/);
+  if (bairro) return bairro[1];
+  const parts = endereco
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (event.fonte === "ticketmaster" && parts.length >= 3) return parts[parts.length - 2];
+  const cidade = cidadeDeEndereco(endereco);
+  return cidade && cidade !== "Brasil" ? cidade : null;
 }
 
 export async function getOrganizerForUser(userId: string) {

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: [
@@ -94,6 +95,11 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addVariant }) => {
+      addVariant("fine", "@media (pointer: fine)");
+      addVariant("coarse", "@media (pointer: coarse)");
+    }),
+  ],
 };
 export default config;

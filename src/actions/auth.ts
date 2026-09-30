@@ -3,7 +3,7 @@
 import { hash } from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { signIn, unstable_update } from "@/auth";
+import { signIn, signOut, unstable_update } from "@/auth";
 import { isMaiorDe18, parseDataNascimento } from "@/lib/idade";
 import { prisma } from "@/lib/prisma";
 
@@ -85,6 +85,10 @@ export async function loginGoogle(formData?: FormData) {
     redirect("/login?erro=google");
   }
   await signIn("google", { redirectTo: callbackUrl });
+}
+
+export async function sair() {
+  await signOut({ redirectTo: "/" });
 }
 
 export async function completarPerfil(_prev: FormState, formData: FormData): Promise<FormState> {

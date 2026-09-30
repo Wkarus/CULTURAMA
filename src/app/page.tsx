@@ -4,7 +4,7 @@ import { HomeFeaturedParticles } from "@/components/home-featured-particles";
 import { HomeHero } from "@/components/home-hero";
 import { HomeHowItWorks } from "@/components/home-how-it-works";
 import { HomeStats } from "@/components/home-stats";
-import { cidadeDeEndereco, formatEventoCurto, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
+import { cidadeDeEndereco, formatEventoCurto, localDoEvento, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
 import { eventWhereFromParams } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
@@ -53,15 +53,27 @@ export default async function HomePage() {
     gratuito: event.gratuito,
     imagemCapa: event.imagemCapa,
   }));
-  const pathEvents = unique.slice(0, 14).map((event) => nomeCurtoEvento(event.titulo));
-  const pathSponsors = [
-    ...(events.some((event) => event.fonte === "ticketmaster") ? ["Ticketmaster"] : []),
-    ...sponsorNames,
-  ].slice(0, 8);
+  const heroNomes = Array.from(new Set(unique.map((event) => nomeCurtoEvento(event.titulo, 28)))).slice(0, 18);
+  const heroCapas = unique.flatMap((event) =>
+    event.imagemCapa
+      ? [
+          {
+            id: event.id,
+            titulo: nomeCurtoEvento(event.titulo, 40),
+            categoria: event.category?.nome ?? null,
+            imagemCapa: event.imagemCapa,
+            href: `/eventos/${event.id}`,
+          },
+        ]
+      : [],
+  ).slice(0, 8);
+  const heroLocais = Array.from(
+    new Set(events.map(localDoEvento).filter((local): local is string => Boolean(local))),
+  ).slice(0, 8);
 
   return (
     <main>
-      <HomeHero events={pathEvents} sponsors={pathSponsors} />
+      <HomeHero nomes={heroNomes} capas={heroCapas} locais={heroLocais} patrocinadores={sponsorNames.slice(0, 12)} />
       <HomeFeaturedParticles
         events={featuredList.flatMap((event) =>
           event.imagemCapa
