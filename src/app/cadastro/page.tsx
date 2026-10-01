@@ -1,14 +1,21 @@
 import { CadastroForm } from "@/components/auth-forms";
-import { AuthFooterLink, AuthPanel } from "@/components/auth-panel";
+import { AuthShell, AuthTroca } from "@/components/auth-shell";
+import { capasDecorativas } from "@/lib/eventos";
 
-export default function CadastroPage() {
+export default async function CadastroPage() {
+  const capas = await capasDecorativas();
+
   return (
-    <AuthPanel
-      title="Criar conta"
-      description="Cadastro para maiores de 18 anos, com aceite da política de privacidade. Depois você pode publicar eventos."
-      footer={<AuthFooterLink href="/login" prompt="Já tem conta?" label="Entrar" />}
+    <AuthShell
+      capas={capas}
+      titulo={
+        <>
+          Seu próximo <span className="text-accent-gradient">rolê</span> começa aqui
+        </>
+      }
     >
       <CadastroForm />
-    </AuthPanel>
+      <AuthTroca pergunta="Já tem conta?" href="/login" acao="Entrar" />
+    </AuthShell>
   );
 }

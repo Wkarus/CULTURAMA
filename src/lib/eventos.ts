@@ -1,4 +1,5 @@
 import type { EventFonte, EventStatus, RestricaoIdade } from "@prisma/client";
+import { eventWhereFromParams } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
 export const RESTRICOES: { value: RestricaoIdade; label: string }[] = [
@@ -85,6 +86,22 @@ export function localDoEvento(event: { endereco: string; fonte: EventFonte }): s
   if (event.fonte === "ticketmaster" && parts.length >= 3) return parts[parts.length - 2];
   const cidade = cidadeDeEndereco(endereco);
   return cidade && cidade !== "Brasil" ? cidade : null;
+}
+
+export async function capasDecorativas(quantidade = 3): Promise<{ id: string; imagemCapa: string }[]> {
+  try {
+    const events = await prisma.event.findMany({
+      where: { ...eventWhereFromParams({}), imagemCapa: { not: null } },
+      select: { id: true, titulo: true, imagemCapa: true },
+      orderBy: { dataHora: "asc" },
+      take: quantidade * 4,
+    });
+    return uniqueByCapa(events)
+      .slice(0, quantidade)
+      .flatMap((event) => (event.imagemCapa ? [{ id: event.id, imagemCapa: event.imagemCapa }] : []));
+  } catch {
+    return [];
+  }
 }
 
 export async function getOrganizerForUser(userId: string) {

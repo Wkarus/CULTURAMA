@@ -73,6 +73,7 @@ const config: Config = {
           DEFAULT: "var(--color-warning-fg)",
           bg: "var(--color-warning-bg)",
         },
+        danger: "var(--color-danger-fg)",
       },
       maxWidth: {
         page: "1200px",

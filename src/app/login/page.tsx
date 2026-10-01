@@ -1,18 +1,25 @@
 import { LoginForm } from "@/components/auth-forms";
-import { AuthFooterLink, AuthPanel } from "@/components/auth-panel";
+import { AuthShell, AuthTroca } from "@/components/auth-shell";
+import { capasDecorativas } from "@/lib/eventos";
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
   searchParams: { callbackUrl?: string; erro?: string };
 }) {
+  const capas = await capasDecorativas();
+
   return (
-    <AuthPanel
-      title="Entrar"
-      description="Use e-mail e senha. Google entra quando as chaves estiverem no ambiente."
-      footer={<AuthFooterLink href="/cadastro" prompt="Não tem conta?" label="Criar conta" />}
+    <AuthShell
+      capas={capas}
+      titulo={
+        <>
+          Bem-vindo de <span className="text-accent-gradient">volta</span>
+        </>
+      }
     >
       <LoginForm callbackUrl={searchParams.callbackUrl ?? "/conta"} googleErro={searchParams.erro === "google"} />
-    </AuthPanel>
+      <AuthTroca pergunta="Ainda não tem conta?" href="/cadastro" acao="Criar conta" />
+    </AuthShell>
   );
 }

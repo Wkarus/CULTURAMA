@@ -28,6 +28,7 @@ Hero e destaques em superfície escura; conteúdo padrão em papel quente-frio. 
 | `--color-muted-on-dark` | `#9198B8` | Texto idle sobre escuro |
 | `--color-success-fg` / `--color-success-bg` | `#1E7A42` / `#EAF6EE` | Positivo |
 | `--color-warning-fg` / `--color-warning-bg` | `#A16A1B` / `#FBF2E3` | Alerta |
+| `--color-danger-fg` | `#F87171` | Erro de campo sobre escuro (`text-danger`) |
 | `--radius-card` | `20px` | Cards e painéis (faixa 16–24) |
 | `--radius-control` | `16px` | Botões e inputs |
 | `--shadow-card` | blur alto, opacidade ~0.06–0.10 | Elevação |

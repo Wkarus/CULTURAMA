@@ -17,6 +17,9 @@ const LINKS = [
   { href: "/cadastro/organizador", label: "Para organizadores" },
 ];
 
+/** Páginas que abrem sobre fundo escuro: o header começa transparente e sobrepõe o topo, como na home. */
+const ROTAS_ESCURAS = new Set(["/", "/login", "/cadastro"]);
+
 const LIMIAR_FUNDO = 40;
 const LIMIAR_ESCONDER = 120;
 const DELTA_MIN = 6;
@@ -221,7 +224,7 @@ function MenuMobile({
 
 export function SiteHeaderClient({ usuario }: { usuario: UsuarioHeader | null }) {
   const pathname = usePathname() ?? "/";
-  const home = pathname === "/";
+  const sobreEscuro = ROTAS_ESCURAS.has(pathname);
   const [rolou, setRolou] = useState(false);
   const [escondido, setEscondido] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
@@ -260,14 +263,14 @@ export function SiteHeaderClient({ usuario }: { usuario: UsuarioHeader | null })
     };
   }, []);
 
-  const solido = !home || rolou;
+  const solido = !sobreEscuro || rolou;
   const oculto = escondido && !menuAberto;
 
   return (
     <header
       className={cn(
         "sticky top-0 z-40 border-b text-on-dark transition-[background-color,border-color,backdrop-filter,transform] duration-300 ease-out",
-        home && "-mb-16",
+        sobreEscuro && "-mb-16",
         solido && "backdrop-blur-md",
         oculto && "-translate-y-full",
       )}
