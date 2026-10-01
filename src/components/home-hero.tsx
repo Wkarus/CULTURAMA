@@ -243,24 +243,19 @@ function LinhaDeApoio({ locais, reduce }: { locais: string[]; reduce: boolean })
   return (
     <>
       <p
-        className="mt-5 font-display text-[clamp(1.25rem,2.5vw,2rem)] font-semibold leading-tight tracking-display"
+        className="mt-5 mx-auto flex w-full max-w-[22rem] flex-col items-center text-center font-display text-[clamp(1.25rem,2.5vw,2rem)] font-semibold leading-tight tracking-display sm:max-w-none"
         aria-hidden
       >
-        O que está rolando {alterna ? "em " : ""}
-        <span className="inline-grid overflow-hidden pb-[0.12em] text-left align-top">
-          {opcoes.map((local) => (
-            <span key={local} className="invisible col-start-1 row-start-1 whitespace-nowrap">
-              {local}
-            </span>
-          ))}
-          <AnimatePresence initial={false}>
+        <span>O que está rolando{alterna ? " em" : ""}</span>
+        <span className="relative mt-1 flex h-[1.35em] w-full max-w-[min(100%,22ch)] items-center justify-center overflow-hidden pb-[0.12em]">
+          <AnimatePresence initial={false} mode="wait">
             <motion.span
               key={atual}
-              className="text-accent-gradient col-start-1 row-start-1 whitespace-nowrap"
+              className="text-accent-gradient absolute inset-x-0 truncate text-center"
               initial={{ y: "100%", opacity: 0, filter: "blur(6px)" }}
               animate={{ y: "0%", opacity: 1, filter: "blur(0px)" }}
               exit={{ y: "-100%", opacity: 0, filter: "blur(6px)" }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
               {atual}
             </motion.span>
