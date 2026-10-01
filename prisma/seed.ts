@@ -1,14 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { semearCategorias } from "../src/lib/categorias-dados";
 
 const prisma = new PrismaClient();
 
-const CATEGORIAS = ["música", "teatro", "exposição", "feira", "dança", "festival", "standup"];
-
 async function main() {
-  await prisma.category.createMany({
-    data: CATEGORIAS.map((nome) => ({ nome })),
-    skipDuplicates: true,
-  });
+  const { maes, filhas } = await semearCategorias(prisma);
+  console.log(`Categorias: ${maes} mães e ${filhas} subcategorias.`);
 }
 
 main()

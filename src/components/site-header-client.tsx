@@ -7,6 +7,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { Menu } from "@base-ui/react/menu";
 import { Menu as MenuIcon, X } from "lucide-react";
 import { sair } from "@/actions/auth";
+import { iniciais } from "@/lib/perfil";
 import { cn } from "@/lib/utils";
 
 export type UsuarioHeader = { nome: string | null; email: string | null; admin: boolean };
@@ -18,7 +19,7 @@ const LINKS = [
 ];
 
 /** Páginas que abrem sobre fundo escuro: o header começa transparente e sobrepõe o topo, como na home. */
-const ROTAS_ESCURAS = new Set(["/", "/login", "/cadastro"]);
+const ROTAS_ESCURAS = new Set(["/", "/login", "/cadastro", "/conta", "/boas-vindas"]);
 
 const LIMIAR_FUNDO = 40;
 const LIMIAR_ESCONDER = 120;
@@ -36,13 +37,6 @@ const ctaPequeno = cn(
 
 function ativo(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function iniciais(usuario: UsuarioHeader) {
-  const base = usuario.nome?.trim() || usuario.email?.split("@")[0] || "";
-  const partes = base.split(/\s+/).filter(Boolean);
-  const letras = partes.length > 1 ? partes[0][0] + partes[partes.length - 1][0] : base.slice(0, 2);
-  return letras.toUpperCase() || "?";
 }
 
 function itensConta(usuario: UsuarioHeader) {

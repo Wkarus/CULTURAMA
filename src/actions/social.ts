@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import type { FormState } from "@/actions/auth";
+import { ensureCategorias } from "@/lib/categorias";
+import { normalizarInteresses } from "@/lib/categorias-arvore";
 import { prisma } from "@/lib/prisma";
 
 async function requireUser() {
@@ -35,11 +37,11 @@ export async function salvarInteresses(_prev: FormState, formData: FormData): Pr
   const userId = await requireUser();
   if (!userId) return { error: "Entre na conta." };
 
-  const interesses = formData
+  const valores = formData
     .getAll("interesse")
     .map((item) => String(item).trim())
-    .filter(Boolean)
-    .slice(0, 12);
+    .filter(Boolean);
+  const interesses = normalizarInteresses(await ensureCategorias(), valores);
 
   await prisma.user.update({ where: { id: userId }, data: { interesses } });
   revalidatePath("/conta");

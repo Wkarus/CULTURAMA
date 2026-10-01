@@ -37,7 +37,8 @@ export function normalizeSearchParams(params: Record<string, string | string[] |
   };
 }
 
-export function eventWhereFromParams(params: EventSearchParams): Prisma.EventWhereInput {
+/** `categoriaIds` vem de `idsDaCategoria`: a mãe já chega expandida com as filhas. */
+export function eventWhereFromParams(params: EventSearchParams, categoriaIds?: string[] | null): Prisma.EventWhereInput {
   const agora = new Date();
   const de = parseDateBound(params.de, false);
   const ate = parseDateBound(params.ate, true);
@@ -45,7 +46,7 @@ export function eventWhereFromParams(params: EventSearchParams): Prisma.EventWhe
 
   return {
     status: "publicado",
-    ...(params.categoria ? { categoriaId: params.categoria } : {}),
+    ...(categoriaIds ? { categoriaId: { in: categoriaIds } } : {}),
     dataHora: {
       gte: inicio,
       ...(ate ? { lte: ate } : {}),

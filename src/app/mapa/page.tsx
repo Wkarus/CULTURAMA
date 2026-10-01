@@ -4,6 +4,7 @@ import SpotlightCard from "@/components/SpotlightCard";
 import { EventMap } from "@/components/event-map";
 import { PageHeading } from "@/components/page-heading";
 import { ensureCategorias } from "@/lib/categorias";
+import { idsDaCategoria } from "@/lib/categorias-arvore";
 import { eventWhereFromParams, filterPublishedEvents, normalizeSearchParams, toMapEvent } from "@/lib/event-filters";
 import { uniqueByCapa } from "@/lib/eventos";
 import { parseCoord } from "@/lib/geo";
@@ -13,7 +14,7 @@ export default async function MapaPage({ searchParams }: { searchParams: Record<
   const filters = normalizeSearchParams(searchParams);
   const categorias = await ensureCategorias();
   const raw = await prisma.event.findMany({
-    where: eventWhereFromParams(filters),
+    where: eventWhereFromParams(filters, idsDaCategoria(categorias, filters.categoria)),
     include: { category: true },
     orderBy: { dataHora: "asc" },
     take: 200,

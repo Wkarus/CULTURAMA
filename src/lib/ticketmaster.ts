@@ -1,6 +1,7 @@
 import type { RestricaoIdade } from "@prisma/client";
 import { ensureCategorias } from "@/lib/categorias";
 import { prisma } from "@/lib/prisma";
+import { mapCategoriaSlug, type TmClassificacao } from "@/lib/ticketmaster-categorias";
 
 type TmEvent = {
   id: string;
@@ -10,7 +11,7 @@ type TmEvent = {
   url?: string;
   dates?: { start?: { dateTime?: string; localDate?: string; localTime?: string } };
   images?: { url: string; width?: number }[];
-  classifications?: { segment?: { name?: string }; genre?: { name?: string } }[];
+  classifications?: TmClassificacao[];
   priceRanges?: { min?: number; max?: number }[];
   _embedded?: {
     venues?: {
@@ -35,16 +36,6 @@ function parseDataHora(event: TmEvent): Date | null {
     return Number.isNaN(d.getTime()) ? null : d;
   }
   return null;
-}
-
-function mapCategoriaNome(event: TmEvent): string {
-  const raw = (event.classifications?.[0]?.segment?.name ?? event.classifications?.[0]?.genre?.name ?? "festival").toLowerCase();
-  if (raw.includes("music") || raw.includes("mús")) return "música";
-  if (raw.includes("theatre") || raw.includes("theater") || raw.includes("teatro")) return "teatro";
-  if (raw.includes("art") || raw.includes("expos")) return "exposição";
-  if (raw.includes("comedy") || raw.includes("stand")) return "standup";
-  if (raw.includes("sport") || raw.includes("misc")) return "festival";
-  return "festival";
 }
 
 async function fetchPage(key: string, params: Record<string, string>): Promise<{ events: TmEvent[]; totalPages: number }> {
@@ -93,6 +84,7 @@ export async function syncTicketmaster(): Promise<{ ok: true; upserted: number }
 
   const events = await fetchAllBrasil(key);
   const categorias = await ensureCategorias();
+  const porSlug = new Map(categorias.map((c) => [c.slug, c]));
   const syncedIds: string[] = [];
 
   let upserted = 0;
@@ -106,9 +98,15 @@ export async function syncTicketmaster(): Promise<{ ok: true; upserted: number }
     const lat = Number(venue?.location?.latitude);
     const lng = Number(venue?.location?.longitude);
     const image = item.images?.slice().sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0]?.url;
-    const catNome = mapCategoriaNome(item);
-    const category = categorias.find((c) => c.nome === catNome) ?? categorias[0];
-    const tags = [item.classifications?.[0]?.genre?.name, item.classifications?.[0]?.segment?.name].filter(Boolean) as string[];
+    const category = porSlug.get(mapCategoriaSlug(item)) ?? porSlug.get("musica");
+    const classificacao = item.classifications?.find((c) => c.primary) ?? item.classifications?.[0];
+    const tags = Array.from(
+      new Set(
+        [classificacao?.genre?.name, classificacao?.subGenre?.name, classificacao?.segment?.name].filter(
+          (nome): nome is string => !!nome && nome !== "Undefined",
+        ),
+      ),
+    );
     const descricao = item.info || item.pleaseNote || item.name;
     const restricaoIdade: RestricaoIdade = "livre";
     const ranges = item.priceRanges ?? [];

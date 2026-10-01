@@ -1,15 +1,47 @@
 "use client";
 
-import { useState, type MouseEvent } from "react";
+import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import type { Category } from "@prisma/client";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { acharCategoria, montarArvore } from "@/lib/categorias-arvore";
 import type { EventSearchParams } from "@/lib/event-filters";
 import { DISTANCIAS_KM } from "@/lib/event-filters";
 import { mensagemGeolocalizacao } from "@/lib/geo";
+import { iconeLucide } from "@/lib/perfil";
+import { cn } from "@/lib/utils";
 
 const selectClass = "h-9 w-full rounded-pill border border-input bg-card px-3 text-sm";
+
+function ChipSub({
+  ativo,
+  onClick,
+  icone: Icone,
+  children,
+}: {
+  ativo: boolean;
+  onClick: () => void;
+  icone: LucideIcon;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={ativo}
+      onClick={onClick}
+      className={cn(
+        "inline-flex h-9 items-center gap-1.5 rounded-pill border px-3.5 text-sm font-medium transition-colors",
+        "outline-none focus-visible:ring-2 focus-visible:ring-accent-solid focus-visible:ring-offset-2",
+        ativo ? "border-transparent bg-accent-gradient text-on-dark shadow-cta" : "border-input bg-card hover:bg-muted",
+      )}
+    >
+      <Icone className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+      {children}
+    </button>
+  );
+}
 
 function hojeISO(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
@@ -36,6 +68,17 @@ export function EventFilters({
 }) {
   const [buscando, setBuscando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const arvore = useMemo(() => montarArvore(categorias), [categorias]);
+  const [maeId, setMaeId] = useState(() => {
+    const atual = acharCategoria(categorias, values.categoria);
+    return atual ? (atual.parentId ?? atual.id) : "";
+  });
+  const [subId, setSubId] = useState(() => {
+    const atual = acharCategoria(categorias, values.categoria);
+    return atual?.parentId ? atual.id : "";
+  });
+  const mae = arvore.find((m) => m.id === maeId);
+  const valorCategoria = (subId && mae?.filhas.find((f) => f.id === subId)?.slug) || mae?.slug || "";
 
   function usarLocalizacao(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -80,14 +123,23 @@ export function EventFilters({
         <Label htmlFor="categoria" className="text-xs text-muted-foreground">
           Categoria
         </Label>
-        <select id="categoria" name="categoria" defaultValue={values.categoria ?? ""} className={selectClass}>
+        <select
+          id="categoria"
+          value={maeId}
+          onChange={(e) => {
+            setMaeId(e.target.value);
+            setSubId("");
+          }}
+          className={selectClass}
+        >
           <option value="">Todas</option>
-          {categorias.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.nome}
+          {arvore.map((mae) => (
+            <option key={mae.id} value={mae.id}>
+              {mae.nome}
             </option>
           ))}
         </select>
+        <input type="hidden" name="categoria" value={valorCategoria} />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="de" className="text-xs text-muted-foreground">
@@ -124,6 +176,18 @@ export function EventFilters({
           ))}
         </select>
       </div>
+      {mae && mae.filhas.length > 0 ? (
+        <div role="group" aria-label={`Subcategorias de ${mae.nome}`} className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5">
+          <ChipSub ativo={!subId} onClick={() => setSubId("")} icone={iconeLucide(mae.icone)}>
+            Tudo em {mae.nome}
+          </ChipSub>
+          {mae.filhas.map((filha) => (
+            <ChipSub key={filha.id} ativo={subId === filha.id} onClick={() => setSubId(filha.id)} icone={iconeLucide(filha.icone)}>
+              {filha.nome}
+            </ChipSub>
+          ))}
+        </div>
+      ) : null}
       <input type="hidden" name="lat" defaultValue={values.lat ?? ""} />
       <input type="hidden" name="lng" defaultValue={values.lng ?? ""} />
       <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-5">

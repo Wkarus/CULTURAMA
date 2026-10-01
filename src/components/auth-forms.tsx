@@ -230,7 +230,7 @@ function BotaoGoogleEnviar() {
       type="submit"
       disabled={pending}
       className={cn(
-        "auth-chip inline-flex h-12 w-full items-center justify-center gap-2 rounded-control text-base font-medium text-on-dark transition-colors hover:bg-[color-mix(in_srgb,var(--color-on-dark)_14%,transparent)] disabled:opacity-70",
+        "chip-dark inline-flex h-12 w-full items-center justify-center gap-2 rounded-control text-base font-medium text-on-dark transition-colors hover:bg-[color-mix(in_srgb,var(--color-on-dark)_14%,transparent)] disabled:opacity-70",
         FOCO_ESCURO,
       )}
     >
@@ -248,9 +248,9 @@ function BlocoGoogle({ callbackUrl }: { callbackUrl: string }) {
         <BotaoGoogleEnviar />
       </form>
       <div className="my-6 flex items-center gap-3 text-xs font-medium text-muted-on-dark">
-        <span className="auth-rule h-px flex-1" aria-hidden />
+        <span className="rule-dark h-px flex-1" aria-hidden />
         ou com e-mail
-        <span className="auth-rule h-px flex-1" aria-hidden />
+        <span className="rule-dark h-px flex-1" aria-hidden />
       </div>
     </>
   );
@@ -258,7 +258,7 @@ function BlocoGoogle({ callbackUrl }: { callbackUrl: string }) {
 
 function CartaoAuth({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children: ReactNode }) {
   return (
-    <div className="auth-card rounded-card p-6 shadow-card sm:p-8">
+    <div className="panel-dark rounded-card p-6 shadow-card sm:p-8">
       <h2 className="font-display text-2xl font-semibold tracking-display text-on-dark">{titulo}</h2>
       {subtitulo ? <p className="mt-1 text-sm text-muted-on-dark">{subtitulo}</p> : null}
       <div className="mt-6">{children}</div>

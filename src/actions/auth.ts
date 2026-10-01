@@ -51,7 +51,7 @@ export async function cadastrarUsuario(_prev: FormState, formData: FormData): Pr
   });
 
   try {
-    await signIn("credentials", { email, password: senha, redirectTo: "/conta" });
+    await signIn("credentials", { email, password: senha, redirectTo: "/boas-vindas" });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Conta criada, mas o login automático falhou. Entre em /login." };
@@ -123,5 +123,5 @@ export async function completarPerfil(_prev: FormState, formData: FormData): Pro
     user: { needsCompletion: false },
   });
 
-  redirect("/conta");
+  redirect("/boas-vindas");
 }

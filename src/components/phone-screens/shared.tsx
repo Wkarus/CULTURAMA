@@ -2,17 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import {
-  Drama,
-  MapPin,
-  Mic,
-  Music,
-  Palette,
-  PartyPopper,
-  Sparkles,
-  Store,
-  type LucideIcon,
-} from "lucide-react";
+import { MapPin, type LucideIcon } from "lucide-react";
+import { iconePorNome } from "@/lib/perfil";
 
 /** Mesmas condições de `md:motion-safe:` no Tailwind. */
 export const PIN_QUERY = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
@@ -32,24 +23,8 @@ export type TelaProps = {
   animate: boolean;
 };
 
-const ICONES: Record<string, LucideIcon> = {
-  musica: Music,
-  teatro: Drama,
-  exposicao: Palette,
-  feira: Store,
-  danca: Sparkles,
-  festival: PartyPopper,
-  standup: Mic,
-};
-
 export function iconeCategoria(categoria: string | null): LucideIcon {
-  if (!categoria) return MapPin;
-  const key = categoria
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z]/gi, "")
-    .toLowerCase();
-  return ICONES[key] ?? MapPin;
+  return (categoria && iconePorNome(categoria)) || MapPin;
 }
 
 type ScreenTimelineOptions = {

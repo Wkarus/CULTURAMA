@@ -116,10 +116,19 @@ model Event {
 }
 
 model Category {
-  id     String  @id @default(cuid())
-  nome   String  @unique
-  events Event[]
+  id       String  @id @default(cuid())
+  nome     String  @unique
+  slug     String  @unique
+  /// Nome do ícone lucide (ex.: "Music").
+  icone    String  @default("Sparkles")
+  parentId String? @map("parent_id")
+  ordem    Int     @default(0)
 
+  parent        Category?  @relation("subcategorias", fields: [parentId], references: [id], onDelete: Restrict)
+  subcategorias Category[] @relation("subcategorias")
+  events        Event[]
+
+  @@index([parentId])
   @@map("categories")
 }
 

@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import type { Category, Event } from "@prisma/client";
+import { montarArvore } from "@/lib/categorias-arvore";
 import type { FormState } from "@/actions/auth";
 import { salvarEvento } from "@/actions/eventos";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,62 @@ function Actions({ podePublicar }: { podePublicar: boolean }) {
       <Button type="submit" name="intencao" value="publicar" disabled={pending || !podePublicar}>
         {pending ? "Salvando…" : "Publicar"}
       </Button>
+    </div>
+  );
+}
+
+const SELECT = "h-9 rounded-pill border border-input bg-card px-3 text-sm disabled:opacity-50";
+
+/** Mãe e subcategoria. Envia `categoriaId` com a subcategoria, ou a mãe quando não há subcategoria escolhida. */
+function SelectCategoria({ categorias, inicial }: { categorias: Category[]; inicial: string | null }) {
+  const arvore = useMemo(() => montarArvore(categorias), [categorias]);
+  const atual = categorias.find((c) => c.id === inicial);
+  const [maeId, setMaeId] = useState(atual ? (atual.parentId ?? atual.id) : "");
+  const [subId, setSubId] = useState(atual?.parentId ? atual.id : "");
+  const mae = arvore.find((m) => m.id === maeId);
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-1.5">
+        <Label htmlFor="categoriaMae">Categoria</Label>
+        <select
+          id="categoriaMae"
+          required
+          value={maeId}
+          onChange={(e) => {
+            setMaeId(e.target.value);
+            setSubId("");
+          }}
+          className={SELECT}
+        >
+          <option value="" disabled>
+            Selecione
+          </option>
+          {arvore.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.nome}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="categoriaSub">Subcategoria</Label>
+        <select
+          id="categoriaSub"
+          value={subId}
+          onChange={(e) => setSubId(e.target.value)}
+          disabled={!mae || mae.filhas.length === 0}
+          className={SELECT}
+        >
+          <option value="">{mae ? `Outro em ${mae.nome}` : "Escolha a categoria antes"}</option>
+          {mae?.filhas.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.nome}
+            </option>
+          ))}
+        </select>
+      </div>
+      <input type="hidden" name="categoriaId" value={subId || maeId} />
     </div>
   );
 }
@@ -70,25 +128,7 @@ export function EventForm({
           className="w-full rounded-card border border-input bg-card px-3 py-2 text-base tracking-shop"
         />
       </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor="categoriaId">Categoria</Label>
-        <select
-          id="categoriaId"
-          name="categoriaId"
-          required
-          defaultValue={evento?.categoriaId ?? ""}
-          className="h-9 rounded-pill border border-input bg-card px-3 text-sm"
-        >
-          <option value="" disabled>
-            Selecione
-          </option>
-          {categorias.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.nome}
-            </option>
-          ))}
-        </select>
-      </div>
+      <SelectCategoria categorias={categorias} inicial={evento?.categoriaId ?? null} />
       <div className="grid gap-1.5">
         <Label htmlFor="dataHora">Data e hora</Label>
         <Input id="dataHora" name="dataHora" type="datetime-local" required defaultValue={evento ? toLocalInput(evento.dataHora) : ""} />

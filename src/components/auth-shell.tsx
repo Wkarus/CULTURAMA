@@ -62,7 +62,7 @@ export function AuthShell({
           <ul className="grid gap-2.5 lg:gap-4">
             {BENEFICIOS.map(({ icone: Icone, texto }) => (
               <li key={texto} className="flex items-center gap-3 text-sm lg:text-base">
-                <span className="auth-chip inline-flex size-8 shrink-0 items-center justify-center rounded-sm lg:size-10" aria-hidden>
+                <span className="chip-dark inline-flex size-8 shrink-0 items-center justify-center rounded-sm lg:size-10" aria-hidden>
                   <Icone className="size-4 text-accent-hover lg:size-5" strokeWidth={1.75} />
                 </span>
                 {texto}

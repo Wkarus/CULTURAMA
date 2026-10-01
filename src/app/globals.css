@@ -62,17 +62,17 @@
     border: 1px solid color-mix(in srgb, var(--color-on-dark) 10%, transparent);
   }
 
-  .auth-card {
+  .panel-dark {
     background-color: color-mix(in srgb, var(--color-on-dark) 5%, var(--color-surface-dark));
     border: 1px solid color-mix(in srgb, var(--color-on-dark) 10%, transparent);
   }
 
-  .auth-chip {
+  .chip-dark {
     background-color: color-mix(in srgb, var(--color-on-dark) 8%, transparent);
     border: 1px solid color-mix(in srgb, var(--color-on-dark) 12%, transparent);
   }
 
-  .auth-rule {
+  .rule-dark {
     background-color: color-mix(in srgb, var(--color-on-dark) 12%, transparent);
   }
 
