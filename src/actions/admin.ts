@@ -7,9 +7,9 @@ import { requireAdmin, requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma";
 import { syncTicketmaster } from "@/lib/ticketmaster";
-import { saveImagemLocal } from "@/lib/upload";
+import { salvarImagem } from "@/lib/upload";
 
-const EVENT_STATUS = new Set<EventStatus>(["rascunho", "publicado", "cancelado", "adiado"]);
+const EVENT_STATUS = new Set<EventStatus>(["rascunho", "publicado", "cancelado", "adiado", "em_revisao"]);
 const AD_TIPOS = new Set<AdSlotTipo>(["banner_home", "banner_categoria", "destaque_evento"]);
 
 function refreshAdmin() {
@@ -100,7 +100,7 @@ export async function salvarAnuncio(_prev: FormState, formData: FormData): Promi
 
   let imagem: string | undefined;
   if (arquivo instanceof File && arquivo.size > 0) {
-    const saved = await saveImagemLocal(arquivo);
+    const saved = await salvarImagem(arquivo);
     if (!saved.ok) return { error: saved.message };
     imagem = saved.url;
   }

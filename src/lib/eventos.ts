@@ -36,6 +36,7 @@ export function labelStatus(value: EventStatus): string {
     publicado: "Publicado",
     cancelado: "Cancelado",
     adiado: "Adiado",
+    em_revisao: "Em revisão",
   };
   return map[value];
 }
@@ -110,4 +111,23 @@ export async function getOrganizerForUser(userId: string) {
 
 export function podePublicar(statusVerificacao: string): boolean {
   return statusVerificacao === "aprovado";
+}
+
+/** Organizador em análise não publica direto, mas pode mandar o evento para a fila de revisão. */
+export function podeEnviarParaRevisao(statusVerificacao: string): boolean {
+  return statusVerificacao === "pendente";
+}
+
+export function botoesDoOrganizador(statusVerificacao: string): {
+  intencoes: ("rascunho" | "publicar" | "revisao")[];
+  aviso?: string;
+} {
+  if (podePublicar(statusVerificacao)) return { intencoes: ["rascunho", "publicar"] };
+  if (podeEnviarParaRevisao(statusVerificacao)) {
+    return {
+      intencoes: ["rascunho", "revisao"],
+      aviso: "Verificação pendente: salve como rascunho ou envie para a equipe revisar. Aprovado, o evento vai ao ar.",
+    };
+  }
+  return { intencoes: ["rascunho"], aviso: "Seu cadastro de organizador não foi aprovado. Você pode guardar rascunhos." };
 }

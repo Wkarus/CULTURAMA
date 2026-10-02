@@ -37,6 +37,7 @@ export function ModeracaoForm({ event }: { event: Event }) {
         Status público
         <select name="status" defaultValue={event.status} className={campoAdmin}>
           <option value="publicado">Publicado</option>
+          <option value="em_revisao">Em revisão</option>
           <option value="adiado">Adiado</option>
           <option value="cancelado">Oculto / cancelado</option>
           <option value="rascunho">Rascunho</option>

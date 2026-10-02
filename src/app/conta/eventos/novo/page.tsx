@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EventForm } from "@/components/event-form";
 import { ensureCategorias } from "@/lib/categorias";
-import { getOrganizerForUser, podePublicar } from "@/lib/eventos";
+import { botoesDoOrganizador, getOrganizerForUser } from "@/lib/eventos";
 
 export default async function NovoEventoPage() {
   const session = await auth();
@@ -15,7 +15,7 @@ export default async function NovoEventoPage() {
   return (
     <main className="mx-auto max-w-lg px-4 py-12">
       <h1 className="mb-6 text-2xl font-medium tracking-display">Novo evento</h1>
-      <EventForm categorias={categorias} podePublicar={podePublicar(organizer.statusVerificacao)} />
+      <EventForm categorias={categorias} {...botoesDoOrganizador(organizer.statusVerificacao)} />
     </main>
   );
 }

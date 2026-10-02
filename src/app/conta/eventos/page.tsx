@@ -45,6 +45,14 @@ export default async function MeusEventosPage() {
                 <p className="text-sm text-muted-foreground">
                   {labelStatus(event.status)} · {event.category?.nome} · {event.dataHora.toLocaleString("pt-BR")}
                 </p>
+                {event.revisaoResultado && event.mensagemOrganizador ? (
+                  <p className="mt-2 max-w-prose rounded-md bg-warning-bg px-3 py-2 text-sm text-warning">
+                    <span className="font-medium">
+                      {event.revisaoResultado === "recusado" ? "Recusado pela equipe" : "A equipe pediu um ajuste"}:
+                    </span>{" "}
+                    {event.mensagemOrganizador}
+                  </p>
+                ) : null}
               </div>
               <div className="flex gap-2">
                 <Link href={`/conta/eventos/${event.id}/editar`} className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>

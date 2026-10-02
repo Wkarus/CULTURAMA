@@ -13,18 +13,25 @@ type EventoHome = Prisma.EventGetPayload<{ include: { category: true } }>;
 export default async function HomePage() {
   const where = eventWhereFromParams({});
   let events: EventoHome[] = [];
+  let destaques: EventoHome[] = [];
   let eventCount = 0;
   let organizerCount = 0;
   let addresses: { endereco: string }[] = [];
   let sponsorNames: string[] = [];
   try {
     const now = new Date();
-    [events, eventCount, organizerCount, addresses, sponsorNames] = await Promise.all([
+    [events, destaques, eventCount, organizerCount, addresses, sponsorNames] = await Promise.all([
       prisma.event.findMany({
         where,
         include: { category: true },
         orderBy: { dataHora: "asc" },
         take: 48,
+      }),
+      prisma.event.findMany({
+        where: { ...where, destaque: true, imagemCapa: { not: null } },
+        include: { category: true },
+        orderBy: { dataHora: "asc" },
+        take: 6,
       }),
       prisma.event.count({ where }),
       prisma.organizer.count({ where: { statusVerificacao: "aprovado" } }),
@@ -41,7 +48,7 @@ export default async function HomePage() {
   }
 
   const unique = uniqueByCapa(events);
-  const featuredList = unique.filter((event) => event.imagemCapa).slice(0, 6);
+  const featuredList = uniqueByCapa([...destaques, ...unique.filter((event) => event.imagemCapa)]).slice(0, 6);
   const featuredIds = new Set(featuredList.map((event) => event.id));
   const grid = unique.filter((event) => !featuredIds.has(event.id)).slice(0, 6);
   const cidades = new Set(addresses.map((row) => cidadeDeEndereco(row.endereco)).filter(Boolean)).size;

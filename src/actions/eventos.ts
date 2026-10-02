@@ -1,16 +1,13 @@
 "use server";
 
-import type { EventStatus, RestricaoIdade } from "@prisma/client";
+import type { EventStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import type { FormState } from "@/actions/auth";
-import { ensureCategorias } from "@/lib/categorias";
-import { getOrganizerForUser, podePublicar } from "@/lib/eventos";
+import { lerDadosEvento } from "@/lib/evento-dados";
+import { getOrganizerForUser, podeEnviarParaRevisao, podePublicar } from "@/lib/eventos";
 import { geocodeEndereco } from "@/lib/geocode";
 import { prisma } from "@/lib/prisma";
-import { saveImagemLocal } from "@/lib/upload";
-
-const RESTRICOES = new Set<RestricaoIdade>(["livre", "doze", "quatorze", "dezesseis", "dezoito"]);
 
 async function requireOrganizer() {
   const session = await auth();
@@ -20,13 +17,7 @@ async function requireOrganizer() {
   return { organizer };
 }
 
-function parseTags(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-    .slice(0, 12);
-}
+type Intencao = "rascunho" | "publicar" | "revisao";
 
 export async function salvarEvento(_prev: FormState, formData: FormData): Promise<FormState> {
   const ctx = await requireOrganizer();
@@ -34,53 +25,22 @@ export async function salvarEvento(_prev: FormState, formData: FormData): Promis
   const { organizer } = ctx as { organizer: NonNullable<Awaited<ReturnType<typeof getOrganizerForUser>>> };
 
   const id = String(formData.get("id") ?? "");
-  const titulo = String(formData.get("titulo") ?? "").trim();
-  const descricao = String(formData.get("descricao") ?? "").trim();
-  const categoriaId = String(formData.get("categoriaId") ?? "");
-  const dataHoraRaw = String(formData.get("dataHora") ?? "");
-  const endereco = String(formData.get("endereco") ?? "").trim();
-  const linkSaibaMais = String(formData.get("linkSaibaMais") ?? "").trim() || null;
-  const linkIngresso = String(formData.get("linkIngresso") ?? "").trim() || null;
-  const gratuito = formData.get("gratuito") === "true";
-  const restricaoIdade = String(formData.get("restricaoIdade") ?? "livre") as RestricaoIdade;
-  const tags = parseTags(String(formData.get("tags") ?? ""));
-  const publicar = formData.get("intencao") === "publicar";
-  const arquivo = formData.get("imagemCapa");
+  const bruta = String(formData.get("intencao") ?? "rascunho");
+  const intencao: Intencao = bruta === "publicar" || bruta === "revisao" ? bruta : "rascunho";
 
-  if (!titulo || !descricao || !endereco || !dataHoraRaw) {
-    return { error: "Preencha título, descrição, data e endereço." };
+  const lido = await lerDadosEvento(formData);
+  if (!lido.ok) return { error: lido.error };
+  const { dados, imagemCapa } = lido;
+
+  if (intencao === "publicar" && !podePublicar(organizer.statusVerificacao)) {
+    return { error: "Sua verificação ainda está pendente. Envie para revisão ou salve como rascunho." };
   }
-  if (!RESTRICOES.has(restricaoIdade)) {
-    return { error: "Restrição de idade inválida." };
+  if (intencao === "revisao" && !podeEnviarParaRevisao(organizer.statusVerificacao)) {
+    return { error: "Envio para revisão é só para organizadores em análise." };
   }
 
-  const categorias = await ensureCategorias();
-  if (!categorias.some((c) => c.id === categoriaId)) {
-    return { error: "Escolha uma categoria." };
-  }
-
-  const dataHora = new Date(dataHoraRaw);
-  if (Number.isNaN(dataHora.getTime())) {
-    return { error: "Data e hora inválidas." };
-  }
-
-  const geo = await geocodeEndereco(`${endereco}, Brasil`);
-  if (!geo) {
-    return { error: "Não achei esse endereço. Inclua rua, número e cidade." };
-  }
-
-  let imagemCapa: string | undefined;
-  if (arquivo instanceof File && arquivo.size > 0) {
-    const saved = await saveImagemLocal(arquivo);
-    if (!saved.ok) return { error: saved.message };
-    imagemCapa = saved.url;
-  }
-
-  if (publicar && !podePublicar(organizer.statusVerificacao)) {
-    return { error: "Sua verificação ainda está pendente. Salve como rascunho." };
-  }
-
-  const status: EventStatus = publicar ? "publicado" : "rascunho";
+  const status: EventStatus = intencao === "publicar" ? "publicado" : intencao === "revisao" ? "em_revisao" : "rascunho";
+  const limparRevisao = intencao !== "rascunho" ? { revisaoResultado: null, mensagemOrganizador: null } : {};
 
   if (id) {
     const existing = await prisma.event.findFirst({ where: { id, organizerId: organizer.id } });
@@ -90,48 +50,22 @@ export async function salvarEvento(_prev: FormState, formData: FormData): Promis
     await prisma.event.update({
       where: { id },
       data: {
-        titulo,
-        descricao,
-        categoriaId,
-        dataHora,
-        endereco,
-        latitude: geo.lat,
-        longitude: geo.lng,
-        linkSaibaMais,
-        linkIngresso,
-        gratuito,
-        restricaoIdade,
-        tags,
+        ...dados,
         status: existing.status === "cancelado" ? existing.status : status,
+        ...(existing.status === "cancelado" ? {} : limparRevisao),
         ...(imagemCapa ? { imagemCapa } : {}),
       },
     });
   } else {
     await prisma.event.create({
-      data: {
-        organizerId: organizer.id,
-        fonte: "interno",
-        titulo,
-        descricao,
-        categoriaId,
-        dataHora,
-        endereco,
-        latitude: geo.lat,
-        longitude: geo.lng,
-        imagemCapa,
-        linkSaibaMais,
-        linkIngresso,
-        gratuito,
-        restricaoIdade,
-        tags,
-        status,
-      },
+      data: { ...dados, organizerId: organizer.id, fonte: "interno", imagemCapa, status },
     });
   }
 
   revalidatePath("/eventos");
   revalidatePath("/mapa");
   revalidatePath("/conta/eventos");
+  revalidatePath("/admin/revisao");
   return { ok: true };
 }
 
@@ -153,4 +87,16 @@ export async function cancelarEvento(eventId: string): Promise<FormState> {
   revalidatePath("/mapa");
   revalidatePath("/conta/eventos");
   return { ok: true };
+}
+
+export type LocalizarState = { lat?: number; lng?: number; error?: string };
+
+/** Posiciona o pino do formulário a partir do endereço digitado. */
+export async function localizarEndereco(endereco: string): Promise<LocalizarState> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Entre na sua conta." };
+  const texto = endereco.trim();
+  if (texto.length < 5) return { error: "Digite rua, número e cidade." };
+  const geo = await geocodeEndereco(`${texto}, Brasil`);
+  return geo ? { lat: geo.lat, lng: geo.lng } : { error: "Não achei esse endereço. Arraste o pino até o local." };
 }

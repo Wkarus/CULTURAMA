@@ -24,5 +24,5 @@ export function podeExcluirEvento(papel: PapelPainel): boolean {
 }
 
 export function inicioDoPainel(papel: PapelPainel): string {
-  return papel === "admin" ? "/admin" : "/admin/eventos";
+  return papel === "admin" ? "/admin" : "/admin/revisao";
 }

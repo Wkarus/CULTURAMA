@@ -107,6 +107,8 @@ const ICONES: Record<IconeCategoria, LucideIcon> = {
 };
 
 /** Ícone a partir do nome salvo em `Category.icone`. */
+export const NOMES_ICONES: string[] = ["Sparkles", ...Object.keys(ICONES)];
+
 export function iconeLucide(nome: string | null | undefined): LucideIcon {
   return (nome && ICONES[nome as IconeCategoria]) || Sparkles;
 }

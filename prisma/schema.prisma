@@ -44,6 +44,12 @@ enum EventStatus {
   publicado
   cancelado
   adiado
+  em_revisao
+}
+
+enum RevisaoResultado {
+  recusado
+  ajuste
 }
 
 enum AdSlotTipo {
@@ -108,6 +114,11 @@ model Event {
   linkSaibaMais  String?        @map("link_saiba_mais")
   notaAdmin      String?        @map("nota_admin")
   status         EventStatus    @default(rascunho)
+  destaque       Boolean        @default(false)
+  /// Motivo de recusa ou pedido de ajuste da revisão; aparece para o organizador em /conta/eventos.
+  mensagemOrganizador String?           @map("mensagem_organizador")
+  revisaoResultado    RevisaoResultado? @map("revisao_resultado")
+  revisadoEm          DateTime?         @map("revisado_em")
 
   organizer Organizer? @relation(fields: [organizerId], references: [id])
   category  Category?  @relation(fields: [categoriaId], references: [id])

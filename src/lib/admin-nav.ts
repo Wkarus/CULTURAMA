@@ -5,7 +5,9 @@ export type ItemNav = { href: string; label: string; secao: SecaoPainel; badge?:
 
 const ITENS: Omit<ItemNav, "badge">[] = [
   { href: "/admin", label: "Visão geral", secao: "visao-geral" },
+  { href: "/admin/revisao", label: "Revisão", secao: "revisao" },
   { href: "/admin/eventos", label: "Eventos", secao: "eventos" },
+  { href: "/admin/categorias", label: "Categorias", secao: "categorias" },
   { href: "/admin/organizadores", label: "Organizadores", secao: "organizadores" },
   { href: "/admin/comentarios", label: "Comentários", secao: "comentarios" },
   { href: "/admin/anuncios", label: "Anúncios", secao: "anuncios" },
@@ -13,16 +15,18 @@ const ITENS: Omit<ItemNav, "badge">[] = [
 ];
 
 export async function contarPendencias() {
-  const [organizadores, comentarios] = await Promise.all([
+  const [revisao, organizadores, comentarios] = await Promise.all([
+    prisma.event.count({ where: { status: "em_revisao" } }),
     prisma.organizer.count({ where: { statusVerificacao: "pendente" } }),
     prisma.comment.count({ where: { oculto: false, reports: { some: {} } } }),
   ]);
-  return { organizadores, comentarios };
+  return { revisao, organizadores, comentarios };
 }
 
 export async function itensDoPainel(papel: PapelPainel): Promise<ItemNav[]> {
   const pendencias = await contarPendencias();
   const badges: Partial<Record<SecaoPainel, number>> = {
+    revisao: pendencias.revisao,
     organizadores: pendencias.organizadores,
     comentarios: pendencias.comentarios,
   };

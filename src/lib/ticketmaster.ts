@@ -145,7 +145,6 @@ export async function syncTicketmaster(): Promise<{ ok: true; upserted: number }
         gratuito,
         tags,
         linkSaibaMais: item.url,
-        status: "publicado",
       },
     });
     syncedIds.push(item.id);
