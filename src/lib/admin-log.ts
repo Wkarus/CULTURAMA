@@ -28,6 +28,9 @@ export const ACOES_LOG = {
   "anuncio.editar": "Editou anúncio",
   "anuncio.alternar": "Ativou/pausou anúncio",
   "comentario.ocultar": "Ocultou comentário",
+  "denuncia.descartar": "Descartou denúncia",
+  "denuncia.despublicar": "Despublicou evento por denúncia",
+  "denuncia.remover_comentario": "Removeu comentário por denúncia",
   "ticketmaster.sincronizar": "Sincronizou Ticketmaster",
 } as const;
 

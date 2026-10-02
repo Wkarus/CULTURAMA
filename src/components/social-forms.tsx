@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Check, Loader2, type LucideIcon } from "lucide-react";
+import type { DenunciaMotivo } from "@prisma/client";
+import { Check, Flag, Loader2, type LucideIcon } from "lucide-react";
 import type { FormState } from "@/actions/auth";
-import { comentarEvento, denunciarComentario, salvarInteresses, toggleFavorite } from "@/actions/social";
+import { comentarEvento, denunciarComentario, denunciarEvento, salvarInteresses, toggleFavorite } from "@/actions/social";
+import { MOTIVOS_DENUNCIA } from "@/lib/denuncias";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { montarArvore, normalizarInteresses, type CategoriaBase, type MaeComFilhas } from "@/lib/categorias-arvore";
@@ -246,22 +248,77 @@ export function ComentarioForm({ eventId }: { eventId: string }) {
   );
 }
 
-export function DenunciaForm({ commentId }: { commentId: string }) {
-  const [state, action] = useFormState(denunciarComentario, {} as FormState);
+const MOTIVOS = Object.entries(MOTIVOS_DENUNCIA) as [DenunciaMotivo, string][];
+
+export function DenunciaForm({ alvo, id }: { alvo: "evento" | "comentario"; id: string }) {
+  const [state, action] = useFormState(alvo === "evento" ? denunciarEvento : denunciarComentario, {} as FormState);
+  const [aberto, setAberto] = useState(false);
+  const [motivo, setMotivo] = useState<DenunciaMotivo | "">("");
+  const titulo = alvo === "evento" ? "Denunciar evento" : "Denunciar comentário";
+
+  if (state.ok) {
+    return (
+      <p role="status" className="mt-3 flex items-center gap-1.5 text-caption text-muted-foreground">
+        <Check className="size-4" aria-hidden />
+        Denúncia enviada. A moderação vai olhar.
+      </p>
+    );
+  }
+
+  if (!aberto) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAberto(true)}
+        className="link-quiet mt-3 inline-flex w-fit items-center gap-1.5 text-caption text-muted-foreground"
+      >
+        <Flag className="size-3.5" aria-hidden />
+        {titulo}
+      </button>
+    );
+  }
+
   return (
-    <form action={action} className="mt-2 grid gap-2">
-      <input type="hidden" name="commentId" value={commentId} />
-      {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-      {state.ok ? <p className="text-sm">Denúncia enviada ao admin.</p> : null}
-      <input
-        name="motivo"
-        required
-        placeholder="Motivo da denúncia"
-        className="h-9 rounded-pill border border-input bg-card px-3 text-sm"
-      />
-      <Button type="submit" variant="outline" size="sm">
-        Denunciar
-      </Button>
+    <form action={action} className="mt-3 grid gap-3 rounded-card border border-input p-4">
+      <input type="hidden" name={alvo === "evento" ? "eventId" : "commentId"} value={id} />
+      <fieldset className="grid gap-2">
+        <legend className="mb-1 text-sm font-medium">{titulo}: qual o problema?</legend>
+        {MOTIVOS.map(([valor, rotulo]) => (
+          <label key={valor} className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              name="motivo"
+              value={valor}
+              required
+              checked={motivo === valor}
+              onChange={() => setMotivo(valor)}
+              className="size-4 accent-[var(--color-accent-to)]"
+            />
+            {rotulo}
+          </label>
+        ))}
+      </fieldset>
+      <label className="grid gap-1.5 text-sm">
+        {motivo === "outro" ? "Conte o que está errado" : "Detalhes (opcional)"}
+        <textarea
+          name="texto"
+          rows={2}
+          maxLength={500}
+          required={motivo === "outro"}
+          className="w-full rounded-card border border-input bg-card px-3 py-2 text-sm"
+        />
+      </label>
+      {state.error ? (
+        <p role="alert" className="text-sm text-destructive">
+          {state.error}
+        </p>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <Submit label="Enviar denúncia" />
+        <Button type="button" variant="ghost" onClick={() => setAberto(false)}>
+          Cancelar
+        </Button>
+      </div>
     </form>
   );
 }

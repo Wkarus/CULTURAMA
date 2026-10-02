@@ -52,6 +52,19 @@ enum RevisaoResultado {
   ajuste
 }
 
+enum DenunciaMotivo {
+  falso
+  improprio
+  ja_aconteceu
+  outro
+}
+
+enum DenunciaStatus {
+  aberta
+  descartada
+  resolvida
+}
+
 enum AdSlotTipo {
   banner_home
   banner_categoria
@@ -70,26 +83,28 @@ model User {
   criadoEm            DateTime  @default(now()) @map("criado_em")
   suspensoEm          DateTime? @map("suspenso_em")
 
-  organizer Organizer?
-  favorites Favorite[]
-  comments  Comment[]
-  commentReports CommentReport[]
-  adminLogs      AdminLog[]
+  organizer           Organizer?
+  favorites           Favorite[]
+  comments            Comment[]
+  commentReports      CommentReport[]
+  adminLogs           AdminLog[]
+  denuncias           Denuncia[]      @relation("denunciante")
+  denunciasResolvidas Denuncia[]      @relation("resolvedor")
 
   @@map("users")
 }
 
 model Organizer {
-  id                String             @id @default(cuid())
-  userId            String             @unique @map("user_id")
-  nomeEmpresa       String             @map("nome_empresa")
+  id                String            @id @default(cuid())
+  userId            String            @unique @map("user_id")
+  nomeEmpresa       String            @map("nome_empresa")
   documento         String
-  tipoDocumento     TipoDocumento      @map("tipo_documento")
-  statusVerificacao StatusVerificacao  @default(pendente) @map("status_verificacao")
-  dataVerificacao   DateTime?          @map("data_verificacao")
-  documentoUrl      String             @map("documento_url")
+  tipoDocumento     TipoDocumento     @map("tipo_documento")
+  statusVerificacao StatusVerificacao @default(pendente) @map("status_verificacao")
+  dataVerificacao   DateTime?         @map("data_verificacao")
+  documentoUrl      String            @map("documento_url")
   /// Suspenso: eventos somem do site público até reativar.
-  suspensoEm        DateTime?          @map("suspenso_em")
+  suspensoEm        DateTime?         @map("suspenso_em")
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   events Event[]
@@ -98,26 +113,26 @@ model Organizer {
 }
 
 model Event {
-  id             String         @id @default(cuid())
-  organizerId    String?        @map("organizer_id")
-  fonte          EventFonte
-  idExterno      String?        @unique @map("id_externo")
-  titulo         String
-  descricao      String
-  categoriaId    String?        @map("categoria_id")
-  dataHora       DateTime       @map("data_hora")
-  endereco       String
-  latitude       Float
-  longitude      Float
-  imagemCapa     String?        @map("imagem_capa")
-  linkIngresso   String?        @map("link_ingresso")
-  gratuito       Boolean        @default(false)
-  tags           String[]
-  restricaoIdade RestricaoIdade @map("restricao_idade")
-  linkSaibaMais  String?        @map("link_saiba_mais")
-  notaAdmin      String?        @map("nota_admin")
-  status         EventStatus    @default(rascunho)
-  destaque       Boolean        @default(false)
+  id                  String            @id @default(cuid())
+  organizerId         String?           @map("organizer_id")
+  fonte               EventFonte
+  idExterno           String?           @unique @map("id_externo")
+  titulo              String
+  descricao           String
+  categoriaId         String?           @map("categoria_id")
+  dataHora            DateTime          @map("data_hora")
+  endereco            String
+  latitude            Float
+  longitude           Float
+  imagemCapa          String?           @map("imagem_capa")
+  linkIngresso        String?           @map("link_ingresso")
+  gratuito            Boolean           @default(false)
+  tags                String[]
+  restricaoIdade      RestricaoIdade    @map("restricao_idade")
+  linkSaibaMais       String?           @map("link_saiba_mais")
+  notaAdmin           String?           @map("nota_admin")
+  status              EventStatus       @default(rascunho)
+  destaque            Boolean           @default(false)
   /// Motivo de recusa ou pedido de ajuste da revisão; aparece para o organizador em /conta/eventos.
   mensagemOrganizador String?           @map("mensagem_organizador")
   revisaoResultado    RevisaoResultado? @map("revisao_resultado")
@@ -127,6 +142,7 @@ model Event {
   category  Category?  @relation(fields: [categoriaId], references: [id])
   favorites Favorite[]
   comments  Comment[]
+  denuncias Denuncia[]
 
   @@map("events")
 }
@@ -168,11 +184,38 @@ model Comment {
   oculto   Boolean  @default(false)
   criadoEm DateTime @default(now()) @map("criado_em")
 
-  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event   Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  reports CommentReport[]
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reports   CommentReport[]
+  denuncias Denuncia[]
 
   @@map("comments")
+}
+
+/// Denúncia de evento OU de comentário (CHECK no banco garante exatamente um alvo).
+model Denuncia {
+  id             String         @id @default(cuid())
+  userId         String         @map("user_id")
+  eventId        String?        @map("event_id")
+  commentId      String?        @map("comment_id")
+  motivo         DenunciaMotivo
+  texto          String?
+  status         DenunciaStatus @default(aberta)
+  criadoEm       DateTime       @default(now()) @map("criado_em")
+  resolvidoEm    DateTime?      @map("resolvido_em")
+  resolvidoPorId String?        @map("resolvido_por_id")
+  /// descartar | despublicar | remover_comentario
+  resolucao      String?
+
+  user         User     @relation("denunciante", fields: [userId], references: [id], onDelete: Cascade)
+  event        Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  comment      Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  resolvidoPor User?    @relation("resolvedor", fields: [resolvidoPorId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, eventId])
+  @@unique([userId, commentId])
+  @@index([status, criadoEm])
+  @@map("denuncias")
 }
 
 model CommentReport {

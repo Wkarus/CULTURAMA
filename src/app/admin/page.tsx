@@ -73,7 +73,7 @@ export default async function AdminHomePage() {
     prisma.event.count({ where: { status: "publicado" } }),
     prisma.event.count({ where: { status: "em_revisao" } }),
     prisma.organizer.count({ where: { statusVerificacao: "pendente" } }),
-    prisma.comment.count({ where: { oculto: false, reports: { some: {} } } }),
+    prisma.denuncia.count({ where: { status: "aberta" } }),
     prisma.user.count(),
     prisma.user.count({ where: { criadoEm: { gte: new Date(agora.getTime() - SETE_DIAS) } } }),
     prisma.adSlot.count({ where: { ativo: true, dataInicio: { lte: agora }, dataFim: { gte: agora } } }),
@@ -114,8 +114,8 @@ export default async function AdminHomePage() {
     { rotulo: "Eventos publicados", valor: eventosPublicados, href: "/admin/eventos" },
     { rotulo: "Em revisão", valor: emRevisao, href: "/admin/revisao", destaque: emRevisao > 0 },
     { rotulo: "Organizadores pendentes", valor: organizadoresPendentes, href: "/admin/organizadores", destaque: organizadoresPendentes > 0 },
-    { rotulo: "Comentários denunciados", valor: denunciasAbertas, href: "/admin/comentarios", destaque: denunciasAbertas > 0 },
-    { rotulo: "Usuários", valor: usuarios, detalhe: `+${usuariosNovos} em 7 dias` },
+    { rotulo: "Denúncias abertas", valor: denunciasAbertas, href: "/admin/denuncias", destaque: denunciasAbertas > 0 },
+    { rotulo: "Usuários", valor: usuarios, href: "/admin/usuarios", detalhe: `+${usuariosNovos} em 7 dias` },
     { rotulo: "Anúncios no ar", valor: anunciosNoAr, href: "/admin/anuncios" },
   ];
 

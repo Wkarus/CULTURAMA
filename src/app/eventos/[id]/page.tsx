@@ -102,9 +102,10 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
                 <Link href={`/login?callbackUrl=/eventos/${event.id}`} className="link-quiet">
                   Entre
                 </Link>{" "}
-                para favoritar e comentar.
+                para favoritar, comentar ou denunciar.
               </p>
             )}
+            {session?.user?.id && !isOwner && !foraDoAr ? <DenunciaForm alvo="evento" id={event.id} /> : null}
           </div>
         </aside>
       </div>
@@ -134,7 +135,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
                   {item.user.nome} · nota {item.nota}
                 </p>
                 <p className="mt-3 whitespace-pre-wrap text-body-lg">{item.texto}</p>
-                {session?.user?.id && session.user.id !== item.userId ? <DenunciaForm commentId={item.id} /> : null}
+                {session?.user?.id && session.user.id !== item.userId ? <DenunciaForm alvo="comentario" id={item.id} /> : null}
               </li>
             ))}
           </ul>
