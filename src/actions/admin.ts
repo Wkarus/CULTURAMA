@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { FormState } from "@/actions/auth";
 import { requireAdmin, requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
+import { linkSeguro } from "@/lib/anuncios";
 import { prisma } from "@/lib/prisma";
 import { syncTicketmaster } from "@/lib/ticketmaster";
 import { salvarImagem } from "@/lib/upload";
@@ -90,6 +91,9 @@ export async function salvarAnuncio(_prev: FormState, formData: FormData): Promi
 
   if (!AD_TIPOS.has(tipo) || !patrocinador || !link || !inicioRaw || !fimRaw) {
     return { error: "Preencha tipo, patrocinador, link e o período." };
+  }
+  if (!linkSeguro(link)) {
+    return { error: "O link precisa começar com https:// ou http://." };
   }
 
   const dataInicio = new Date(inicioRaw);

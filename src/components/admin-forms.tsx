@@ -81,7 +81,7 @@ export function AnuncioForm({ slot }: { slot?: AdSlot }) {
   return (
     <form action={action} className="grid gap-4">
       {slot ? <input type="hidden" name="id" value={slot.id} /> : null}
-      <Mensagem state={state} sucesso="Anúncio salvo. Ele ainda não aparece no site (Fase 6)." />
+      <Mensagem state={state} sucesso="Anúncio salvo. Banner da home entra no ar quando estiver ativo e dentro do período." />
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={rotuloAdmin}>
           Tipo

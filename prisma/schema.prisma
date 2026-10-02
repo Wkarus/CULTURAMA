@@ -241,6 +241,9 @@ model AdSlot {
   dataInicio   DateTime   @map("data_inicio")
   dataFim      DateTime   @map("data_fim")
   ativo        Boolean    @default(false)
+  /// Contados no servidor: exibição ao renderizar, clique em /api/anuncios/[id].
+  exibicoes    Int        @default(0)
+  cliques      Int        @default(0)
 
   @@map("ad_slots")
 }

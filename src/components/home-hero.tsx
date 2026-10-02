@@ -25,8 +25,10 @@ type HomeHeroProps = {
   nomes: string[];
   capas: CapaHero[];
   locais: string[];
-  patrocinadores: string[];
+  patrocinadores: Patrocinador[];
 };
+
+type Patrocinador = { nome: string; href: string };
 
 const MOTION_FINE = "(pointer: fine) and (prefers-reduced-motion: no-preference)";
 const TROCA_LOCAL_MS = 2200;
@@ -267,7 +269,7 @@ function LinhaDeApoio({ locais, reduce }: { locais: string[]; reduce: boolean })
   );
 }
 
-function FaixaPatrocinadores({ nomes, reduce }: { nomes: string[]; reduce: boolean }) {
+function FaixaPatrocinadores({ nomes, reduce }: { nomes: Patrocinador[]; reduce: boolean }) {
   const janelaRef = useRef<HTMLDivElement>(null);
   const listaRef = useRef<HTMLUListElement>(null);
   const [cabe, setCabe] = useState(true);
@@ -290,12 +292,17 @@ function FaixaPatrocinadores({ nomes, reduce }: { nomes: string[]; reduce: boole
       className={cn("flex shrink-0 items-center gap-10", marquee && "pr-10")}
       aria-hidden={oculto || undefined}
     >
-      {nomes.map((nome) => (
-        <li
-          key={nome}
-          className="whitespace-nowrap font-display text-sm font-semibold uppercase tracking-[0.18em] text-muted-on-dark hover:text-on-dark"
-        >
-          {nome}
+      {nomes.map(({ nome, href }) => (
+        <li key={nome}>
+          <a
+            href={href}
+            target="_blank"
+            rel="sponsored noopener"
+            tabIndex={oculto ? -1 : undefined}
+            className="whitespace-nowrap rounded-sm font-display text-sm font-semibold uppercase tracking-[0.18em] text-muted-on-dark outline-none transition-colors hover:text-on-dark focus-visible:text-on-dark focus-visible:ring-2 focus-visible:ring-accent-hover"
+          >
+            {nome}
+          </a>
         </li>
       ))}
     </ul>
@@ -304,12 +311,14 @@ function FaixaPatrocinadores({ nomes, reduce }: { nomes: string[]; reduce: boole
   return (
     <div className="relative z-10 border-t" style={{ borderColor: mix("var(--color-on-dark)", 10) }}>
       <div className="mx-auto flex max-w-page items-center gap-6 px-4 py-4">
-        <span className="shrink-0 text-caption text-muted-on-dark">Apoio de</span>
-        <p className="sr-only">{nomes.join(", ")}</p>
+        <span id="apoio-de" className="shrink-0 text-caption text-muted-on-dark">
+          Apoio de
+        </span>
         <div
           ref={janelaRef}
+          role="group"
+          aria-labelledby="apoio-de"
           className={cn("min-w-0 flex-1 [scrollbar-width:none]", marquee ? "overflow-hidden" : "overflow-x-auto")}
-          aria-hidden
         >
           <div
             className={cn("flex w-max", marquee && "hero-marquee-track hover:[animation-play-state:paused]")}

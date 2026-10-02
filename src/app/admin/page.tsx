@@ -5,6 +5,7 @@ import { focoAdmin, painelAdmin } from "@/components/admin/estilos";
 import { GraficoCategorias, type FatiaCategoria } from "@/components/admin/grafico-categorias";
 import { SincronizarTicketmaster } from "@/components/admin/sincronizar-ticketmaster";
 import { requireSecao } from "@/lib/admin";
+import { formatarCtr } from "@/lib/anuncios";
 import { ensureCategorias } from "@/lib/categorias";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,7 @@ export default async function AdminHomePage() {
     topFavoritos,
     ultimaSync,
     ticketmasterPublicados,
+    metricasAnuncios,
   ] = await Promise.all([
     prisma.event.count({ where: { status: "publicado" } }),
     prisma.event.count({ where: { status: "em_revisao" } }),
@@ -88,7 +90,10 @@ export default async function AdminHomePage() {
     }),
     prisma.adminLog.findFirst({ where: { acao: "ticketmaster.sincronizar" }, orderBy: { criadoEm: "desc" } }),
     prisma.event.count({ where: { fonte: "ticketmaster", status: "publicado" } }),
+    prisma.adSlot.aggregate({ _sum: { exibicoes: true, cliques: true } }),
   ]);
+  const exibicoes = metricasAnuncios._sum.exibicoes ?? 0;
+  const cliques = metricasAnuncios._sum.cliques ?? 0;
 
   const porId = new Map(categorias.map((c) => [c.id, c]));
   const somaPorMae = new Map<string, number>();
@@ -116,7 +121,12 @@ export default async function AdminHomePage() {
     { rotulo: "Organizadores pendentes", valor: organizadoresPendentes, href: "/admin/organizadores", destaque: organizadoresPendentes > 0 },
     { rotulo: "Denúncias abertas", valor: denunciasAbertas, href: "/admin/denuncias", destaque: denunciasAbertas > 0 },
     { rotulo: "Usuários", valor: usuarios, href: "/admin/usuarios", detalhe: `+${usuariosNovos} em 7 dias` },
-    { rotulo: "Anúncios no ar", valor: anunciosNoAr, href: "/admin/anuncios" },
+    {
+      rotulo: "Anúncios no ar",
+      valor: anunciosNoAr,
+      href: "/admin/anuncios",
+      detalhe: exibicoes > 0 ? `CTR ${formatarCtr(exibicoes, cliques)} em ${exibicoes.toLocaleString("pt-BR")} exibições` : undefined,
+    },
   ];
 
   return (

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "ad_slots" ADD COLUMN     "cliques" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "exibicoes" INTEGER NOT NULL DEFAULT 0;
