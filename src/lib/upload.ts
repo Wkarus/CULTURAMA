@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-import { enviarArquivo, storageConfigurado, urlPublica } from "@/lib/storage";
+import { PREFIXO_PRIVADO, enviarArquivo, storageConfigurado, urlPublica } from "@/lib/storage";
 
 const ALLOWED = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -24,6 +24,19 @@ export async function salvarImagem(file: File): Promise<Resultado> {
   const enviado = await enviarArquivo("capas", file, file.type.split("/")[1]);
   if (!enviado.ok) return enviado;
   return { ok: true, url: urlPublica("capas", enviado.caminho) };
+}
+
+/** Documento do organizador: bucket privado `documentos`, gravado como `storage:documentos/<caminho>` e aberto só por URL assinada. */
+export async function salvarDocumento(file: File): Promise<Resultado> {
+  if (!storageConfigurado()) return saveDocumentoLocal(file);
+  if (!file || file.size === 0) return { ok: false, message: "Envie um arquivo do documento (PDF ou imagem)." };
+  if (file.size > MAX_BYTES) return { ok: false, message: "Arquivo maior que 5 MB." };
+  if (!ALLOWED.has(file.type)) return { ok: false, message: "Formato inválido. Use PDF, JPG, PNG ou WebP." };
+
+  const ext = file.type === "application/pdf" ? "pdf" : file.type.split("/")[1];
+  const enviado = await enviarArquivo("documentos", file, ext);
+  if (!enviado.ok) return enviado;
+  return { ok: true, url: `${PREFIXO_PRIVADO}${enviado.caminho}` };
 }
 
 export async function saveImagemLocal(file: File): Promise<Resultado> {

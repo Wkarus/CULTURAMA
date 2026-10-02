@@ -321,7 +321,15 @@ export function CadastroForm() {
   );
 }
 
-export function LoginForm({ callbackUrl, googleErro }: { callbackUrl: string; googleErro?: boolean }) {
+export function LoginForm({
+  callbackUrl,
+  googleErro,
+  contaSuspensa,
+}: {
+  callbackUrl: string;
+  googleErro?: boolean;
+  contaSuspensa?: boolean;
+}) {
   const [state, action] = useFormState(loginUsuario, {});
   const { erro, eventos } = useErrosDeCampo(state, ERROS_LOGIN);
 
@@ -330,6 +338,11 @@ export function LoginForm({ callbackUrl, googleErro }: { callbackUrl: string; go
       {googleErro ? (
         <div className="mb-4">
           <AvisoTopo texto="Login com Google ainda não está configurado. Coloque AUTH_GOOGLE_ID e AUTH_GOOGLE_SECRET no .env." />
+        </div>
+      ) : null}
+      {contaSuspensa ? (
+        <div className="mb-4">
+          <AvisoTopo texto="Esta conta está suspensa. Fale com a equipe do Culturama." />
         </div>
       ) : null}
       <BlocoGoogle callbackUrl={callbackUrl} />

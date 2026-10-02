@@ -18,13 +18,13 @@ export async function getUsuarioPainel(papeis: PapelPainel[] = EQUIPE): Promise<
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, nome: true, email: true, tipo: true },
+    select: { id: true, nome: true, email: true, tipo: true, suspensoEm: true },
   });
-  if (!user) return null;
+  if (!user || user.suspensoEm) return null;
   const { tipo } = user;
   if (!ehPapelPainel(tipo) || !papeis.includes(tipo)) return null;
 
-  return { ...user, tipo };
+  return { id: user.id, nome: user.nome, email: user.email, tipo };
 }
 
 export async function requireRole(papeis: PapelPainel[], callbackUrl = "/admin"): Promise<UsuarioPainel> {

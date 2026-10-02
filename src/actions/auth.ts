@@ -1,6 +1,6 @@
 "use server";
 
-import { hash } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { signIn, signOut, unstable_update } from "@/auth";
@@ -71,6 +71,10 @@ export async function loginUsuario(_prev: FormState, formData: FormData): Promis
     await signIn("credentials", { email, password, redirectTo: callbackUrl });
   } catch (error) {
     if (error instanceof AuthError) {
+      const conta = await prisma.user.findUnique({ where: { email }, select: { senhaHash: true, suspensoEm: true } });
+      if (conta?.suspensoEm && conta.senhaHash && (await compare(password, conta.senhaHash))) {
+        return { error: "Esta conta está suspensa. Fale com a equipe do Culturama." };
+      }
       return { error: "E-mail ou senha inválidos." };
     }
     throw error;

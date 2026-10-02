@@ -106,7 +106,7 @@ export async function capasDecorativas(quantidade = 3): Promise<{ id: string; im
 }
 
 export async function getOrganizerForUser(userId: string) {
-  return prisma.organizer.findUnique({ where: { userId } });
+  return prisma.organizer.findUnique({ where: { userId }, include: { user: { select: { suspensoEm: true } } } });
 }
 
 export function podePublicar(statusVerificacao: string): boolean {

@@ -14,12 +14,13 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
   const session = await auth();
   const event = await prisma.event.findUnique({
     where: { id: params.id },
-    include: { category: true, organizer: true },
+    include: { category: true, organizer: { include: { user: { select: { suspensoEm: true } } } } },
   });
   if (!event) notFound();
 
   const isOwner = Boolean(session?.user?.id && event.organizer?.userId === session.user.id);
-  if (event.status !== "publicado" && !isOwner && !(await getUsuarioPainel())) notFound();
+  const foraDoAr = event.status !== "publicado" || Boolean(event.organizer?.suspensoEm || event.organizer?.user.suspensoEm);
+  if (foraDoAr && !isOwner && !(await getUsuarioPainel())) notFound();
 
   const data = formatEventoQuando(event.dataHora);
   const dataLonga = event.dataHora.toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" });

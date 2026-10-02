@@ -14,6 +14,9 @@ async function requireOrganizer() {
   if (!session?.user?.id) return { error: "Entre na sua conta." as const };
   const organizer = await getOrganizerForUser(session.user.id);
   if (!organizer) return { error: "Cadastre-se como organizador primeiro." as const };
+  if (organizer.suspensoEm || organizer.user.suspensoEm) {
+    return { error: "Seu cadastro de organizador está suspenso. Fale com a equipe do Culturama." as const };
+  }
   return { organizer };
 }
 

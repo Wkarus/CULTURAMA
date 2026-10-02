@@ -7,6 +7,7 @@ import { InteressesForm } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
 import { inicioDoPainel } from "@/lib/admin-permissoes";
 import { ensureCategorias } from "@/lib/categorias";
+import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { iniciais, visualCategoria } from "@/lib/perfil";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -62,7 +63,7 @@ export default async function ContaPage() {
     redirect("/login");
   }
 
-  const favoritosPublicados = { userId: user.id, event: { status: "publicado" as const } };
+  const favoritosPublicados = { userId: user.id, event: EVENTO_PUBLICO };
   const [categorias, totalFavoritos, favoritos, eventosPublicados] = await Promise.all([
     ensureCategorias(),
     prisma.favorite.count({ where: favoritosPublicados }),

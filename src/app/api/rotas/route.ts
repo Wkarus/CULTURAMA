@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { isRotaOk, stripHtmlInstrucao, type ModoRota, type PassoRota, type RotaModo } from "@/lib/directions";
+import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { hasValidCoords } from "@/lib/geo";
 import { prisma } from "@/lib/prisma";
 
@@ -150,7 +151,7 @@ export async function POST(request: Request) {
   }
 
   const event = await prisma.event.findFirst({
-    where: { id: parsed.data.eventId, status: "publicado" },
+    where: { id: parsed.data.eventId, ...EVENTO_PUBLICO },
     select: { latitude: true, longitude: true },
   });
   if (!event || !hasValidCoords(event.latitude, event.longitude)) {

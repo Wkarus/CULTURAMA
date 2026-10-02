@@ -68,6 +68,7 @@ model User {
   dataNascimento      DateTime? @map("data_nascimento")
   aceitePrivacidadeEm DateTime? @map("aceite_privacidade_em")
   criadoEm            DateTime  @default(now()) @map("criado_em")
+  suspensoEm          DateTime? @map("suspenso_em")
 
   organizer Organizer?
   favorites Favorite[]
@@ -87,6 +88,8 @@ model Organizer {
   statusVerificacao StatusVerificacao  @default(pendente) @map("status_verificacao")
   dataVerificacao   DateTime?          @map("data_verificacao")
   documentoUrl      String             @map("documento_url")
+  /// Suspenso: eventos somem do site público até reativar.
+  suspensoEm        DateTime?          @map("suspenso_em")
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   events Event[]

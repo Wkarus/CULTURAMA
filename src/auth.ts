@@ -26,7 +26,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           where: { email },
           include: { organizer: true },
         });
-        if (!user?.senhaHash) return null;
+        if (!user?.senhaHash || user.suspensoEm) return null;
 
         const ok = await compare(password, user.senhaHash);
         if (!ok) return null;
@@ -46,6 +46,13 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
+    async signIn({ account, user, profile }) {
+      if (account?.provider !== "google") return true;
+      const email = String(user?.email ?? profile?.email ?? "").toLowerCase();
+      if (!email) return true;
+      const existente = await prisma.user.findUnique({ where: { email }, select: { suspensoEm: true } });
+      return existente?.suspensoEm ? "/login?erro=suspensa" : true;
+    },
     async jwt({ token, user, account, profile, trigger, session }) {
       if (trigger === "update") {
         if (session?.user?.needsCompletion === false) {

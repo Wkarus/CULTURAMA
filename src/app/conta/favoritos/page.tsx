@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EventCard } from "@/components/event-card";
+import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
 export default async function FavoritosPage() {
@@ -9,7 +10,7 @@ export default async function FavoritosPage() {
   if (!session?.user?.id) redirect("/login?callbackUrl=/conta/favoritos");
 
   const rows = await prisma.favorite.findMany({
-    where: { userId: session.user.id, event: { status: "publicado" } },
+    where: { userId: session.user.id, event: EVENTO_PUBLICO },
     include: { event: { include: { category: true } } },
     orderBy: { event: { dataHora: "asc" } },
   });

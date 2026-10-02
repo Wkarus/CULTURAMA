@@ -18,7 +18,9 @@ export default async function LoginPage({
         </>
       }
     >
-      <LoginForm callbackUrl={searchParams.callbackUrl ?? "/conta"} googleErro={searchParams.erro === "google"} />
+      <LoginForm callbackUrl={searchParams.callbackUrl ?? "/conta"} googleErro={searchParams.erro === "google"}
+        contaSuspensa={searchParams.erro === "suspensa"}
+      />
       <AuthTroca pergunta="Ainda não tem conta?" href="/cadastro" acao="Criar conta" />
     </AuthShell>
   );

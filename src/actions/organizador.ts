@@ -4,7 +4,7 @@ import { auth, unstable_update } from "@/auth";
 import { lookupCnpj, normalizeCnpj } from "@/lib/cnpj";
 import { isValidCpf, normalizeCpf } from "@/lib/cpf";
 import { prisma } from "@/lib/prisma";
-import { saveDocumentoLocal } from "@/lib/upload";
+import { salvarDocumento } from "@/lib/upload";
 import type { FormState } from "@/actions/auth";
 
 export async function cadastrarOrganizador(_prev: FormState, formData: FormData): Promise<FormState> {
@@ -54,7 +54,7 @@ export async function cadastrarOrganizador(_prev: FormState, formData: FormData)
     dataVerificacao = new Date();
   }
 
-  const saved = await saveDocumentoLocal(arquivo);
+  const saved = await salvarDocumento(arquivo);
   if (!saved.ok) {
     return { error: saved.message };
   }

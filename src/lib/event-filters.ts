@@ -37,6 +37,14 @@ export function normalizeSearchParams(params: Record<string, string | string[] |
   };
 }
 
+/** Publicado e sem organizador suspenso. Eventos da equipe e da Ticketmaster não têm organizador. */
+export const EVENTO_PUBLICO = {
+  status: "publicado",
+  NOT: {
+    organizer: { is: { OR: [{ suspensoEm: { not: null } }, { user: { is: { suspensoEm: { not: null } } } }] } },
+  },
+} satisfies Prisma.EventWhereInput;
+
 /** `categoriaIds` vem de `idsDaCategoria`: a mãe já chega expandida com as filhas. */
 export function eventWhereFromParams(params: EventSearchParams, categoriaIds?: string[] | null): Prisma.EventWhereInput {
   const agora = new Date();
@@ -45,7 +53,7 @@ export function eventWhereFromParams(params: EventSearchParams, categoriaIds?: s
   const inicio = de && de > agora ? de : agora;
 
   return {
-    status: "publicado",
+    ...EVENTO_PUBLICO,
     ...(categoriaIds ? { categoriaId: { in: categoriaIds } } : {}),
     dataHora: {
       gte: inicio,

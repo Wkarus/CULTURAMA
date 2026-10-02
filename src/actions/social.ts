@@ -7,11 +7,14 @@ import { getUsuarioPainel } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
 import { ensureCategorias } from "@/lib/categorias";
 import { normalizarInteresses } from "@/lib/categorias-arvore";
+import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
 async function requireUser() {
   const session = await auth();
   if (!session?.user?.id) return null;
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { suspensoEm: true } });
+  if (!user || user.suspensoEm) return null;
   return session.user.id;
 }
 
@@ -19,7 +22,7 @@ export async function toggleFavorite(eventId: string): Promise<FormState> {
   const userId = await requireUser();
   if (!userId) return { error: "Entre na conta para favoritar." };
 
-  const event = await prisma.event.findFirst({ where: { id: eventId, status: "publicado" }, select: { id: true } });
+  const event = await prisma.event.findFirst({ where: { id: eventId, ...EVENTO_PUBLICO }, select: { id: true } });
   if (!event) return { error: "Evento não encontrado." };
 
   const existing = await prisma.favorite.findUnique({ where: { userId_eventId: { userId, eventId } } });
@@ -62,7 +65,7 @@ export async function comentarEvento(_prev: FormState, formData: FormData): Prom
   if (!eventId || texto.length < 3) return { error: "Escreva um comentário com pelo menos 3 caracteres." };
   if (!Number.isInteger(nota) || nota < 1 || nota > 5) return { error: "A nota vai de 1 a 5." };
 
-  const event = await prisma.event.findFirst({ where: { id: eventId, status: "publicado" }, select: { id: true } });
+  const event = await prisma.event.findFirst({ where: { id: eventId, ...EVENTO_PUBLICO }, select: { id: true } });
   if (!event) return { error: "Evento não encontrado." };
 
   await prisma.comment.create({ data: { userId, eventId, texto: texto.slice(0, 500), nota } });
