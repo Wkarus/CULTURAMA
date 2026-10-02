@@ -9,7 +9,7 @@ export async function SiteHeader() {
     <SiteHeaderClient
       usuario={
         user
-          ? { nome: user.name ?? null, email: user.email ?? null, admin: user.tipo === "admin" }
+          ? { nome: user.name ?? null, email: user.email ?? null, admin: user.tipo === "admin" || user.tipo === "moderador" }
           : null
       }
     />

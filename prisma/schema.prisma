@@ -12,6 +12,7 @@ enum UserTipo {
   comum
   organizador
   admin
+  moderador
 }
 
 enum TipoDocumento {
@@ -66,6 +67,7 @@ model User {
   favorites Favorite[]
   comments  Comment[]
   commentReports CommentReport[]
+  adminLogs      AdminLog[]
 
   @@map("users")
 }
@@ -184,4 +186,23 @@ model AdSlot {
   ativo        Boolean    @default(false)
 
   @@map("ad_slots")
+}
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  autorId   String?  @map("autor_id")
+  /// Nome de quem agiu no momento da ação; fica mesmo se a conta for excluída.
+  autorNome String   @map("autor_nome")
+  acao      String
+  alvoTipo  String   @map("alvo_tipo")
+  alvoId    String?  @map("alvo_id")
+  detalhes  Json?
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  autor User? @relation(fields: [autorId], references: [id], onDelete: SetNull)
+
+  @@index([criadoEm])
+  @@index([autorId])
+  @@index([acao])
+  @@map("admin_logs")
 }

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ModeracaoForm } from "@/components/admin-forms";
+import { requireSecao } from "@/lib/admin";
 import { labelStatus } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminEventosPage() {
+  await requireSecao("eventos");
   const events = await prisma.event.findMany({
     include: { category: true, organizer: true },
     orderBy: { dataHora: "desc" },

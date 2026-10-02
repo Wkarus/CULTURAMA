@@ -1,8 +1,10 @@
 import { ocultarComentario } from "@/actions/social";
 import { Button } from "@/components/ui/button";
+import { requireSecao } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminComentariosPage() {
+  await requireSecao("comentarios");
   const reports = await prisma.commentReport.findMany({
     include: {
       user: { select: { nome: true, email: true } },

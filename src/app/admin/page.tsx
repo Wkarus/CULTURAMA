@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { requireSecao } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminHomePage() {
+  await requireSecao("visao-geral");
   const [pendentes, eventosPublicados, anunciosAtivos] = await Promise.all([
     prisma.organizer.count({ where: { statusVerificacao: "pendente" } }),
     prisma.event.count({ where: { status: "publicado" } }),

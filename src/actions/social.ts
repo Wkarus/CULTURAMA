@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import type { FormState } from "@/actions/auth";
+import { getUsuarioPainel } from "@/lib/admin";
+import { registrarLog } from "@/lib/admin-log";
 import { ensureCategorias } from "@/lib/categorias";
 import { normalizarInteresses } from "@/lib/categorias-arvore";
 import { prisma } from "@/lib/prisma";
@@ -92,14 +94,19 @@ export async function denunciarComentario(_prev: FormState, formData: FormData):
 }
 
 export async function ocultarComentario(commentId: string): Promise<FormState> {
-  const session = await auth();
-  if (session?.user?.tipo !== "admin") return { error: "Só o admin remove comentário." };
+  const autor = await getUsuarioPainel(["admin", "moderador"]);
+  if (!autor) return { error: "Só a equipe de moderação remove comentário." };
 
   const comment = await prisma.comment.findUnique({ where: { id: commentId } });
   if (!comment) return { error: "Comentário não encontrado." };
 
   await prisma.comment.update({ where: { id: commentId }, data: { oculto: true } });
+  await registrarLog(autor, "comentario.ocultar", "comentario", commentId, {
+    eventoId: comment.eventId,
+    texto: comment.texto.slice(0, 140),
+  });
   revalidatePath(`/eventos/${comment.eventId}`);
   revalidatePath("/admin/comentarios");
+  revalidatePath("/admin/historico");
   return { ok: true };
 }

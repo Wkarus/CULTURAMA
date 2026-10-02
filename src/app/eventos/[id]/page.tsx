@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { RotaPainel } from "@/components/rota-painel";
 import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
+import { getUsuarioPainel } from "@/lib/admin";
 import { formatEventoQuando, labelRestricao } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
 import { prisma } from "@/lib/prisma";
@@ -18,8 +19,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
   if (!event) notFound();
 
   const isOwner = Boolean(session?.user?.id && event.organizer?.userId === session.user.id);
-  const isAdmin = session?.user?.tipo === "admin";
-  if (event.status !== "publicado" && !isOwner && !isAdmin) notFound();
+  if (event.status !== "publicado" && !isOwner && !(await getUsuarioPainel())) notFound();
 
   const data = formatEventoQuando(event.dataHora);
   const dataLonga = event.dataHora.toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" });

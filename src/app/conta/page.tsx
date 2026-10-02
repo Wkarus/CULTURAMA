@@ -5,6 +5,7 @@ import { ArrowRight, CalendarPlus, Clock, Heart, Megaphone, ShieldCheck, Sparkle
 import { auth } from "@/auth";
 import { InteressesForm } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
+import { inicioDoPainel } from "@/lib/admin-permissoes";
 import { ensureCategorias } from "@/lib/categorias";
 import { iniciais, visualCategoria } from "@/lib/perfil";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,7 @@ const LINK_ACCENT = cn(
 
 function seloConta(tipo: UserTipo, organizer: Organizer | null): { rotulo: string; icone: LucideIcon } {
   if (tipo === "admin") return { rotulo: "Admin", icone: ShieldCheck };
+  if (tipo === "moderador") return { rotulo: "Moderação", icone: ShieldCheck };
   if (organizer?.statusVerificacao === "aprovado") return { rotulo: "Organizador", icone: Megaphone };
   if (organizer?.statusVerificacao === "pendente") return { rotulo: "Em análise", icone: Clock };
   return { rotulo: "Explorador", icone: Sparkles };
@@ -109,9 +111,9 @@ export default async function ContaPage() {
               ) : null}
             </dl>
 
-            {user.tipo === "admin" ? (
-              <Link href="/admin" className={cn(LINK_ACCENT, "mt-6")}>
-                Abrir painel admin
+            {user.tipo === "admin" || user.tipo === "moderador" ? (
+              <Link href={inicioDoPainel(user.tipo)} className={cn(LINK_ACCENT, "mt-6")}>
+                {user.tipo === "admin" ? "Abrir painel admin" : "Abrir painel de moderação"}
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
             ) : null}

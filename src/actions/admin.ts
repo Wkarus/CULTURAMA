@@ -3,7 +3,8 @@
 import type { AdSlotTipo, EventStatus, StatusVerificacao } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { FormState } from "@/actions/auth";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, requireRole } from "@/lib/admin";
+import { registrarLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma";
 import { saveImagemLocal } from "@/lib/upload";
 
@@ -15,12 +16,13 @@ function refreshAdmin() {
   revalidatePath("/admin/eventos");
   revalidatePath("/admin/organizadores");
   revalidatePath("/admin/anuncios");
+  revalidatePath("/admin/historico");
   revalidatePath("/eventos");
   revalidatePath("/mapa");
 }
 
 export async function moderarEvento(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireAdmin();
+  const autor = await requireRole(["admin", "moderador"]);
   const id = String(formData.get("id") ?? "");
   const status = String(formData.get("status") ?? "") as EventStatus;
   const notaAdmin = String(formData.get("notaAdmin") ?? "").trim() || null;
@@ -36,6 +38,12 @@ export async function moderarEvento(_prev: FormState, formData: FormData): Promi
     where: { id },
     data: { status, notaAdmin },
   });
+  await registrarLog(autor, "evento.moderar", "evento", id, {
+    titulo: existing.titulo,
+    statusAntes: existing.status,
+    status,
+    notaAlterada: (existing.notaAdmin ?? null) !== notaAdmin,
+  });
 
   revalidatePath(`/eventos/${id}`);
   refreshAdmin();
@@ -43,7 +51,7 @@ export async function moderarEvento(_prev: FormState, formData: FormData): Promi
 }
 
 export async function decidirOrganizador(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireAdmin();
+  const autor = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const decisao = String(formData.get("decisao") ?? "") as StatusVerificacao;
 
@@ -58,13 +66,18 @@ export async function decidirOrganizador(_prev: FormState, formData: FormData): 
     where: { id },
     data: { statusVerificacao: decisao, dataVerificacao: new Date() },
   });
+  await registrarLog(autor, "organizador.decidir", "organizador", id, {
+    nomeEmpresa: organizer.nomeEmpresa,
+    statusAntes: organizer.statusVerificacao,
+    status: decisao,
+  });
 
   refreshAdmin();
   return { ok: true };
 }
 
 export async function salvarAnuncio(_prev: FormState, formData: FormData): Promise<FormState> {
-  await requireAdmin();
+  const autor = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const tipo = String(formData.get("tipo") ?? "") as AdSlotTipo;
   const patrocinador = String(formData.get("patrocinador") ?? "").trim();
@@ -106,11 +119,18 @@ export async function salvarAnuncio(_prev: FormState, formData: FormData): Promi
         ...(imagem ? { imagem } : {}),
       },
     });
+    await registrarLog(autor, "anuncio.editar", "anuncio", id, {
+      patrocinador,
+      tipo,
+      ativo,
+      imagemTrocada: Boolean(imagem),
+    });
   } else {
     if (!imagem) return { error: "Envie a imagem do banner." };
-    await prisma.adSlot.create({
+    const criado = await prisma.adSlot.create({
       data: { tipo, patrocinador, imagem, link, dataInicio, dataFim, ativo },
     });
+    await registrarLog(autor, "anuncio.criar", "anuncio", criado.id, { patrocinador, tipo, ativo });
   }
 
   refreshAdmin();
@@ -118,10 +138,14 @@ export async function salvarAnuncio(_prev: FormState, formData: FormData): Promi
 }
 
 export async function alternarAnuncio(id: string): Promise<FormState> {
-  await requireAdmin();
+  const autor = await requireAdmin();
   const existing = await prisma.adSlot.findUnique({ where: { id } });
   if (!existing) return { error: "Anúncio não encontrado." };
   await prisma.adSlot.update({ where: { id }, data: { ativo: !existing.ativo } });
+  await registrarLog(autor, "anuncio.alternar", "anuncio", id, {
+    patrocinador: existing.patrocinador,
+    ativo: !existing.ativo,
+  });
   refreshAdmin();
   return { ok: true };
 }

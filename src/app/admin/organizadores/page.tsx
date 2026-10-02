@@ -1,7 +1,9 @@
 import { OrganizadorDecisao } from "@/components/admin-forms";
+import { requireSecao } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminOrganizadoresPage() {
+  await requireSecao("organizadores");
   const organizers = await prisma.organizer.findMany({
     include: { user: true },
     orderBy: { statusVerificacao: "asc" },

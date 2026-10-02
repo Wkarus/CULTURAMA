@@ -1,7 +1,9 @@
 import { AlternarAnuncioButton, AnuncioForm } from "@/components/admin-forms";
+import { requireSecao } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminAnunciosPage() {
+  await requireSecao("anuncios");
   const slots = await prisma.adSlot.findMany({ orderBy: { dataInicio: "desc" } });
 
   return (
