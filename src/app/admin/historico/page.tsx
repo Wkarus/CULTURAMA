@@ -1,11 +1,15 @@
 import type { Prisma } from "@prisma/client";
 import Link from "next/link";
+import { CabecalhoAdmin, Vazio } from "@/components/admin/cabecalho";
+import { botaoAdmin, campoAdmin, painelAdmin, rotuloAdmin } from "@/components/admin/estilos";
 import { requireSecao } from "@/lib/admin";
-import { ACOES_LOG, rotuloAcao } from "@/lib/admin-log";
+import { ACOES_LOG, AUTOR_CRON, rotuloAcao } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma";
+import { cn } from "@/lib/utils";
 
 const POR_PAGINA = 50;
 const FUSO = "-03:00";
+const AUTOR_SISTEMA = "sistema";
 
 type Params = { autor?: string; acao?: string; de?: string; ate?: string; pagina?: string };
 
@@ -31,7 +35,8 @@ export default async function AdminHistoricoPage({ searchParams }: { searchParam
 
   const pagina = Math.max(1, Number.parseInt(searchParams.pagina ?? "1", 10) || 1);
   const where: Prisma.AdminLogWhereInput = {};
-  if (searchParams.autor) where.autorId = searchParams.autor;
+  if (searchParams.autor === AUTOR_SISTEMA) where.autorId = null;
+  else if (searchParams.autor) where.autorId = searchParams.autor;
   if (searchParams.acao) where.acao = searchParams.acao;
   if (dataValida(searchParams.de) || dataValida(searchParams.ate)) {
     where.criadoEm = {
@@ -66,24 +71,28 @@ export default async function AdminHistoricoPage({ searchParams }: { searchParam
     const texto = query.toString();
     return texto ? `/admin/historico?${texto}` : "/admin/historico";
   };
+  const linkPaginacao = botaoAdmin("secundario", "sm");
 
   return (
-    <div className="grid gap-6">
-      <form className="grid gap-3 rounded-card bg-card p-4 shadow-card sm:grid-cols-[1fr_1fr_auto_auto_auto] sm:items-end">
-        <label className="grid gap-1 text-sm">
+    <>
+      <CabecalhoAdmin titulo="Histórico" descricao="Tudo o que a equipe fez no painel, com quem, quando e em quê." />
+
+      <form className={cn(painelAdmin, "grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto_auto] lg:items-end")}>
+        <label className={rotuloAdmin}>
           Pessoa
-          <select name="autor" defaultValue={searchParams.autor ?? ""} className="rounded-control border bg-background px-3 py-2">
+          <select name="autor" defaultValue={searchParams.autor ?? ""} className={campoAdmin}>
             <option value="">Todas</option>
             {autores.map((autor) => (
               <option key={autor.autorId} value={autor.autorId ?? ""}>
                 {autor.autorNome}
               </option>
             ))}
+            <option value={AUTOR_SISTEMA}>{AUTOR_CRON}</option>
           </select>
         </label>
-        <label className="grid gap-1 text-sm">
+        <label className={rotuloAdmin}>
           Ação
-          <select name="acao" defaultValue={searchParams.acao ?? ""} className="rounded-control border bg-background px-3 py-2">
+          <select name="acao" defaultValue={searchParams.acao ?? ""} className={campoAdmin}>
             <option value="">Todas</option>
             {Object.entries(ACOES_LOG).map(([valor, rotulo]) => (
               <option key={valor} value={valor}>
@@ -92,55 +101,75 @@ export default async function AdminHistoricoPage({ searchParams }: { searchParam
             ))}
           </select>
         </label>
-        <label className="grid gap-1 text-sm">
+        <label className={rotuloAdmin}>
           De
-          <input type="date" name="de" defaultValue={searchParams.de ?? ""} className="rounded-control border bg-background px-3 py-2" />
+          <input type="date" name="de" defaultValue={searchParams.de ?? ""} className={campoAdmin} />
         </label>
-        <label className="grid gap-1 text-sm">
+        <label className={rotuloAdmin}>
           Até
-          <input type="date" name="ate" defaultValue={searchParams.ate ?? ""} className="rounded-control border bg-background px-3 py-2" />
+          <input type="date" name="ate" defaultValue={searchParams.ate ?? ""} className={campoAdmin} />
         </label>
-        <button type="submit" className="rounded-control bg-foreground px-4 py-2 text-sm text-background">
+        <button type="submit" className={botaoAdmin("primario")}>
           Filtrar
         </button>
       </form>
 
-      <p className="text-sm text-muted-foreground">
+      <p className="mt-6 text-sm text-muted-on-dark" aria-live="polite">
         {total} {total === 1 ? "registro" : "registros"}
       </p>
 
       {logs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhuma ação registrada com esses filtros.</p>
+        <div className="mt-3">
+          <Vazio>Nenhuma ação registrada com esses filtros.</Vazio>
+        </div>
       ) : (
-        <ol className="grid gap-2">
-          {logs.map((log) => (
-            <li key={log.id} className="grid gap-1 rounded-card bg-card p-4 text-sm shadow-card">
-              <p>
-                <span className="font-medium">{log.autorNome}</span> · {rotuloAcao(log.acao)}
-                <span className="text-muted-foreground">
-                  {" "}
-                  · {log.alvoTipo}
-                  {log.alvoId ? ` ${log.alvoId}` : ""}
-                </span>
-              </p>
-              {resumoDetalhes(log.detalhes) ? <p className="text-muted-foreground">{resumoDetalhes(log.detalhes)}</p> : null}
-              <time dateTime={log.criadoEm.toISOString()} className="text-xs text-muted-foreground">
-                {formatoData.format(log.criadoEm)}
-              </time>
-            </li>
-          ))}
+        <ol className={cn(painelAdmin, "mt-3 grid overflow-hidden")}>
+          {logs.map((log) => {
+            const detalhes = resumoDetalhes(log.detalhes);
+            return (
+              <li
+                key={log.id}
+                className="grid gap-1 border-t border-[color-mix(in_srgb,var(--color-on-dark)_8%,transparent)] px-5 py-4 text-sm first:border-t-0 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4"
+              >
+                <time dateTime={log.criadoEm.toISOString()} className="tabular-nums text-muted-on-dark">
+                  {formatoData.format(log.criadoEm)}
+                </time>
+                <div className="grid min-w-0 gap-1">
+                  <p>
+                    <span className="font-medium">{log.autorNome}</span>
+                    <span className="text-muted-on-dark"> · </span>
+                    {rotuloAcao(log.acao)}
+                    <span className="text-muted-on-dark">
+                      {" "}
+                      · {log.alvoTipo}
+                      {log.alvoId ? ` ${log.alvoId}` : ""}
+                    </span>
+                  </p>
+                  {detalhes ? <p className="break-words text-muted-on-dark">{detalhes}</p> : null}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       )}
 
       {paginas > 1 ? (
-        <nav className="flex items-center gap-3 text-sm">
-          {pagina > 1 ? <Link href={linkPagina(pagina - 1)}>Anterior</Link> : null}
-          <span className="text-muted-foreground">
+        <nav aria-label="Paginação" className="mt-6 flex items-center gap-3 text-sm">
+          {pagina > 1 ? (
+            <Link href={linkPagina(pagina - 1)} className={linkPaginacao}>
+              Anterior
+            </Link>
+          ) : null}
+          <span className="text-muted-on-dark">
             Página {pagina} de {paginas}
           </span>
-          {pagina < paginas ? <Link href={linkPagina(pagina + 1)}>Próxima</Link> : null}
+          {pagina < paginas ? (
+            <Link href={linkPagina(pagina + 1)} className={linkPaginacao}>
+              Próxima
+            </Link>
+          ) : null}
         </nav>
       ) : null}
-    </div>
+    </>
   );
 }

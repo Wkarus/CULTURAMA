@@ -1,7 +1,9 @@
 import { ocultarComentario } from "@/actions/social";
-import { Button } from "@/components/ui/button";
+import { CabecalhoAdmin, Vazio } from "@/components/admin/cabecalho";
+import { botaoAdmin, painelAdmin } from "@/components/admin/estilos";
 import { requireSecao } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { cn } from "@/lib/utils";
 
 export default async function AdminComentariosPage() {
   await requireSecao("comentarios");
@@ -14,20 +16,20 @@ export default async function AdminComentariosPage() {
   });
 
   return (
-    <div className="grid gap-4">
-      <p className="text-sm text-muted-foreground">Denúncias. Ocultar tira o comentário do site público, sem apagar o histórico.</p>
+    <>
+      <CabecalhoAdmin titulo="Comentários" descricao="Denúncias. Ocultar tira o comentário do site público, sem apagar o histórico." />
       {reports.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhuma denúncia no momento.</p>
+        <Vazio>Nenhuma denúncia no momento.</Vazio>
       ) : (
         <ul className="grid gap-4">
           {reports.map((item) => (
-            <li key={item.id} className="grid gap-2 rounded-card bg-card p-4 shadow-card">
-              <p className="text-xs text-muted-foreground">
+            <li key={item.id} className={cn(painelAdmin, "grid gap-2 p-5")}>
+              <p className="text-xs text-muted-on-dark">
                 {item.comment.oculto ? "já oculto" : "visível"} · evento {item.comment.event.titulo}
               </p>
               <p className="text-sm font-medium">{item.comment.user.nome}</p>
               <p className="text-sm">{item.comment.texto}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-on-dark">
                 Denúncia de {item.user.nome}: {item.motivo}
               </p>
               {!item.comment.oculto ? (
@@ -37,15 +39,15 @@ export default async function AdminComentariosPage() {
                     await ocultarComentario(item.commentId);
                   }}
                 >
-                  <Button type="submit" variant="outline" size="sm">
+                  <button type="submit" className={botaoAdmin("perigo", "sm")}>
                     Ocultar
-                  </Button>
+                  </button>
                 </form>
               ) : null}
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 }

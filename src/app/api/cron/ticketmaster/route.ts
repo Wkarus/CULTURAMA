@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { registrarLog } from "@/lib/admin-log";
 import { syncTicketmaster } from "@/lib/ticketmaster";
 
 function authorized(request: Request): boolean {
@@ -15,6 +16,13 @@ export async function GET(request: Request) {
   }
 
   const result = await syncTicketmaster();
+  await registrarLog(
+    null,
+    "ticketmaster.sincronizar",
+    "sistema",
+    null,
+    result.ok ? { ok: true, importados: result.upserted } : { ok: false, erro: result.message },
+  );
   if (!result.ok) {
     return NextResponse.json({ error: result.message }, { status: 503 });
   }

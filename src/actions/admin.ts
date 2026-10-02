@@ -6,6 +6,7 @@ import type { FormState } from "@/actions/auth";
 import { requireAdmin, requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
 import { prisma } from "@/lib/prisma";
+import { syncTicketmaster } from "@/lib/ticketmaster";
 import { saveImagemLocal } from "@/lib/upload";
 
 const EVENT_STATUS = new Set<EventStatus>(["rascunho", "publicado", "cancelado", "adiado"]);
@@ -135,6 +136,23 @@ export async function salvarAnuncio(_prev: FormState, formData: FormData): Promi
 
   refreshAdmin();
   return { ok: true };
+}
+
+export type SyncState = FormState & { importados?: number };
+
+export async function sincronizarTicketmasterAgora(): Promise<SyncState> {
+  const autor = await requireAdmin();
+  const result = await syncTicketmaster();
+  await registrarLog(
+    autor,
+    "ticketmaster.sincronizar",
+    "sistema",
+    null,
+    result.ok ? { ok: true, importados: result.upserted } : { ok: false, erro: result.message },
+  );
+  refreshAdmin();
+  revalidatePath("/");
+  return result.ok ? { ok: true, importados: result.upserted } : { error: result.message };
 }
 
 export async function alternarAnuncio(id: string): Promise<FormState> {

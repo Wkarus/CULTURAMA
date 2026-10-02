@@ -218,7 +218,7 @@ function MenuMobile({
 
 export function SiteHeaderClient({ usuario }: { usuario: UsuarioHeader | null }) {
   const pathname = usePathname() ?? "/";
-  const sobreEscuro = ROTAS_ESCURAS.has(pathname);
+  const sobreEscuro = ROTAS_ESCURAS.has(pathname) || pathname === "/admin" || pathname.startsWith("/admin/");
   const [rolou, setRolou] = useState(false);
   const [escondido, setEscondido] = useState(false);
   const [menuAberto, setMenuAberto] = useState(false);
