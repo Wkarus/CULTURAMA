@@ -1,10 +1,14 @@
 import type { AdSlotTipo, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { BannerPatrocinado } from "@/components/banner-patrocinado";
+import { HomeAppFeatures } from "@/components/home-app-features";
+import { HomeB2BPartners } from "@/components/home-b2b-partners";
 import { HomeEventGrid } from "@/components/home-event-grid";
 import { HomeFeaturedParticles } from "@/components/home-featured-particles";
 import { HomeHero } from "@/components/home-hero";
-import { HomeHowItWorks } from "@/components/home-how-it-works";
+import { HomeInteractiveDemo } from "@/components/home-interactive-demo";
+import { HomeMarketInvestors } from "@/components/home-market-investors";
+import { HomePainSolution } from "@/components/home-pain-solution";
 import { HomeStats } from "@/components/home-stats";
 import { anuncioNoAr, contaComoExibicao, hrefDoAnuncio } from "@/lib/anuncios";
 import { cidadeDeEndereco, formatEventoCurto, localDoEvento, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
@@ -97,44 +101,49 @@ export default async function HomePage() {
     new Set(events.map(localDoEvento).filter((local): local is string => Boolean(local))),
   ).slice(0, 8);
 
+  const destaquesParticles = featuredList.flatMap((event) =>
+    event.imagemCapa
+      ? [
+          {
+            id: event.id,
+            titulo: event.titulo,
+            imagemCapa: event.imagemCapa,
+            href: `/eventos/${event.id}`,
+            quando: formatEventoCurto(event.dataHora),
+            categoria: event.category?.nome ?? null,
+          },
+        ]
+      : [],
+  );
+
   return (
     <main>
       <HomeHero nomes={heroNomes} capas={heroCapas} locais={heroLocais} patrocinadores={faixa.map(({ nome, href }) => ({ nome, href }))} />
-      <HomeFeaturedParticles
-        events={featuredList.flatMap((event) =>
-          event.imagemCapa
-            ? [
-                {
-                  id: event.id,
-                  titulo: event.titulo,
-                  imagemCapa: event.imagemCapa,
-                  href: `/eventos/${event.id}`,
-                  quando: formatEventoCurto(event.dataHora),
-                  categoria: event.category?.nome ?? null,
-                },
-              ]
-            : [],
-        )}
-      />
+      <HomePainSolution />
+      <HomeAppFeatures />
+      <HomeInteractiveDemo events={proximos} />
+      {destaquesParticles.length > 0 ? <HomeFeaturedParticles events={destaquesParticles} /> : null}
       <HomeStats eventos={eventCount} cidades={cidades} organizadores={organizerCount} />
-      <HomeHowItWorks events={proximos} />
       {banner ? (
         <BannerPatrocinado anuncio={{ href: hrefDoAnuncio(banner.id), imagem: banner.imagem, patrocinador: banner.patrocinador }} />
       ) : null}
       {grid.length > 0 ? (
-        <section className="mx-auto max-w-page px-4 pb-24">
-          <div className="grid gap-3">
-            <h2 className="font-display text-2xl font-semibold tracking-display">Em seguida</h2>
+        <section className="mx-auto max-w-page px-4 py-16">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent-solid">No ar</p>
+            <h2 className="font-display text-2xl font-bold tracking-display text-on-light">Próximos eventos</h2>
           </div>
           <HomeEventGrid events={grid} />
         </section>
       ) : featuredList.length === 0 ? (
-        <section className="mx-auto max-w-page px-4 pb-24">
+        <section className="mx-auto max-w-page px-4 py-16">
           <p className="max-w-md text-caption text-muted-foreground">
             Ainda não há eventos futuros na base. Quando o cron da Ticketmaster rodar, eles aparecem aqui.
           </p>
         </section>
       ) : null}
+      <HomeB2BPartners />
+      <HomeMarketInvestors />
     </main>
   );
 }

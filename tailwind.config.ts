@@ -62,9 +62,12 @@ const config: Config = {
         },
         "surface-dark": "var(--color-surface-dark)",
         "surface-light": "var(--color-surface-light)",
+        "surface-raised": "var(--color-surface-raised)",
         "on-dark": "var(--color-on-dark)",
         "on-light": "var(--color-on-light)",
         "muted-on-dark": "var(--color-muted-on-dark)",
+        "muted-on-light": "var(--color-muted-on-light)",
+        "border-light": "var(--color-border-light)",
         success: {
           DEFAULT: "var(--color-success-fg)",
           bg: "var(--color-success-bg)",
@@ -81,6 +84,7 @@ const config: Config = {
       boxShadow: {
         card: "var(--shadow-card)",
         cta: "var(--shadow-cta)",
+        neon: "var(--shadow-neon)",
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# cópia de referência dos sócios; não entra no git
+/_novo-front
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -11,23 +11,26 @@ Não invente tokens Promly. Não misture a paleta antiga Shop (`#5433eb`, Inter,
 
 ## Vibe
 
-Hero e destaques em superfície escura; conteúdo padrão em papel quente-frio. Um accent em gradiente rosa → roxo. Cards com foto, cantos 16–24px, sombra difusa. Motion discreto (hover scale/translate, um fundo animado por página).
+Hero e destaques em superfície carvão; conteúdo padrão em papel quente. Um accent em gradiente terracota. Cards com foto, cantos 16–24px, sombra difusa. Motion discreto (hover scale/translate, um fundo animado por página).
 
 ## Tokens (`:root` em `src/app/globals.css`)
 
 | Token | Valor | Uso |
 |---|---|---|
-| `--color-surface-dark` | `#161A2E` | Hero, seções de destaque |
-| `--color-surface-light` | `#FAF9F6` | Fundo padrão |
-| `--color-on-dark` | `#F6F5FA` | Texto sobre escuro |
-| `--color-on-light` | `#171B2E` | Texto sobre claro |
-| `--color-accent-from` | `#EC4899` | Início do gradiente (CTA, Aurora) |
-| `--color-accent-to` | `#8B5CF6` | Fim do gradiente |
-| `--color-accent-solid` | `#6934B5` | Texto pequeno / links sobre claro |
-| `--color-accent-hover-text` | `#F472B6` | Nome ativo no Hover Members |
-| `--color-muted-on-dark` | `#9198B8` | Texto idle sobre escuro |
-| `--color-success-fg` / `--color-success-bg` | `#1E7A42` / `#EAF6EE` | Positivo |
-| `--color-warning-fg` / `--color-warning-bg` | `#A16A1B` / `#FBF2E3` | Alerta |
+| `--color-surface-dark` | `#1C1F26` | Hero, seções de destaque |
+| `--color-surface-light` | `#F6F4EE` | Fundo padrão |
+| `--color-surface-raised` | `#232731` | Card sobre superfície escura |
+| `--color-on-dark` | `#FFFFFF` | Texto sobre escuro |
+| `--color-on-light` | `#333333` | Texto sobre claro |
+| `--color-accent-from` | `#D98054` | Início do gradiente (CTA, Aurora) |
+| `--color-accent-to` | `#C3724B` | Fim do gradiente |
+| `--color-accent-solid` | `#C3724B` | Texto pequeno / links sobre claro |
+| `--color-accent-hover-text` | `#E5956E` | Nome ativo no Hover Members |
+| `--color-muted-on-dark` | `#E0E0E0` | Texto idle sobre escuro |
+| `--color-border-light` | `#E5E0D5` | Borda das seções claras |
+| `--color-muted-on-light` | `#666666` | Texto secundário sobre claro |
+| `--color-success-fg` / `--color-success-bg` | `#2E8540` / `#EAF6EE` | Positivo |
+| `--color-warning-fg` / `--color-warning-bg` | `#C3724B` / `#FDF3ED` | Alerta |
 | `--color-danger-fg` | `#F87171` | Erro de campo sobre escuro (`text-danger`) |
 | `--radius-card` | `20px` | Cards e painéis (faixa 16–24) |
 | `--radius-control` | `16px` | Botões e inputs |
@@ -46,7 +49,7 @@ Tipo: **Space Grotesk** 600–700 nos títulos (`font-display`); **IBM Plex Sans
 
 ## Não faça
 
-- Segunda paleta (Shop violeta, teal, laranja).
+- Segunda paleta (Shop violeta, teal, rosa-roxo antigo). O accent é o terracota dos tokens.
 - Empilhar Aurora + outro WebGL na mesma página.
 - Fontes do sistema nos títulos, exceto fallback.
 

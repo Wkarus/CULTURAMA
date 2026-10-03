@@ -63,9 +63,9 @@ export function TelaMapa({ events, active, animate }: TelaProps) {
               data-pin-shadow
               className="phone-shadow absolute -bottom-1 left-1/2 h-1.5 w-4 -translate-x-1/2 rounded-full"
             />
-            <div data-pin className="relative">
+            <div data-pin className="relative neon-pin">
               <div data-pin-tap={index === 0 ? "" : undefined} className="relative origin-bottom">
-                <span className="grid size-7 rotate-45 place-items-center rounded-full rounded-br-none bg-accent-gradient shadow-cta">
+                <span className="grid size-7 rotate-45 place-items-center rounded-full rounded-br-none border border-on-dark/20 bg-accent-gradient shadow-cta">
                   <Icone className="size-3.5 -rotate-45" strokeWidth={2.25} />
                 </span>
                 {index === 0 ? <Ripple /> : null}

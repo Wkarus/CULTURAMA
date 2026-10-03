@@ -52,9 +52,23 @@
   .glow-spot {
     background: radial-gradient(
       ellipse 80% 60% at 50% -10%,
-      color-mix(in srgb, var(--color-accent-to) 18%, transparent),
+      color-mix(in srgb, var(--color-accent-from) 22%, transparent),
       transparent 70%
     );
+  }
+
+  .neon-glow {
+    box-shadow:
+      0 0 16px color-mix(in srgb, var(--color-accent-from) 60%, transparent),
+      0 0 32px color-mix(in srgb, var(--color-accent-to) 30%, transparent);
+  }
+
+  .neon-pin {
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent-from) 80%, transparent));
+  }
+
+  .neon-pulse-ring {
+    animation: neon-pulse 2.2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
   }
 
   .phone-card {
@@ -243,6 +257,21 @@
   }
 }
 
+@keyframes neon-pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-from) 75%, transparent);
+  }
+  70% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 14px transparent;
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 @keyframes logo-pulse {
   0%,
   72%,
@@ -294,27 +323,31 @@
 
 @layer base {
   :root {
-    --color-surface-dark: #161a2e;
-    --color-surface-light: #faf9f6;
-    --color-on-dark: #f6f5fa;
-    --color-on-light: #171b2e;
-    --color-accent-from: #ec4899;
-    --color-accent-to: #8b5cf6;
-    --color-accent-solid: #6934b5;
-    --color-accent-hover-text: #f472b6;
-    --color-muted-on-dark: #9198b8;
-    --color-muted-on-light: #5c6178;
+    --color-surface-dark: #1c1f26;
+    --color-surface-light: #f6f4ee;
+    --color-surface-raised: #232731;
+    --color-on-dark: #ffffff;
+    --color-on-light: #333333;
+    --color-accent-from: #d98054;
+    --color-accent-to: #c3724b;
+    --color-accent-solid: #c3724b;
+    --color-accent-hover-text: #e5956e;
+    --color-muted-on-dark: #e0e0e0;
+    --color-muted-on-light: #666666;
+    --color-border-light: #e5e0d5;
     --color-surface-card: #ffffff;
-    --color-success-fg: #1e7a42;
+    --color-success-fg: #2e8540;
     --color-success-bg: #eaf6ee;
-    --color-warning-fg: #a16a1b;
-    --color-warning-bg: #fbf2e3;
+    --color-warning-fg: #c3724b;
+    --color-warning-bg: #fdf3ed;
     --color-danger-fg: #f87171;
     --radius-card: 20px;
     --radius-control: 16px;
     --radius-pill: 16px;
-    --shadow-card: 0 24px 48px -16px rgb(22 26 46 / 0.1), 0 8px 16px -8px rgb(22 26 46 / 0.06);
-    --shadow-cta: 0 16px 40px -12px color-mix(in srgb, var(--color-accent-from) 42%, transparent);
+    --shadow-card: 0 24px 48px -16px rgb(28 31 38 / 0.1), 0 8px 16px -8px rgb(28 31 38 / 0.06);
+    --shadow-cta: 0 16px 36px -10px color-mix(in srgb, var(--color-accent-from) 48%, transparent);
+    --shadow-neon: 0 0 20px -3px color-mix(in srgb, var(--color-accent-from) 65%, transparent),
+      0 0 35px -5px color-mix(in srgb, var(--color-accent-to) 40%, transparent);
     --phone-map-park: color-mix(in srgb, var(--color-on-dark) 5%, var(--color-surface-dark));
     --phone-map-water: color-mix(in srgb, var(--color-accent-to) 16%, var(--color-surface-dark));
 

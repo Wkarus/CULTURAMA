@@ -15,7 +15,9 @@ export function HomeStats({
     { to: eventos, label: "eventos no ar" },
     { to: cidades, label: "cidades no mapa" },
     { to: organizadores, label: "organizadores verificados" },
-  ];
+  ].filter((item) => item.to > 0);
+
+  if (items.length === 0) return null;
 
   return (
     <section className="relative overflow-hidden">

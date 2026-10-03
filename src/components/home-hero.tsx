@@ -5,6 +5,8 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Map, Sparkles } from "lucide-react";
+import { AppDownloadModal } from "@/components/app-download-modal";
 import Aurora from "@/components/Aurora";
 import { buttonVariants } from "@/components/ui/button";
 import { visual } from "@/lib/visual-tokens";
@@ -450,25 +452,34 @@ export function HomeHero({ nomes, capas, locais, patrocinadores }: HomeHeroProps
         {capasHero.length > 0 ? <CapasFlutuantes capas={capasHero} /> : null}
 
         <div className="pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-16 text-center md:py-20">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-pill border border-on-dark/15 bg-on-dark/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-hover backdrop-blur-sm">
+            <Sparkles className="size-3.5" aria-hidden />
+            Culturama · mapa e lista
+          </p>
           <TituloCulturama />
-          <LinhaDeApoio locais={locais} reduce={reduce} />
-          <p className="mt-4 max-w-[38ch] text-[1.125rem] leading-relaxed" style={{ color: mix("var(--color-on-dark)", 85, "var(--color-muted-on-dark)") }}>
+          <h2 className="mt-4 max-w-3xl font-display text-2xl font-bold leading-snug tracking-display text-on-dark sm:text-3xl md:text-4xl">
+            Sua próxima experiência cultural começa aqui.
+          </h2>
+          <p className="mt-3 max-w-2xl text-base text-muted-on-dark sm:text-lg">
             Shows, teatro e rua. Compare carro, metrô e caminhada até o destino.
           </p>
-          <div className="pointer-events-auto mt-6 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/mapa" className={cn(buttonVariants())}>
-              Ver no mapa
-            </Link>
-            <Link
-              href="/eventos"
-              className={cn(buttonVariants({ variant: "outline" }))}
+          <LinhaDeApoio locais={locais} reduce={reduce} />
+          <div className="pointer-events-auto mt-8 flex flex-wrap items-center justify-center gap-3">
+            <AppDownloadModal triggerText="Baixar o App" />
+            <a
+              href="#demo"
+              className={cn(buttonVariants({ variant: "outline" }), "font-medium")}
               style={{
-                borderColor: mix("var(--color-on-dark)", 22),
+                borderColor: mix("var(--color-on-dark)", 25),
                 background: "transparent",
                 color: "var(--color-on-dark)",
               }}
             >
-              Ver lista
+              Testar a demo
+            </a>
+            <Link href="/mapa" className={cn(buttonVariants({ variant: "ghost" }), "gap-1.5 text-sm text-muted-on-dark hover:text-on-dark")}>
+              <Map className="size-4" aria-hidden />
+              Abrir mapa
             </Link>
           </div>
           {capasHero.length > 0 ? <FaixaDeCapas capas={capasHero.slice(0, 4)} /> : null}
