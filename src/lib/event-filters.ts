@@ -2,6 +2,7 @@ import type { EventFonte, EventStatus, Prisma } from "@prisma/client";
 import { haversineKm, hasValidCoords, parseCoord } from "@/lib/geo";
 
 export type EventSearchParams = {
+  q?: string;
   categoria?: string;
   de?: string;
   ate?: string;
@@ -27,6 +28,7 @@ function firstParam(value: string | string[] | undefined): string | undefined {
 
 export function normalizeSearchParams(params: Record<string, string | string[] | undefined>): EventSearchParams {
   return {
+    q: firstParam(params.q),
     categoria: firstParam(params.categoria),
     de: firstParam(params.de),
     ate: firstParam(params.ate),
@@ -87,6 +89,22 @@ export function filterPublishedEvents<T extends { latitude: number; longitude: n
   return filterByDistance(byPrice, params);
 }
 
+/** Busca livre por título, local ou categoria. `q` vazio não altera a lista. */
+export function filtraBusca<T extends { titulo: string; endereco: string; category?: { nome: string; parent?: { nome: string } | null } | null }>(
+  events: T[],
+  q: string | undefined,
+): T[] {
+  const termo = (q ?? "").trim().toLocaleLowerCase("pt-BR");
+  if (!termo) return events;
+  return events.filter((event) =>
+    [event.titulo, event.endereco, event.category?.nome, event.category?.parent?.nome]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("pt-BR")
+      .includes(termo),
+  );
+}
+
 function filterByDistance<T extends { latitude: number; longitude: number }>(
   events: T[],
   params: EventSearchParams,
@@ -94,7 +112,7 @@ function filterByDistance<T extends { latitude: number; longitude: number }>(
   const km = Number(params.distancia);
   const lat = parseCoord(params.lat);
   const lng = parseCoord(params.lng);
-  if (lat === null || lng === null || !DISTANCIAS_KM.includes(km as (typeof DISTANCIAS_KM)[number])) {
+  if (lat === null || lng === null || !Number.isInteger(km) || km < 1 || km > 50) {
     return events;
   }
 

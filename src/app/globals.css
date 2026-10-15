@@ -341,6 +341,20 @@
     --color-warning-fg: #c3724b;
     --color-warning-bg: #fdf3ed;
     --color-danger-fg: #f87171;
+    /* Uma cor por categoria-mãe. Texto branco passa AA (contraste ≥ 7:1). */
+    --cat-musica: #6b2d5b;
+    --cat-samba: #8c3e12;
+    --cat-esportes: #1b5e45;
+    --cat-geek-e-games: #2e2e78;
+    --cat-danca: #8a3050;
+    --cat-artes-cenicas: #6a341c;
+    --cat-arte-e-exposicao: #1a5568;
+    --cat-feiras-e-gastronomia: #7a4a10;
+    --cat-cinema-e-audiovisual: #3a3868;
+    --cat-cultura-popular: #3e5418;
+    --cat-literatura: #5a3418;
+    --cat-oficinas: #1a4468;
+    --cat-outros: #3a4150;
     --radius-card: 20px;
     --radius-control: 16px;
     --radius-pill: 16px;

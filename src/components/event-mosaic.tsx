@@ -14,7 +14,7 @@ export function EventMosaic({
   logado: boolean;
 }) {
   return (
-    <ul className="mt-16 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       {events.map((event) => (
         <li key={event.id}>
           <EventCard event={event} favorito={favoritos.has(event.id)} logado={logado} />
