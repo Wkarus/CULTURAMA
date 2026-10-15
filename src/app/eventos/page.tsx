@@ -14,7 +14,7 @@ export default async function EventosPage({ searchParams }: { searchParams: Reco
   const categorias = await ensureCategorias();
   const raw = await prisma.event.findMany({
     where: eventWhereFromParams(filters, idsDaCategoria(categorias, filters.categoria)),
-    include: { category: true },
+    include: { category: { include: { parent: { select: { nome: true } } } } },
     orderBy: { dataHora: "asc" },
   });
   const events = filterPublishedEvents(raw, filters);
@@ -29,8 +29,14 @@ export default async function EventosPage({ searchParams }: { searchParams: Reco
   });
   const paraVoce = interesses.length > 0;
   const visual = uniqueByCapa(ranked);
-  const destaque = visual[0];
-  const demais = visual.slice(1);
+  const marcados =
+    session?.user?.id && visual.length > 0
+      ? await prisma.favorite.findMany({
+          where: { userId: session.user.id, eventId: { in: visual.map((event) => event.id) } },
+          select: { eventId: true },
+        })
+      : [];
+  const favoritos = new Set(marcados.map((row) => row.eventId));
 
   return (
     <main className="mx-auto max-w-page px-4 py-16">
@@ -55,7 +61,7 @@ export default async function EventosPage({ searchParams }: { searchParams: Reco
             : "Nenhum evento neste recorte. Organizadores podem cadastrar; a Ticketmaster entra pelo cron."}
         </p>
       ) : (
-        <EventMosaic destaque={destaque} demais={demais} />
+        <EventMosaic events={visual} favoritos={favoritos} logado={Boolean(session?.user?.id)} />
       )}
     </main>
   );

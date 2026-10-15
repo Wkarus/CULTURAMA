@@ -33,7 +33,9 @@ export async function toggleFavorite(eventId: string): Promise<FormState> {
     await prisma.favorite.create({ data: { userId, eventId } });
   }
 
+  revalidatePath("/");
   revalidatePath("/eventos");
+  revalidatePath("/mapa");
   revalidatePath(`/eventos/${eventId}`);
   revalidatePath("/conta/favoritos");
   return { ok: true };

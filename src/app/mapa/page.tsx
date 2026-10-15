@@ -1,6 +1,6 @@
+import { auth } from "@/auth";
 import { EventCard } from "@/components/event-card";
 import { EventFilters } from "@/components/event-filters";
-import SpotlightCard from "@/components/SpotlightCard";
 import { EventMap } from "@/components/event-map";
 import { PageHeading } from "@/components/page-heading";
 import { ensureCategorias } from "@/lib/categorias";
@@ -15,12 +15,22 @@ export default async function MapaPage({ searchParams }: { searchParams: Record<
   const categorias = await ensureCategorias();
   const raw = await prisma.event.findMany({
     where: eventWhereFromParams(filters, idsDaCategoria(categorias, filters.categoria)),
-    include: { category: true },
+    include: { category: { include: { parent: { select: { nome: true } } } } },
     orderBy: { dataHora: "asc" },
     take: 200,
   });
   const events = filterPublishedEvents(raw, filters);
   const cards = uniqueByCapa(events).slice(0, 12);
+  const session = await auth();
+  const marcados =
+    session?.user?.id && cards.length > 0
+      ? await prisma.favorite.findMany({
+          where: { userId: session.user.id, eventId: { in: cards.map((event) => event.id) } },
+          select: { eventId: true },
+        })
+      : [];
+  const favoritos = new Set(marcados.map((row) => row.eventId));
+  const logado = Boolean(session?.user?.id);
   const pins = events.map(toMapEvent);
   const lat = parseCoord(filters.lat);
   const lng = parseCoord(filters.lng);
@@ -53,9 +63,7 @@ export default async function MapaPage({ searchParams }: { searchParams: Record<
         <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((event) => (
             <li key={event.id}>
-              <SpotlightCard>
-                <EventCard event={event} />
-              </SpotlightCard>
+              <EventCard event={event} favorito={favoritos.has(event.id)} logado={logado} />
             </li>
           ))}
         </ul>

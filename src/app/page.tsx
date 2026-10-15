@@ -1,9 +1,10 @@
 import type { AdSlotTipo, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
+import { Suspense } from "react";
 import { BannerPatrocinado } from "@/components/banner-patrocinado";
 import { HomeAppFeatures } from "@/components/home-app-features";
 import { HomeB2BPartners } from "@/components/home-b2b-partners";
-import { HomeEventGrid } from "@/components/home-event-grid";
+import { HomeEventGridSkeleton, HomeSemana } from "@/components/home-event-grid";
 import { HomeFeaturedParticles } from "@/components/home-featured-particles";
 import { HomeHero } from "@/components/home-hero";
 import { HomeInteractiveDemo } from "@/components/home-interactive-demo";
@@ -72,8 +73,6 @@ export default async function HomePage() {
 
   const unique = uniqueByCapa(events);
   const featuredList = uniqueByCapa([...destaques, ...unique.filter((event) => event.imagemCapa)]).slice(0, 6);
-  const featuredIds = new Set(featuredList.map((event) => event.id));
-  const grid = unique.filter((event) => !featuredIds.has(event.id)).slice(0, 6);
   const cidades = new Set(addresses.map((row) => cidadeDeEndereco(row.endereco)).filter(Boolean)).size;
   const proximos = unique.slice(0, 3).map((event) => ({
     id: event.id,
@@ -127,21 +126,17 @@ export default async function HomePage() {
       {banner ? (
         <BannerPatrocinado anuncio={{ href: hrefDoAnuncio(banner.id), imagem: banner.imagem, patrocinador: banner.patrocinador }} />
       ) : null}
-      {grid.length > 0 ? (
-        <section className="mx-auto max-w-page px-4 py-16">
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-accent-solid">No ar</p>
-            <h2 className="font-display text-2xl font-bold tracking-display text-on-light">Próximos eventos</h2>
-          </div>
-          <HomeEventGrid events={grid} />
-        </section>
-      ) : featuredList.length === 0 ? (
+      {eventCount === 0 && featuredList.length === 0 ? (
         <section className="mx-auto max-w-page px-4 py-16">
           <p className="max-w-md text-caption text-muted-foreground">
             Ainda não há eventos futuros na base. Quando o cron da Ticketmaster rodar, eles aparecem aqui.
           </p>
         </section>
-      ) : null}
+      ) : (
+        <Suspense fallback={<HomeEventGridSkeleton />}>
+          <HomeSemana />
+        </Suspense>
+      )}
       <HomeB2BPartners />
       <HomeMarketInvestors />
     </main>

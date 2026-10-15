@@ -10,6 +10,43 @@ export const RESTRICOES: { value: RestricaoIdade; label: string }[] = [
   { value: "dezoito", label: "18+" },
 ];
 
+const FUSO_EVENTO = "America/Sao_Paulo";
+
+export type DataCard = { mes: string; dia: string; quando: string };
+
+/** Bloco de data e linha "Sex, 22h" do card, sempre no horário de São Paulo. */
+export function dataDoCard(date: Date): DataCard {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat("pt-BR", {
+      timeZone: FUSO_EVENTO,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(date)
+      .map((parte) => [parte.type, parte.value]),
+  );
+  const semanaBruta = (partes.weekday ?? "").replace(".", "");
+  const semana = semanaBruta ? semanaBruta.charAt(0).toUpperCase() + semanaBruta.slice(1) : "";
+  const minuto = partes.minute ?? "00";
+  const horario = minuto === "00" ? `${Number(partes.hour)}h` : `${Number(partes.hour)}h${minuto}`;
+  return {
+    mes: (partes.month ?? "").replace(".", "").slice(0, 3).toUpperCase(),
+    dia: partes.day ?? "",
+    quando: `${semana}, ${horario}`,
+  };
+}
+
+/** Selo do card: só 16+ e 18+. Livre, 12+ e 14+ ficam para a página do evento. */
+export function seloRestricaoCard(value: RestricaoIdade): "16+" | "18+" | null {
+  if (value === "dezoito") return "18+";
+  if (value === "dezesseis") return "16+";
+  return null;
+}
+
 export function formatEventoQuando(date: Date): string {
   return date.toLocaleString("pt-BR", {
     weekday: "short",
@@ -82,6 +119,16 @@ export function cidadeDeEndereco(endereco: string): string {
     .map((part) => part.replace(/\d{5}-?\d{3}/g, "").replace(/\s*-?\s*[A-Z]{2}\s*$/i, "").trim())
     .filter(Boolean);
   return parts[parts.length - 1] ?? endereco.trim();
+}
+
+/** "Local · bairro" (ou cidade, quando a fonte não tem bairro). */
+export function linhaDoLocal(event: { endereco: string; fonte: EventFonte }): string {
+  const partes = event.endereco.split(",").map((parte) => parte.trim()).filter(Boolean);
+  const nome = partes[0] ?? "";
+  if (partes.length < 2 || nome === "Brasil") return nome === "Brasil" ? "" : nome;
+  const extra = localDoEvento(event);
+  if (!extra || extra.toLowerCase() === nome.toLowerCase()) return nome;
+  return `${nome} · ${extra}`;
 }
 
 /** Bairro quando o endereço segue "…, 123 - Bairro, Cidade"; senão a cidade. Ticketmaster grava "Local, rua, Cidade, Estado". */

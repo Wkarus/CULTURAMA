@@ -11,14 +11,14 @@ export default async function FavoritosPage() {
 
   const rows = await prisma.favorite.findMany({
     where: { userId: session.user.id, event: EVENTO_PUBLICO },
-    include: { event: { include: { category: true } } },
+    include: { event: { include: { category: { include: { parent: { select: { nome: true } } } } } } },
     orderBy: { event: { dataHora: "asc" } },
   });
 
   return (
     <main className="mx-auto max-w-page px-4 py-12">
       <h1 className="text-display">Favoritos</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Eventos que você marcou. Abra o detalhe para tirar o favorito.</p>
+      <p className="mt-2 text-sm text-muted-foreground">Eventos que você marcou. O coração no card tira o favorito.</p>
       {rows.length === 0 ? (
         <p className="mt-10 text-sm text-muted-foreground">
           Nada aqui ainda. Vá em <Link href="/eventos" className="underline underline-offset-4">eventos</Link> e use Favoritar.
@@ -27,7 +27,7 @@ export default async function FavoritosPage() {
         <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => (
             <li key={row.eventId}>
-              <EventCard event={row.event} />
+              <EventCard event={row.event} favorito logado />
             </li>
           ))}
         </ul>
