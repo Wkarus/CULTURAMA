@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "tsx --test src/lib/cpf.test.ts src/lib/geo.test.ts src/lib/directions.test.ts src/lib/event-filters.test.ts src/lib/categorias-arvore.test.ts src/lib/ticketmaster-categorias.test.ts src/lib/admin-permissoes.test.ts src/lib/denuncias.test.ts src/lib/anuncios.test.ts",
+    "test": "tsx --test src/lib/cpf.test.ts src/lib/geo.test.ts src/lib/directions.test.ts src/lib/event-filters.test.ts src/lib/categorias-arvore.test.ts src/lib/ticketmaster-categorias.test.ts src/lib/admin-permissoes.test.ts src/lib/denuncias.test.ts src/lib/anuncios.test.ts src/lib/mapas-culturais.test.ts",
+    "mapas:importar": "tsx scripts/importar-mapas-culturais.ts",
     "postinstall": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:admin": "tsx prisma/promote-admin.ts"

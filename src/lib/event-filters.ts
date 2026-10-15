@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { EventFonte, EventStatus, Prisma } from "@prisma/client";
 import { haversineKm, hasValidCoords, parseCoord } from "@/lib/geo";
 
 export type EventSearchParams = {
@@ -37,9 +37,21 @@ export function normalizeSearchParams(params: Record<string, string | string[] |
   };
 }
 
-/** Publicado e sem organizador suspenso. Eventos da equipe e da Ticketmaster não têm organizador. */
+/** `importado` fica no ar sem revisão; a equipe tira do ar pelo painel. */
+export const STATUS_NO_AR = ["publicado", "importado"] as const satisfies readonly EventStatus[];
+
+export function estaNoAr(status: EventStatus): boolean {
+  return (STATUS_NO_AR as readonly EventStatus[]).includes(status);
+}
+
+/** Status para tirar do ar: evento importado vira `cancelado` (oculto), que a sincronização respeita. */
+export function statusFora(fonte: EventFonte): EventStatus {
+  return fonte === "interno" ? "rascunho" : "cancelado";
+}
+
+/** No ar e sem organizador suspenso. Eventos da equipe e das fontes externas não têm organizador. */
 export const EVENTO_PUBLICO = {
-  status: "publicado",
+  status: { in: [...STATUS_NO_AR] },
   NOT: {
     organizer: { is: { OR: [{ suspensoEm: { not: null } }, { user: { is: { suspensoEm: { not: null } } } }] } },
   },

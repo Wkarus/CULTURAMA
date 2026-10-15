@@ -2,7 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import { RefreshCw } from "lucide-react";
-import { sincronizarTicketmasterAgora, type SyncState } from "@/actions/admin";
+import { importarMapasCulturaisAgora, sincronizarTicketmasterAgora, type SyncState } from "@/actions/admin";
 import { botaoAdmin } from "@/components/admin/estilos";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +16,8 @@ function Botao() {
   );
 }
 
-export function SincronizarTicketmaster() {
-  const [state, action] = useFormState(sincronizarTicketmasterAgora, {} as SyncState);
+function Sincronizar({ acao }: { acao: () => Promise<SyncState> }) {
+  const [state, action] = useFormState(acao, {} as SyncState);
 
   return (
     <form action={action} className="grid justify-items-start gap-2">
@@ -28,4 +28,12 @@ export function SincronizarTicketmaster() {
       </p>
     </form>
   );
+}
+
+export function SincronizarTicketmaster() {
+  return <Sincronizar acao={sincronizarTicketmasterAgora} />;
+}
+
+export function ImportarMapasCulturais() {
+  return <Sincronizar acao={importarMapasCulturaisAgora} />;
 }

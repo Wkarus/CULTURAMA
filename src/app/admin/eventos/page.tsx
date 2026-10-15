@@ -8,13 +8,16 @@ import { requireSecao } from "@/lib/admin";
 import { podeExcluirEvento } from "@/lib/admin-permissoes";
 import { ensureCategorias } from "@/lib/categorias";
 import { idsDaCategoria, montarArvore } from "@/lib/categorias-arvore";
+import { estaNoAr } from "@/lib/event-filters";
 import { labelStatus } from "@/lib/eventos";
+import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 const POR_PAGINA = 30;
 const FUSO = "-03:00";
-const STATUS: EventStatus[] = ["publicado", "em_revisao", "rascunho", "adiado", "cancelado"];
+const STATUS: EventStatus[] = ["publicado", "importado", "em_revisao", "rascunho", "adiado", "cancelado", "inativo"];
+const FONTES = { interno: "Local", ticketmaster: "Ticketmaster", mapas_culturais: "Mapas Culturais" } as const;
 
 type Params = { q?: string; status?: string; fonte?: string; categoria?: string; de?: string; ate?: string; pagina?: string };
 
@@ -37,6 +40,8 @@ const COR_STATUS: Record<EventStatus, string> = {
   rascunho: "chip-dark text-muted-on-dark",
   adiado: "chip-dark text-on-dark",
   cancelado: "chip-dark text-muted-on-dark line-through decoration-1",
+  importado: "bg-[color-mix(in_srgb,var(--color-accent-to)_12%,transparent)] text-on-dark",
+  inativo: "chip-dark text-muted-on-dark",
 };
 
 export default async function AdminEventosPage({ searchParams }: { searchParams: Params }) {
@@ -55,7 +60,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
     ];
   }
   if (STATUS.includes(searchParams.status as EventStatus)) where.status = searchParams.status as EventStatus;
-  if (searchParams.fonte === "interno" || searchParams.fonte === "ticketmaster") where.fonte = searchParams.fonte;
+  if (searchParams.fonte && searchParams.fonte in FONTES) where.fonte = searchParams.fonte as keyof typeof FONTES;
   if (searchParams.fonte === "destaque") where.destaque = true;
   const idsCategoria = idsDaCategoria(categorias, searchParams.categoria);
   if (idsCategoria) where.categoriaId = { in: idsCategoria };
@@ -92,7 +97,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
     <>
       <CabecalhoAdmin
         titulo="Eventos"
-        descricao="Locais e da Ticketmaster. Ticketmaster só sai do ar ou ganha destaque; o conteúdo vem da sincronização."
+        descricao="Locais, Ticketmaster e Mapas Culturais. Ticketmaster só sai do ar ou ganha destaque; Mapas Culturais também pode ser editado."
         acoes={
           <Link href="/admin/eventos/novo" className={botaoAdmin("primario")}>
             <Plus aria-hidden />
@@ -127,8 +132,11 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
           Fonte
           <select name="fonte" defaultValue={searchParams.fonte ?? ""} className={campoAdmin}>
             <option value="">Todas</option>
-            <option value="interno">Local</option>
-            <option value="ticketmaster">Ticketmaster</option>
+            {Object.entries(FONTES).map(([valor, rotulo]) => (
+              <option key={valor} value={valor}>
+                {rotulo}
+              </option>
+            ))}
             <option value="destaque">Só destaques</option>
           </select>
         </label>
@@ -211,7 +219,12 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                       {evento.titulo}
                     </Link>
                     <span className="mt-0.5 block truncate text-xs text-muted-on-dark">
-                      {evento.fonte === "ticketmaster" ? "Ticketmaster" : (evento.organizer?.nomeEmpresa ?? "Equipe Culturama")}
+                      {evento.fonte === "interno"
+                        ? (evento.organizer?.nomeEmpresa ?? "Equipe Culturama")
+                        : evento.fonte === "mapas_culturais"
+                          ? nomeDaInstancia(evento.fonteInstancia)
+                          : FONTES[evento.fonte]}
+                      {evento.editadoPelaEquipe ? " · editado pela equipe" : ""}
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-on-dark">{formatoData.format(evento.dataHora)}</td>
@@ -225,9 +238,10 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
                     <EventoAcoes
                       id={evento.id}
                       titulo={evento.titulo}
-                      publicado={evento.status === "publicado"}
+                      publicado={estaNoAr(evento.status)}
                       destaque={evento.destaque}
-                      ticketmaster={evento.fonte === "ticketmaster"}
+                      importado={evento.fonte !== "interno"}
+                      editavel={evento.fonte !== "ticketmaster"}
                       podeExcluir={podeExcluir}
                     />
                   </td>

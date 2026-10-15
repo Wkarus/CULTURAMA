@@ -5,8 +5,10 @@ import { RotaPainel } from "@/components/rota-painel";
 import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
 import { getUsuarioPainel } from "@/lib/admin";
-import { formatEventoQuando, labelRestricao } from "@/lib/eventos";
+import { estaNoAr } from "@/lib/event-filters";
+import { formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
+import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
@@ -19,13 +21,21 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
   if (!event) notFound();
 
   const isOwner = Boolean(session?.user?.id && event.organizer?.userId === session.user.id);
-  const foraDoAr = event.status !== "publicado" || Boolean(event.organizer?.suspensoEm || event.organizer?.user.suspensoEm);
+  const foraDoAr = !estaNoAr(event.status) || Boolean(event.organizer?.suspensoEm || event.organizer?.user.suspensoEm);
   if (foraDoAr && !isOwner && !(await getUsuarioPainel())) notFound();
 
   const data = formatEventoQuando(event.dataHora);
   const dataLonga = event.dataHora.toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" });
+  const instancia = event.fonte === "mapas_culturais" ? nomeDaInstancia(event.fonteInstancia) : null;
   const ctaHref = event.fonte === "ticketmaster" ? event.linkIngresso : event.linkIngresso || event.linkSaibaMais;
-  const ctaLabel = event.fonte === "ticketmaster" ? "Comprar na Ticketmaster" : event.linkIngresso ? "Ingresso" : "Saiba mais";
+  const ctaLabel =
+    event.fonte === "ticketmaster"
+      ? "Comprar na Ticketmaster"
+      : event.linkIngresso
+        ? "Ingresso"
+        : instancia
+          ? `Ver no ${instancia}`
+          : "Saiba mais";
   const favorito = session?.user?.id
     ? Boolean(await prisma.favorite.findUnique({ where: { userId_eventId: { userId: session.user.id, eventId: event.id } } }))
     : false;
@@ -34,7 +44,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
     include: { user: { select: { nome: true } } },
     orderBy: { criadoEm: "desc" },
   });
-  const selo = event.fonte === "ticketmaster" ? "via Ticketmaster" : "Na rua";
+  const selo = instancia ? `via ${instancia}` : seloDaFonte(event.fonte);
 
   return (
     <main className="mx-auto max-w-page px-4 py-16">
@@ -58,7 +68,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
             <span className="rounded-pill bg-muted px-2 py-0.5 text-on-light">{selo}</span>
             {event.category ? <span>{event.category.nome}</span> : null}
             <span>{labelRestricao(event.restricaoIdade)}</span>
-            {event.status !== "publicado" ? <span>{event.status}</span> : null}
+            {!estaNoAr(event.status) ? <span>{labelStatus(event.status)}</span> : null}
           </div>
           <h1 className="text-display">{event.titulo}</h1>
           <p className="text-caption text-muted-foreground">{data}</p>
@@ -74,6 +84,18 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
           <p className="text-body-lg">{event.gratuito ? "Entrada franca" : "Pago"}</p>
           <p className="text-caption text-muted-foreground">{event.endereco}</p>
           <p className="text-caption text-muted-foreground">{dataLonga}</p>
+          {instancia ? (
+            <p className="text-caption text-muted-foreground">
+              Fonte:{" "}
+              {event.linkSaibaMais ? (
+                <a href={event.linkSaibaMais} target="_blank" rel="noreferrer" className="link-quiet">
+                  {instancia}
+                </a>
+              ) : (
+                instancia
+              )}
+            </p>
+          ) : null}
           {event.organizer && event.fonte === "interno" ? (
             <p className="text-caption text-muted-foreground">
               Por {event.organizer.nomeEmpresa}

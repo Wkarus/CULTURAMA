@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { Category, Event } from "@prisma/client";
-import { formatEventoQuando, labelRestricao } from "@/lib/eventos";
+import { formatEventoQuando, labelRestricao, seloDaFonte } from "@/lib/eventos";
 import { cn } from "@/lib/utils";
 
 type EventoCard = Event & { category: Category | null };
 
 export function EventCard({ event, featured = false }: { event: EventoCard; featured?: boolean }) {
   const data = formatEventoQuando(event.dataHora);
-  const selo = event.fonte === "ticketmaster" ? "via Ticketmaster" : "Na rua";
+  const selo = seloDaFonte(event.fonte);
 
   return (
     <Link

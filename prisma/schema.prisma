@@ -29,6 +29,7 @@ enum StatusVerificacao {
 enum EventFonte {
   interno
   ticketmaster
+  mapas_culturais
 }
 
 enum RestricaoIdade {
@@ -45,6 +46,10 @@ enum EventStatus {
   cancelado
   adiado
   em_revisao
+  /// Veio de fonte externa (Mapas Culturais) e está no ar sem revisão da equipe.
+  importado
+  /// Sumiu da fonte ou a última ocorrência já passou; volta a `importado` se reaparecer.
+  inativo
 }
 
 enum RevisaoResultado {
@@ -116,11 +121,14 @@ model Event {
   id                  String            @id @default(cuid())
   organizerId         String?           @map("organizer_id")
   fonte               EventFonte
-  idExterno           String?           @unique @map("id_externo")
+  /// URL base da instância do Mapas Culturais; vazio nas outras fontes.
+  fonteInstancia      String            @default("") @map("fonte_instancia")
+  idExterno           String?           @map("id_externo")
   titulo              String
   descricao           String
   categoriaId         String?           @map("categoria_id")
   dataHora            DateTime          @map("data_hora")
+  dataFim             DateTime?         @map("data_fim")
   endereco            String
   latitude            Float
   longitude           Float
@@ -137,6 +145,9 @@ model Event {
   mensagemOrganizador String?           @map("mensagem_organizador")
   revisaoResultado    RevisaoResultado? @map("revisao_resultado")
   revisadoEm          DateTime?         @map("revisado_em")
+  /// Equipe editou o texto de um evento importado: a importação não sobrescreve mais o conteúdo.
+  editadoPelaEquipe   Boolean           @default(false) @map("editado_pela_equipe")
+  sincronizadoEm      DateTime?         @map("sincronizado_em")
 
   organizer Organizer? @relation(fields: [organizerId], references: [id])
   category  Category?  @relation(fields: [categoriaId], references: [id])
@@ -144,6 +155,7 @@ model Event {
   comments  Comment[]
   denuncias Denuncia[]
 
+  @@unique([fonte, fonteInstancia, idExterno])
   @@map("events")
 }
 

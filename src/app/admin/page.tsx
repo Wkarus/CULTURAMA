@@ -3,14 +3,25 @@ import { ArrowUpRight, Heart } from "lucide-react";
 import { CabecalhoAdmin, Vazio } from "@/components/admin/cabecalho";
 import { focoAdmin, painelAdmin } from "@/components/admin/estilos";
 import { GraficoCategorias, type FatiaCategoria } from "@/components/admin/grafico-categorias";
-import { SincronizarTicketmaster } from "@/components/admin/sincronizar-ticketmaster";
+import { ImportarMapasCulturais, SincronizarTicketmaster } from "@/components/admin/sincronizar-ticketmaster";
 import { requireSecao } from "@/lib/admin";
 import { formatarCtr } from "@/lib/anuncios";
 import { ensureCategorias } from "@/lib/categorias";
+import { STATUS_NO_AR } from "@/lib/event-filters";
+import { lerInstancias } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
+
+const NO_AR = { in: [...STATUS_NO_AR] };
+
+type DetalhesMapas = {
+  ok?: boolean;
+  importados?: number;
+  erro?: string;
+  instancias?: { nome: string; ok: boolean; criados: number; atualizados: number; inativados: number; linguagensNaoMapeadas: string[]; erros: string[] }[];
+} | null;
 
 const SETE_DIAS = 7 * 24 * 60 * 60 * 1000;
 
@@ -71,19 +82,22 @@ export default async function AdminHomePage() {
     ultimaSync,
     ticketmasterPublicados,
     metricasAnuncios,
+    ultimaImportacaoMapas,
+    mapasNoAr,
+    mapasInativos,
   ] = await Promise.all([
-    prisma.event.count({ where: { status: "publicado" } }),
+    prisma.event.count({ where: { status: NO_AR } }),
     prisma.event.count({ where: { status: "em_revisao" } }),
     prisma.organizer.count({ where: { statusVerificacao: "pendente" } }),
     prisma.denuncia.count({ where: { status: "aberta" } }),
     prisma.user.count(),
     prisma.user.count({ where: { criadoEm: { gte: new Date(agora.getTime() - SETE_DIAS) } } }),
     prisma.adSlot.count({ where: { ativo: true, dataInicio: { lte: agora }, dataFim: { gte: agora } } }),
-    prisma.event.groupBy({ by: ["categoriaId"], where: { status: "publicado" }, _count: { _all: true } }),
+    prisma.event.groupBy({ by: ["categoriaId"], where: { status: NO_AR }, _count: { _all: true } }),
     ensureCategorias(),
     prisma.favorite.groupBy({
       by: ["eventId"],
-      where: { event: { status: "publicado" } },
+      where: { event: { status: NO_AR } },
       _count: { eventId: true },
       orderBy: { _count: { eventId: "desc" } },
       take: 5,
@@ -91,7 +105,13 @@ export default async function AdminHomePage() {
     prisma.adminLog.findFirst({ where: { acao: "ticketmaster.sincronizar" }, orderBy: { criadoEm: "desc" } }),
     prisma.event.count({ where: { fonte: "ticketmaster", status: "publicado" } }),
     prisma.adSlot.aggregate({ _sum: { exibicoes: true, cliques: true } }),
+    prisma.adminLog.findFirst({ where: { acao: "mapas.importar" }, orderBy: { criadoEm: "desc" } }),
+    prisma.event.count({ where: { fonte: "mapas_culturais", status: NO_AR } }),
+    prisma.event.count({ where: { fonte: "mapas_culturais", status: "inativo" } }),
   ]);
+  const detalhesMapas = (ultimaImportacaoMapas?.detalhes ?? null) as DetalhesMapas;
+  const instanciasMapas = lerInstancias(process.env.MAPAS_CULTURAIS_INSTANCIAS);
+  const naoMapeadas = [...new Set(detalhesMapas?.instancias?.flatMap((i) => i.linguagensNaoMapeadas) ?? [])];
   const exibicoes = metricasAnuncios._sum.exibicoes ?? 0;
   const cliques = metricasAnuncios._sum.cliques ?? 0;
 
@@ -116,7 +136,7 @@ export default async function AdminHomePage() {
   const detalhesSync = (ultimaSync?.detalhes ?? null) as { ok?: boolean; importados?: number; erro?: string } | null;
 
   const cartoes: Cartao[] = [
-    { rotulo: "Eventos publicados", valor: eventosPublicados, href: "/admin/eventos" },
+    { rotulo: "Eventos no ar", valor: eventosPublicados, href: "/admin/eventos" },
     { rotulo: "Em revisão", valor: emRevisao, href: "/admin/revisao", destaque: emRevisao > 0 },
     { rotulo: "Organizadores pendentes", valor: organizadoresPendentes, href: "/admin/organizadores", destaque: organizadoresPendentes > 0 },
     { rotulo: "Denúncias abertas", valor: denunciasAbertas, href: "/admin/denuncias", destaque: denunciasAbertas > 0 },
@@ -219,6 +239,70 @@ export default async function AdminHomePage() {
           </dl>
         </div>
         <SincronizarTicketmaster />
+      </section>
+
+      <section aria-labelledby="mapas-titulo" className={cn(painelAdmin, "mt-6 grid gap-5 p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6")}>
+        <div className="grid gap-2">
+          <h2 id="mapas-titulo" className="font-display text-lg font-semibold tracking-display">
+            Mapas Culturais
+          </h2>
+          <p className="text-sm text-muted-on-dark">
+            {instanciasMapas.length
+              ? instanciasMapas.map((i) => i.nome).join(" · ")
+              : "Nenhuma instância em MAPAS_CULTURAIS_INSTANCIAS."}
+          </p>
+          <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-flow-col sm:auto-cols-max">
+            <div className="grid gap-0.5">
+              <dt className="text-muted-on-dark">Última importação</dt>
+              <dd>
+                {ultimaImportacaoMapas ? (
+                  <>
+                    {formatoData.format(ultimaImportacaoMapas.criadoEm)}
+                    <span className="text-muted-on-dark"> · {ultimaImportacaoMapas.autorNome}</span>
+                  </>
+                ) : (
+                  "Nenhuma registrada"
+                )}
+              </dd>
+            </div>
+            <div className="grid gap-0.5">
+              <dt className="text-muted-on-dark">Resultado</dt>
+              <dd>
+                {!detalhesMapas ? (
+                  "—"
+                ) : detalhesMapas.ok ? (
+                  `${detalhesMapas.importados ?? 0} eventos importados`
+                ) : (
+                  <span className="text-danger">Falhou: {detalhesMapas.erro}</span>
+                )}
+              </dd>
+            </div>
+            <div className="grid gap-0.5">
+              <dt className="text-muted-on-dark">No ar · inativos</dt>
+              <dd className="tabular-nums">
+                {mapasNoAr} · {mapasInativos}
+              </dd>
+            </div>
+          </dl>
+          {detalhesMapas?.instancias?.some((i) => !i.ok || i.erros.length) ? (
+            <ul className="grid gap-1 text-sm">
+              {detalhesMapas.instancias
+                .filter((i) => !i.ok || i.erros.length)
+                .map((i) => (
+                  <li key={i.nome} className={i.ok ? "text-muted-on-dark" : "text-danger"}>
+                    {i.nome}: {i.ok ? `${i.erros.length} eventos com problema` : i.erros[0]}
+                  </li>
+                ))}
+            </ul>
+          ) : null}
+          {naoMapeadas.length ? (
+            <p className="text-sm text-muted-on-dark">
+              Linguagens sem categoria (foram para Outros): {naoMapeadas.join(", ")}. Mapeie em{" "}
+              <code className="text-on-dark">src/lib/mapas-culturais-categorias.ts</code>.
+            </p>
+          ) : null}
+        </div>
+        <ImportarMapasCulturais />
       </section>
     </>
   );

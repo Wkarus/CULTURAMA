@@ -37,8 +37,17 @@ export function labelStatus(value: EventStatus): string {
     cancelado: "Cancelado",
     adiado: "Adiado",
     em_revisao: "Em revisão",
+    importado: "Importado",
+    inativo: "Inativo",
   };
   return map[value];
+}
+
+/** Selo curto do card (componente cliente: sem acesso à config das instâncias). */
+export function seloDaFonte(fonte: EventFonte): string {
+  if (fonte === "ticketmaster") return "via Ticketmaster";
+  if (fonte === "mapas_culturais") return "via Mapas Culturais";
+  return "Na rua";
 }
 
 export function uniqueByCapa<T extends { titulo: string; imagemCapa: string | null }>(events: T[]): T[] {

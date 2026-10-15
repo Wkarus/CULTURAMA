@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { dominiosDasInstancias } from "@/lib/mapas-culturais-config";
 
 const DOMINIOS_FIXOS = ["ticketm.net", "ticketmaster.com", "ticketmaster.com.br"];
 const TIPOS = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
@@ -16,7 +17,7 @@ function dominiosPermitidos(): string[] {
       extras.push(new URL(supabase).hostname);
     } catch {}
   }
-  return [...DOMINIOS_FIXOS, ...extras];
+  return [...DOMINIOS_FIXOS, ...extras, ...dominiosDasInstancias()];
 }
 
 function permitido(url: URL): boolean {

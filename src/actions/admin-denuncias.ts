@@ -5,6 +5,7 @@ import type { FormState } from "@/actions/auth";
 import { requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
 import type { ResolucaoDenuncia } from "@/lib/denuncias";
+import { estaNoAr, statusFora } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
 const RESOLUCOES = new Set<ResolucaoDenuncia>(["descartar", "despublicar", "remover_comentario"]);
@@ -38,7 +39,7 @@ export async function resolverDenuncia(_prev: FormState, formData: FormData): Pr
     await prisma.$transaction([
       prisma.event.update({
         where: { id: event.id },
-        data: { status: event.status === "publicado" ? (event.fonte === "ticketmaster" ? "cancelado" : "rascunho") : event.status },
+        data: { status: estaNoAr(event.status) ? statusFora(event.fonte) : event.status },
       }),
       prisma.denuncia.updateMany({ where: { eventId: event.id, status: "aberta" }, data: { status: "resolvida", ...fechamento } }),
     ]);

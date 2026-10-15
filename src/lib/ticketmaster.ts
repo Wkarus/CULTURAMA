@@ -113,7 +113,7 @@ export async function syncTicketmaster(): Promise<{ ok: true; upserted: number }
     const gratuito = ranges.length > 0 && ranges.every((range) => (range.min ?? 1) === 0 && (range.max ?? 1) === 0);
 
     await prisma.event.upsert({
-      where: { idExterno: item.id },
+      where: { fonte_fonteInstancia_idExterno: { fonte: "ticketmaster", fonteInstancia: "", idExterno: item.id } },
       create: {
         fonte: "ticketmaster",
         idExterno: item.id,

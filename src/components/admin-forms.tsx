@@ -37,6 +37,12 @@ export function ModeracaoForm({ event }: { event: Event }) {
         Status público
         <select name="status" defaultValue={event.status} className={campoAdmin}>
           <option value="publicado">Publicado</option>
+          {event.fonte === "mapas_culturais" ? (
+            <>
+              <option value="importado">Importado (no ar, sem revisão)</option>
+              <option value="inativo">Inativo</option>
+            </>
+          ) : null}
           <option value="em_revisao">Em revisão</option>
           <option value="adiado">Adiado</option>
           <option value="cancelado">Oculto / cancelado</option>
@@ -48,6 +54,12 @@ export function ModeracaoForm({ event }: { event: Event }) {
         <textarea name="notaAdmin" defaultValue={event.notaAdmin ?? ""} rows={3} className={areaAdmin} />
       </label>
       {event.fonte === "ticketmaster" ? <p className={dicaAdmin}>Ticketmaster: só status e nota. O texto do evento não muda.</p> : null}
+      {event.fonte === "mapas_culturais" ? (
+        <p className={dicaAdmin}>
+          Mapas Culturais: oculto, rascunho, adiado e em revisão são respeitados pela importação. Importado, publicado e inativo ela
+          atualiza sozinha conforme a fonte.
+        </p>
+      ) : null}
       <Submit label="Salvar moderação" />
     </form>
   );

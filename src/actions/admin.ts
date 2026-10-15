@@ -6,11 +6,12 @@ import type { FormState } from "@/actions/auth";
 import { requireAdmin, requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
 import { linkSeguro } from "@/lib/anuncios";
+import { detalhesDoLog, importarMapasCulturais } from "@/lib/mapas-culturais-importer";
 import { prisma } from "@/lib/prisma";
 import { syncTicketmaster } from "@/lib/ticketmaster";
 import { salvarImagem } from "@/lib/upload";
 
-const EVENT_STATUS = new Set<EventStatus>(["rascunho", "publicado", "cancelado", "adiado", "em_revisao"]);
+const EVENT_STATUS = new Set<EventStatus>(["rascunho", "publicado", "cancelado", "adiado", "em_revisao", "importado", "inativo"]);
 const AD_TIPOS = new Set<AdSlotTipo>(["banner_home", "banner_categoria", "destaque_evento"]);
 
 function refreshAdmin() {
@@ -157,6 +158,15 @@ export async function sincronizarTicketmasterAgora(): Promise<SyncState> {
   refreshAdmin();
   revalidatePath("/");
   return result.ok ? { ok: true, importados: result.upserted } : { error: result.message };
+}
+
+export async function importarMapasCulturaisAgora(): Promise<SyncState> {
+  const autor = await requireAdmin();
+  const result = await importarMapasCulturais();
+  await registrarLog(autor, "mapas.importar", "sistema", null, detalhesDoLog(result));
+  refreshAdmin();
+  revalidatePath("/");
+  return result.ok ? { ok: true, importados: result.importados } : { error: result.message };
 }
 
 export async function alternarAnuncio(id: string): Promise<FormState> {

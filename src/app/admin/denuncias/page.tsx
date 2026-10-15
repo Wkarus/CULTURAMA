@@ -5,6 +5,7 @@ import { DenunciaAcoes } from "@/components/admin/denuncia-acoes";
 import { botaoAdmin, campoAdmin, focoAdmin, painelAdmin, rotuloAdmin } from "@/components/admin/estilos";
 import { requireSecao } from "@/lib/admin";
 import { MOTIVOS_DENUNCIA, ROTULO_RESOLUCAO, STATUS_DENUNCIA, type ResolucaoDenuncia } from "@/lib/denuncias";
+import { estaNoAr } from "@/lib/event-filters";
 import { labelStatus } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -111,7 +112,7 @@ export default async function AdminDenunciasPage({ searchParams }: { searchParam
           {denuncias.map((d) => {
             const outras = (d.event?._count.denuncias ?? d.comment?._count.denuncias ?? 0) - (d.status === "aberta" ? 1 : 0);
             const opcoes: ResolucaoDenuncia[] = ["descartar"];
-            if (d.event?.status === "publicado") opcoes.push("despublicar");
+            if (d.event && estaNoAr(d.event.status)) opcoes.push("despublicar");
             if (d.comment && !d.comment.oculto) opcoes.push("remover_comentario");
             const linkEvento = d.event?.id ?? d.comment?.event.id;
 

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { FormState } from "@/actions/auth";
 import { requireAdmin, requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
+import { estaNoAr, statusFora } from "@/lib/event-filters";
 import { lerDadosEvento } from "@/lib/evento-dados";
 import { prisma } from "@/lib/prisma";
 import { caminhoDeCapa, removerArquivo } from "@/lib/storage";
@@ -60,7 +61,10 @@ export async function revisarEvento(_prev: FormState, formData: FormData): Promi
   return { ok: true };
 }
 
-/** Admin e moderação criam ou editam eventos internos. Ticketmaster não é editável. */
+/**
+ * Admin e moderação criam ou editam eventos internos e do Mapas Culturais. Ticketmaster não é editável.
+ * Editar um evento do Mapas marca `editadoPelaEquipe`: a importação passa a mexer só no status dele.
+ */
 export async function salvarEventoAdmin(_prev: FormState, formData: FormData): Promise<FormState> {
   const autor = await requireRole([...EQUIPE]);
   const id = String(formData.get("id") ?? "");
@@ -72,13 +76,14 @@ export async function salvarEventoAdmin(_prev: FormState, formData: FormData): P
 
   if (id) {
     const existing = await prisma.event.findUnique({ where: { id } });
-    if (!existing || existing.fonte !== "interno") return { error: "Evento não encontrado ou não pode ser editado." };
-    const status: EventStatus = publicar ? "publicado" : existing.status === "publicado" ? "rascunho" : existing.status;
+    if (!existing || existing.fonte === "ticketmaster") return { error: "Evento não encontrado ou não pode ser editado." };
+    const status: EventStatus = publicar ? "publicado" : estaNoAr(existing.status) ? statusFora(existing.fonte) : existing.status;
     await prisma.event.update({
       where: { id },
       data: {
         ...dados,
         status,
+        ...(existing.fonte === "mapas_culturais" ? { editadoPelaEquipe: true } : {}),
         ...(publicar ? { revisaoResultado: null, mensagemOrganizador: null } : {}),
         ...(imagemCapa ? { imagemCapa } : {}),
       },
@@ -101,14 +106,14 @@ export async function salvarEventoAdmin(_prev: FormState, formData: FormData): P
   return { ok: true };
 }
 
-/** Publicado sai do ar como rascunho; Ticketmaster sai como oculto, que a sincronização respeita. */
+/** No ar (publicado ou importado) sai como rascunho; evento importado sai como oculto, que a sincronização respeita. */
 export async function alternarPublicacao(id: string): Promise<FormState> {
   const autor = await requireRole([...EQUIPE]);
   const evento = await prisma.event.findUnique({ where: { id }, select: { titulo: true, status: true, fonte: true } });
   if (!evento) return { error: "Evento não encontrado." };
 
-  const publicar = evento.status !== "publicado";
-  const status: EventStatus = publicar ? "publicado" : evento.fonte === "ticketmaster" ? "cancelado" : "rascunho";
+  const publicar = !estaNoAr(evento.status);
+  const status: EventStatus = publicar ? "publicado" : statusFora(evento.fonte);
   await prisma.event.update({
     where: { id },
     data: { status, ...(publicar ? { revisaoResultado: null, mensagemOrganizador: null } : {}) },

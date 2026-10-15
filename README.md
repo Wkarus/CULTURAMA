@@ -80,7 +80,8 @@ Abra [http://localhost:3000](http://localhost:3000). Se a 3000 estiver ocupada, 
 
 ```bash
 npm run dev          # desenvolvimento
-npm test             # CPF + distância (haversine)
+npm test             # testes de lib (CPF, filtros, categorias, Mapas Culturais…)
+npm run mapas:importar  # importa Mapas Culturais (ver abaixo)
 npm run db:seed      # categorias
 npm run db:admin     # promove ADMIN_EMAIL a admin
 npx prisma studio    # ver tabelas
@@ -91,6 +92,25 @@ Sincronizar Ticketmaster (dev, sem `CRON_SECRET`):
 `GET http://localhost:3000/api/cron/ticketmaster`
 
 Na Vercel, o cron diário está em `vercel.json`. Lá defina `CRON_SECRET` e chame com `Authorization: Bearer ...`.
+
+### Mapas Culturais (SP Cultura, Mapa da Cultura, Paraíba…)
+
+Importa eventos da API pública `/api/` das instâncias em `MAPAS_CULTURAIS_INSTANCIAS` (formato `Nome|URL|Fuso`, separado por `;`). Roda todo dia às 8h30 UTC pelo cron de `vercel.json`.
+
+```bash
+npx tsx scripts/importar-mapas-culturais.ts --simular --instancia=https://mapacultural.pb.gov.br   # só busca e mostra, não grava
+npm run mapas:importar                                                                            # grava no banco
+```
+
+No PowerShell use `npx tsx ...` (o `--` do `npm run` some). Em dev também dá para chamar `GET /api/cron/mapas-culturais?instancia=URL`; no painel admin há o botão "Sincronizar agora".
+
+- Eventos entram como `importado` (no ar sem revisão). Ocultar no admin vira `cancelado`, e a importação respeita.
+- Evento que some da fonte ou já terminou vira `inativo` (não é apagado) e volta a `importado` se reaparecer.
+- Editar o texto no admin trava a sobrescrita daquele evento (`editado_pela_equipe`).
+- Linguagem → categoria: `src/lib/mapas-culturais-categorias.ts`. O que não estiver mapeado vai para "Outros" e aparece no painel.
+- Nunca importamos dados de agentes (nome pessoal, e-mail, telefone, documento): o `@select` é uma lista fechada.
+- Região: por padrão só o estado de SP. `MAPAS_CULTURAIS_UFS="SP,RJ"` (ou `*`) e/ou `MAPAS_CULTURAIS_RAIO="lat,lng,km"`. Local sem estado conhecido fica de fora; evento que sai da região vira `inativo`.
+- robots.txt: lido antes de cada instância. Se bloquear `/api/` (ou não responder), a instância é pulada sem nenhuma chamada à API e o aviso fica no histórico do admin. 404 = sem restrições (RFC 9309).
 
 ## Rotas úteis
 

@@ -96,6 +96,11 @@ export const CATEGORIAS_ARVORE = [
       { slug: "encontros-de-carros", nome: "Encontros de carros", icone: "Car" },
     ],
   },
+  { slug: "cinema-e-audiovisual", nome: "Cinema e audiovisual", icone: "Clapperboard", filhas: [] },
+  { slug: "cultura-popular", nome: "Cultura popular e tradicional", icone: "Flower2", filhas: [] },
+  { slug: "literatura", nome: "Literatura", icone: "Library", filhas: [] },
+  { slug: "oficinas", nome: "Oficinas e cursos", icone: "GraduationCap", filhas: [] },
+  { slug: "outros", nome: "Outros", icone: "Shapes", filhas: [] },
 ] as const;
 
 type Mae = (typeof CATEGORIAS_ARVORE)[number];

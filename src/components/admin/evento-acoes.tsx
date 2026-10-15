@@ -24,7 +24,7 @@ function BotaoExcluir() {
   );
 }
 
-function ExcluirEvento({ id, titulo, ticketmaster }: { id: string; titulo: string; ticketmaster: boolean }) {
+function ExcluirEvento({ id, titulo, importado }: { id: string; titulo: string; importado: boolean }) {
   const [aberto, setAberto] = useState(false);
   const [state, action] = useFormState(excluirEvento, {} as FormState);
 
@@ -39,7 +39,7 @@ function ExcluirEvento({ id, titulo, ticketmaster }: { id: string; titulo: strin
           <Dialog.Title className="font-display text-xl font-semibold tracking-display">Excluir evento?</Dialog.Title>
           <Dialog.Description className="text-sm text-muted-on-dark">
             <span className="text-on-dark">{titulo}</span> sai do banco com favoritos e comentários. Não dá para desfazer.
-            {ticketmaster ? " Eventos da Ticketmaster voltam na próxima sincronização se ainda estiverem à venda; para tirar do ar, prefira despublicar." : ""}
+            {importado ? " Eventos importados (Ticketmaster, Mapas Culturais) voltam na próxima sincronização se ainda estiverem na fonte; para tirar do ar, prefira despublicar." : ""}
           </Dialog.Description>
           <form action={action} className="grid gap-3">
             <input type="hidden" name="id" value={id} />
@@ -68,14 +68,16 @@ export function EventoAcoes({
   titulo,
   publicado,
   destaque,
-  ticketmaster,
+  importado,
+  editavel,
   podeExcluir,
 }: {
   id: string;
   titulo: string;
   publicado: boolean;
   destaque: boolean;
-  ticketmaster: boolean;
+  importado: boolean;
+  editavel: boolean;
   podeExcluir: boolean;
 }) {
   const [pendente, iniciar] = useTransition();
@@ -88,7 +90,7 @@ export function EventoAcoes({
 
   return (
     <div className="flex items-center justify-end gap-0.5">
-      <Link href={`/admin/eventos/${id}`} className={iconeBotao} aria-label={`Editar ${titulo}`} title={ticketmaster ? "Moderar" : "Editar"}>
+      <Link href={`/admin/eventos/${id}`} className={iconeBotao} aria-label={`Editar ${titulo}`} title={editavel ? "Editar" : "Moderar"}>
         <Pencil aria-hidden />
       </Link>
       <button
@@ -112,7 +114,7 @@ export function EventoAcoes({
       >
         <Star className={cn(destaque && "fill-current")} aria-hidden />
       </button>
-      {podeExcluir ? <ExcluirEvento id={id} titulo={titulo} ticketmaster={ticketmaster} /> : null}
+      {podeExcluir ? <ExcluirEvento id={id} titulo={titulo} importado={importado} /> : null}
       {erro ? (
         <span role="alert" className="ml-2 text-xs text-danger">
           {erro}
