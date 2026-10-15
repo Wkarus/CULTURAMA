@@ -112,6 +112,23 @@ No PowerShell use `npx tsx ...` (o `--` do `npm run` some). Em dev também dá p
 - Região: por padrão só o estado de SP. `MAPAS_CULTURAIS_UFS="SP,RJ"` (ou `*`) e/ou `MAPAS_CULTURAIS_RAIO="lat,lng,km"`. Local sem estado conhecido fica de fora; evento que sai da região vira `inativo`.
 - robots.txt: lido antes de cada instância. Se bloquear `/api/` (ou não responder), a instância é pulada sem nenhuma chamada à API e o aviso fica no histórico do admin. 404 = sem restrições (RFC 9309).
 
+#### Autorização das fontes
+
+**O Mapa da Cultura (mapa.cultura.gov.br) e o SP Cultura (spcultura.prefeitura.sp.gov.br) só podem ser importados em produção depois de autorização formal dos respectivos gestores.** Até lá, não os inclua em `MAPAS_CULTURAIS_INSTANCIAS` na Vercel. Teste local com `--simular` ou na página `/teste/mapas-culturais` não grava nada e é o limite do uso sem autorização. Ao receber a autorização, registre aqui quem autorizou, quando e por qual canal.
+
+| Instância | Autorização formal |
+|---|---|
+| Mapa da Cultura (federal) | pendente |
+| SP Cultura | pendente |
+
+#### Regras de acesso (sem exceção)
+
+- Nunca contornar Cloudflare, captcha ou desafio anti-robô: nada de User-Agent de navegador, navegador headless, proxy, troca de IP ou resolução automática de desafio.
+- User-Agent sempre honesto e fixo: `CulturamaBot/1.0 (+contato)`, com o contato de `MAPAS_CULTURAIS_CONTATO`. Não existe opção para trocá-lo.
+- Desafio da Cloudflare (403/429/503 com challenge, inclusive no robots.txt) ou robots.txt bloqueando ou sem resposta: a instância é pulada na hora, sem nova tentativa, e o aviso fica no histórico do admin. Nada é gravado nem inativado nessa rodada.
+- Pausa entre chamadas, timeout e poucas retentativas com espera crescente, só para falhas de rede, 429 e 5xx comuns.
+- As funções rodam em São Paulo (`"regions": ["gru1"]` no `vercel.json`) por desempenho, perto do banco no Supabase (`sa-east-1`). Não é forma de passar por bloqueio.
+
 ## Rotas úteis
 
 | Rota | Quem usa |

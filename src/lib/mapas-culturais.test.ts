@@ -19,7 +19,7 @@ import {
   type OcorrenciaApi,
 } from "./mapas-culturais";
 import { LINGUAGEM_PARA_CATEGORIA, mapearLinguagens } from "./mapas-culturais-categorias";
-import { descreverRegiao, lerInstancias, lerRegiao, nomeDaInstancia } from "./mapas-culturais-config";
+import { descreverRegiao, lerConfigMapas, lerInstancias, lerRegiao, nomeDaInstancia, userAgentDoRobo } from "./mapas-culturais-config";
 import { robotsPermite } from "./robots";
 
 const PB = { nome: "Mapa Cultural da Paraíba", url: "https://mapacultural.pb.gov.br", fuso: "America/Recife" };
@@ -211,11 +211,25 @@ function clienteFalso(respostas: ((url: URL) => Response)[]) {
 const json = (corpo: unknown, status = 200) => () =>
   new Response(JSON.stringify(corpo), { status, headers: { "content-type": "application/json" } });
 
-test("desafio anti-robô vira erro claro, sem retentar", async () => {
-  const desafio = () => new Response("<!DOCTYPE html><title>Just a moment...</title>", { status: 403, headers: { "content-type": "text/html" } });
-  const { cliente, chamadas } = clienteFalso([desafio, desafio]);
-  await assert.rejects(cliente.json("event/findOccurrences", {}), /anti-robô/);
-  assert.equal(chamadas.length, 1);
+const desafio = (status: number) => () =>
+  new Response("<!DOCTYPE html><title>Just a moment...</title>", { status, headers: { "content-type": "text/html" } });
+
+test("desafio anti-robô (403, 429 ou 503) pula a instância, sem retentar", async () => {
+  for (const status of [403, 429, 503]) {
+    const { cliente, chamadas } = clienteFalso([desafio(status), desafio(status)]);
+    await assert.rejects(cliente.json("event/findOccurrences", {}), (erro) => erro instanceof InstanciaPulada && /anti-robô/.test(erro.message));
+    assert.equal(chamadas.length, 1, `HTTP ${status}`);
+  }
+  const cabecalho = clienteFalso([() => new Response("", { status: 403, headers: { "cf-mitigated": "challenge" } })]);
+  await assert.rejects(cabecalho.cliente.json("event/find", {}), InstanciaPulada);
+});
+
+test("User-Agent é sempre o robô identificado; só o contato muda", () => {
+  assert.equal(userAgentDoRobo(undefined), "CulturamaBot/1.0 (agregador de eventos culturais)");
+  assert.equal(userAgentDoRobo("contato@culturama.app"), "CulturamaBot/1.0 (+contato@culturama.app)");
+  assert.equal(userAgentDoRobo("x) Mozilla/5.0 (Windows"), "CulturamaBot/1.0 (+x Mozilla/5.0 Windows)");
+  const env = { MAPAS_CULTURAIS_USER_AGENT: "Mozilla/5.0 Chrome/130" } as unknown as NodeJS.ProcessEnv;
+  assert.match(lerConfigMapas(env).userAgent, /^CulturamaBot\/1\.0 /, "User-Agent livre não é aceito");
 });
 
 test("retry com backoff em 503 e desiste em 404", async () => {
@@ -242,7 +256,7 @@ test("paginação de findOccurrences segue até a página incompleta", async () 
   assert.equal(chamadas[2].searchParams.get("@page"), "3");
 });
 
-const UA = "Culturama/0.1 (TCC)";
+const UA = "CulturamaBot/1.0 (+contato@culturama.app)";
 
 test("robots.txt: grupo próprio vence o *, regra mais longa vence, allow ganha empate", () => {
   assert.equal(robotsPermite("", UA, "/api/"), true);
@@ -250,7 +264,8 @@ test("robots.txt: grupo próprio vence o *, regra mais longa vence, allow ganha 
   assert.equal(robotsPermite("User-agent: *\nDisallow: /", UA, "/api/"), false);
   assert.equal(robotsPermite("User-agent: *\nDisallow:", UA, "/api/"), true, "Disallow vazio libera tudo");
   assert.equal(robotsPermite("User-agent: *\nDisallow: /admin\n", UA, "/api/"), true);
-  assert.equal(robotsPermite("User-agent: *\nDisallow: /api/\n\nUser-agent: culturama\nAllow: /", UA, "/api/"), true);
+  assert.equal(robotsPermite("User-agent: *\nDisallow: /api/\n\nUser-agent: CulturamaBot\nAllow: /", UA, "/api/"), true);
+  assert.equal(robotsPermite("User-agent: CulturamaBot\nDisallow: /api/", UA, "/api/"), false);
   assert.equal(robotsPermite("User-agent: Googlebot\nDisallow: /", UA, "/api/"), true, "regra de outro robô não vale");
   assert.equal(robotsPermite("User-agent: *\nDisallow: /\nAllow: /api/", UA, "/api/space/find"), true);
   assert.equal(robotsPermite("User-agent: *\nDisallow: /*find$", UA, "/api/event/find"), false);
@@ -292,6 +307,21 @@ test("robots.txt inacessível também pula; 404 libera", async () => {
   });
   const coleta = await coletarInstancia(sem.cliente, { dias: 60, regiao: TODOS }, ANTES);
   assert.equal(coleta.eventos.length, 0);
+});
+
+test("desafio no robots.txt ou no meio da coleta encerra a instância sem mais chamadas", async () => {
+  const noRobots = clientePorRota({ "/robots.txt": desafio(403) });
+  await assert.rejects(coletarInstancia(noRobots.cliente, { dias: 60, regiao: TODOS }, ANTES), (erro) => erro instanceof InstanciaPulada && /anti-robô/.test(erro.message));
+  assert.deepEqual(noRobots.chamadas.map((c) => c.pathname), ["/robots.txt"], "403 com desafio não conta como 'sem robots.txt'");
+
+  const noLote = clientePorRota({
+    "/robots.txt": texto("", 404),
+    "/api/event/findOccurrences": json(Array.from({ length: 90 }, (_, i) => ({ ...OCORRENCIAS_197[0], event_id: i + 1, space: { id: i + 1 }, _reccurrence_string: `${i}` }))),
+    "/api/space/find": desafio(503),
+  });
+  await assert.rejects(coletarInstancia(noLote.cliente, { dias: 60, regiao: TODOS }, ANTES), InstanciaPulada);
+  assert.equal(noLote.chamadas.filter((c) => c.pathname === "/api/space/find").length, 1, "não segue para os próximos lotes");
+  assert.ok(!noLote.chamadas.some((c) => c.pathname === "/api/event/find"));
 });
 
 test("config de região: padrão SP, lista de UFs, todos e raio", () => {

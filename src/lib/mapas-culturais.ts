@@ -96,8 +96,16 @@ export class ErroMapas extends Error {
   }
 }
 
-/** A instância não deve ser consultada (robots.txt); nada foi pedido à API. */
+/** A instância não deve ser consultada (robots.txt ou desafio anti-robô): a coleta para na hora, sem nova tentativa. */
 export class InstanciaPulada extends ErroMapas {}
+
+export const AVISO_DESAFIO =
+  "A instância respondeu com desafio anti-robô (Cloudflare); instância pulada. Só importar com autorização formal do gestor.";
+
+/** Desafio vem como 403, 429 ou 503; nunca é resolvido nem contornado. */
+function ehDesafio(resposta: Response, corpo: string): boolean {
+  return Boolean(resposta.headers.get("cf-mitigated")) || /cf_chl|challenge-platform|Just a moment|Attention Required/i.test(corpo);
+}
 
 type Fetch = typeof fetch;
 const esperar = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -125,7 +133,7 @@ export class ClienteMapas {
   }
 
   /** robots.txt da raiz do domínio. `null` = inacessível (rede, 429 ou 5xx em todas as tentativas). */
-  async robots(): Promise<{ status: number; corpo: string } | null> {
+  async robots(): Promise<{ status: number; corpo: string; desafio: boolean } | null> {
     const url = new URL("/robots.txt", this.instancia.url);
     for (let tentativa = 0; tentativa <= this.config.tentativas; tentativa++) {
       await this.aguardarVez();
@@ -135,8 +143,10 @@ export class ClienteMapas {
           cache: "no-store",
           signal: AbortSignal.timeout(this.config.timeoutMs),
         });
+        const corpo = await resposta.text().catch(() => "");
+        if (ehDesafio(resposta, corpo)) return { status: resposta.status, corpo: "", desafio: true };
         if (resposta.status !== 429 && resposta.status < 500) {
-          return { status: resposta.status, corpo: resposta.ok ? await resposta.text() : "" };
+          return { status: resposta.status, corpo: resposta.ok ? corpo : "", desafio: false };
         }
       } catch {
         // rede: tenta de novo
@@ -170,11 +180,9 @@ export class ClienteMapas {
         throw new ErroMapas(`A instância redirecionou para ${new URL(resposta.url).origin}; atualize a URL em MAPAS_CULTURAIS_INSTANCIAS.`);
       }
       const tipo = resposta.headers.get("content-type") ?? "";
-      if (resposta.headers.get("cf-mitigated") === "challenge" || (!tipo.includes("json") && resposta.status !== 429 && resposta.status < 500)) {
+      if (resposta.headers.get("cf-mitigated") || !tipo.includes("json")) {
         const corpo = await resposta.text().catch(() => "");
-        if (resposta.headers.get("cf-mitigated") || /cf_chl|Just a moment/i.test(corpo)) {
-          throw new ErroMapas("A instância exige desafio anti-robô (Cloudflare); peça liberação da API ao gestor da instância.", resposta.status);
-        }
+        if (ehDesafio(resposta, corpo)) throw new InstanciaPulada(AVISO_DESAFIO, resposta.status);
         if (resposta.ok) throw new ErroMapas(`Resposta não é JSON em ${caminho} (${tipo || "sem content-type"})`, resposta.status);
       }
       if (resposta.ok) return (await resposta.json()) as T;
@@ -200,6 +208,7 @@ const CAMINHOS_DA_API = ["/api/", "/api/event/findOccurrences", "/api/event/find
 export async function bloqueioDoRobots(cliente: ClienteMapas): Promise<string | null> {
   const resposta = await cliente.robots();
   if (!resposta) return "robots.txt inacessível (sem resposta ou erro do servidor); por precaução a instância foi pulada";
+  if (resposta.desafio) return AVISO_DESAFIO;
   if (resposta.status >= 400) return null;
   const base = new URL(cliente.instancia.url).pathname.replace(/\/+$/, "");
   const bloqueado = CAMINHOS_DA_API.map((caminho) => base + caminho).find(
@@ -248,7 +257,7 @@ function lotes<T>(itens: T[], tamanho: number): T[][] {
 
 export type ResultadoLotes<T> = { itens: T[]; falhas: { ids: number[]; erro: string }[] };
 
-/** Busca por `id=IN(...)` em lotes; um lote que falha não derruba os outros. */
+/** Busca por `id=IN(...)` em lotes; um lote que falha não derruba os outros, mas desafio anti-robô encerra a instância. */
 async function buscarPorIds<T>(cliente: ClienteMapas, entidade: string, ids: number[], params: Record<string, string>): Promise<ResultadoLotes<T>> {
   const resultado: ResultadoLotes<T> = { itens: [], falhas: [] };
   for (const lote of lotes([...new Set(ids)], IDS_POR_LOTE)) {
@@ -257,6 +266,7 @@ async function buscarPorIds<T>(cliente: ClienteMapas, entidade: string, ids: num
       if (!Array.isArray(itens)) throw new ErroMapas(`Resposta inesperada de ${entidade}/find`);
       resultado.itens.push(...itens);
     } catch (erro) {
+      if (erro instanceof InstanciaPulada) throw erro;
       resultado.falhas.push({ ids: lote, erro: erro instanceof Error ? erro.message : String(erro) });
     }
   }

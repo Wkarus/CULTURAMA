@@ -27,7 +27,16 @@ export type ConfigMapas = {
 };
 
 const FUSO_PADRAO = "America/Sao_Paulo";
-const USER_AGENT_PADRAO = "Culturama/0.1 (plataforma de descoberta de eventos culturais; TCC)";
+const ROBO = "CulturamaBot/1.0";
+
+/**
+ * Sempre o mesmo robô identificado; só o contato é configurável (`MAPAS_CULTURAIS_CONTATO`: URL ou e-mail).
+ * Não aceitar User-Agent livre: nunca se passar por navegador.
+ */
+export function userAgentDoRobo(contato: string | undefined): string {
+  const limpo = (contato ?? "").replace(/[()\r\n]/g, "").trim().slice(0, 200);
+  return limpo ? `${ROBO} (+${limpo})` : `${ROBO} (agregador de eventos culturais)`;
+}
 
 function inteiro(raw: string | undefined, padrao: number, min: number, max: number): number {
   const n = Number.parseInt(raw ?? "", 10);
@@ -116,7 +125,7 @@ export function lerConfigMapas(env: NodeJS.ProcessEnv = process.env): ConfigMapa
     pausaMs: inteiro(env.MAPAS_CULTURAIS_PAUSA_MS, 1000, 200, 30_000),
     timeoutMs: inteiro(env.MAPAS_CULTURAIS_TIMEOUT_MS, 20_000, 2_000, 120_000),
     tentativas: inteiro(env.MAPAS_CULTURAIS_TENTATIVAS, 3, 0, 6),
-    userAgent: env.MAPAS_CULTURAIS_USER_AGENT?.trim() || USER_AGENT_PADRAO,
+    userAgent: userAgentDoRobo(env.MAPAS_CULTURAIS_CONTATO),
     geocodeMax: inteiro(env.MAPAS_CULTURAIS_GEOCODE_MAX, 25, 0, 500),
   };
 }

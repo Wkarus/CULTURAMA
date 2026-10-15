@@ -15,7 +15,7 @@ export type ResumoInstancia = {
   instancia: string;
   nome: string;
   ok: boolean;
-  /** Pulada por robots.txt: nenhuma requisição à API. */
+  /** Pulada por robots.txt ou desafio anti-robô: nada gravado nem inativado. */
   pulada: boolean;
   ocorrencias: number;
   foraDaRegiao: number;
