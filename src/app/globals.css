@@ -196,7 +196,8 @@
     .header-item-in,
     .hero-marquee-track,
     .hero-shine-window,
-    .hero-shine-text {
+    .hero-shine-text,
+    .eventos-deriva {
       animation: none;
     }
   }
@@ -318,6 +319,29 @@
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+.eventos-deriva {
+  animation: eventos-deriva 48s linear infinite;
+}
+
+.eventos-deriva-inverso {
+  animation-direction: reverse;
+}
+
+@keyframes eventos-deriva {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eventos-deriva {
+    animation: none !important;
   }
 }
 

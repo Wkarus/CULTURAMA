@@ -21,6 +21,52 @@ import { cn } from "@/lib/utils";
 
 const FOCO = "outline-none focus-visible:ring-2 focus-visible:ring-accent-solid focus-visible:ring-offset-2 focus-visible:ring-offset-surface-light";
 
+const GIROS = [-18, 12, -8, 22, -14, 6, 16, -24, 10, -6, 20, -12, 8];
+const TAMANHOS = [92, 128, 76, 112, 148, 84, 120, 100, 136, 80, 108, 96, 140];
+const OPACIDADES = [0.08, 0.06, 0.1, 0.07, 0.09, 0.06, 0.1, 0.08, 0.07, 0.09, 0.06, 0.08, 0.1];
+const FAIXAS = [
+  { topo: "0%", duracao: "48s", inverso: false },
+  { topo: "34%", duracao: "56s", inverso: true },
+  { topo: "62%", duracao: "42s", inverso: false },
+] as const;
+
+function FundoIcones({ maes }: { maes: { slug: string; icone: string }[] }) {
+  if (maes.length === 0) return null;
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+      {FAIXAS.map((faixa, faixaIndex) => {
+        const ordem = [...maes.slice(faixaIndex), ...maes.slice(0, faixaIndex)];
+        const ciclo = [...ordem, ...ordem];
+        return (
+          <div
+            key={faixa.topo}
+            className={cn("eventos-deriva absolute flex w-max items-center gap-14", faixa.inverso && "eventos-deriva-inverso")}
+            style={{ top: faixa.topo, animationDuration: faixa.duracao }}
+          >
+            {ciclo.map((mae, indice) => {
+              const Icone = iconeLucide(mae.icone);
+              const n = (indice + faixaIndex * 4) % GIROS.length;
+              return (
+                <Icone
+                  key={`${faixa.topo}-${mae.slug}-${indice}`}
+                  className="shrink-0"
+                  style={{
+                    width: TAMANHOS[n],
+                    height: TAMANHOS[n],
+                    color: corDaCategoria(mae.slug),
+                    opacity: OPACIDADES[n],
+                    transform: `rotate(${GIROS[n]}deg)`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function rotuloData(iso: string): string {
   const [ano, mes, dia] = iso.split("-").map(Number);
   return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(Date.UTC(ano, mes - 1, dia)));
@@ -47,6 +93,7 @@ export function EventosBusca({
   const [km, setKm] = useState(() => kmInicial(filters.distancia));
   const [buscando, setBuscando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [compacta, setCompacta] = useState(false);
   const painelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,6 +109,13 @@ export function EventosBusca({
     }, 250);
     return () => window.clearTimeout(timer);
   }, [texto, filters, router]);
+
+  useEffect(() => {
+    const atualizar = () => setCompacta(window.scrollY > 80);
+    atualizar();
+    window.addEventListener("scroll", atualizar, { passive: true });
+    return () => window.removeEventListener("scroll", atualizar);
+  }, []);
 
   useEffect(() => {
     if (!aberto) return;
@@ -115,8 +169,9 @@ export function EventosBusca({
 
   return (
     <div className="relative">
-      <div className="sticky top-16 z-30 -mx-4 border-b border-border-light bg-[color-mix(in_srgb,var(--color-surface-light)_92%,transparent)] px-4 py-4 backdrop-blur-md">
-        <div className="flex items-center justify-between gap-3">
+      <div className="relative min-h-32 overflow-hidden py-3">
+        <FundoIcones maes={arvore} />
+        <div className="relative z-10 flex items-center justify-between gap-3">
           <h1 className="font-display text-3xl font-semibold tracking-display text-on-light">Eventos</h1>
           <div className="flex rounded-full bg-muted p-1" role="group" aria-label="Ver eventos">
             <Link href={hrefBusca("/eventos", filters)} aria-current="page" className={cn("rounded-full bg-surface-dark px-3 py-1.5 text-sm font-medium text-on-dark", FOCO)}>
@@ -127,38 +182,45 @@ export function EventosBusca({
             </Link>
           </div>
         </div>
+      </div>
 
-        <label className="mt-4 flex items-center gap-3 rounded-full bg-surface-dark px-4 py-3 text-on-dark">
-          <Search className="size-5 shrink-0 text-muted-on-dark" aria-hidden />
-          <input
-            value={texto}
-            onChange={(event) => setTexto(event.target.value)}
-            placeholder="O que você quer fazer hoje?"
-            className="w-full bg-transparent text-base text-on-dark outline-none placeholder:text-muted-on-dark"
-            type="search"
-          />
-        </label>
+      <div className="sticky top-16 z-30">
+        <div className="relative left-1/2 w-screen -translate-x-1/2 border-b border-border-light bg-surface-light">
+          <FundoIcones maes={arvore} />
+          <div className={cn("relative z-10 mx-auto max-w-page px-4 transition-[padding] duration-300 ease-out motion-reduce:transition-none", compacta ? "py-2" : "py-3")}>
+            <label className={cn("flex items-center gap-3 rounded-full bg-surface-dark px-4 text-on-dark transition-[padding] duration-300 ease-out motion-reduce:transition-none", compacta ? "py-2" : "py-3")}>
+              <Search className={cn("shrink-0 text-muted-on-dark transition-[width,height] duration-300 ease-out motion-reduce:transition-none", compacta ? "size-4" : "size-5")} aria-hidden />
+              <input
+                value={texto}
+                onChange={(event) => setTexto(event.target.value)}
+                placeholder="O que você quer fazer hoje?"
+                className="w-full bg-transparent text-base text-on-dark outline-none placeholder:text-muted-on-dark"
+                type="search"
+              />
+            </label>
 
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Pilula ativo={tudo} onClick={() => ir({ de: null, ate: null, preco: null, distancia: null, lat: null, lng: null })}>
-            Tudo
-          </Pilula>
-          <Pilula ativo={hoje} onClick={() => ir({ de: diaISO(new Date()), ate: diaISO(new Date()) })}>
-            Hoje
-          </Pilula>
-          <Pilula ativo={fds} onClick={() => ir({ de: fim.de, ate: fim.ate })}>
-            Fim de semana
-          </Pilula>
-          <Pilula ativo={gratis} onClick={() => ir({ preco: gratis ? null : "gratuito" })}>
-            Grátis
-          </Pilula>
-          <Pilula ativo={perto} onClick={pertoDeMim} disabled={buscando}>
-            {buscando ? "Buscando localização…" : "Perto de mim"}
-          </Pilula>
-          <Pilula ativo={maisAtivo || aberto} onClick={() => setAberto((valor) => !valor)} aria-expanded={aberto} aria-controls={painelId}>
-            <SlidersHorizontal className="size-4" aria-hidden />
-            Mais filtros
-          </Pilula>
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <Pilula ativo={tudo} onClick={() => ir({ de: null, ate: null, preco: null, distancia: null, lat: null, lng: null })}>
+                Tudo
+              </Pilula>
+              <Pilula ativo={hoje} onClick={() => ir({ de: diaISO(new Date()), ate: diaISO(new Date()) })}>
+                Hoje
+              </Pilula>
+              <Pilula ativo={fds} onClick={() => ir({ de: fim.de, ate: fim.ate })}>
+                Fim de semana
+              </Pilula>
+              <Pilula ativo={gratis} onClick={() => ir({ preco: gratis ? null : "gratuito" })}>
+                Grátis
+              </Pilula>
+              <Pilula ativo={perto} onClick={pertoDeMim} disabled={buscando}>
+                {buscando ? "Buscando localização…" : "Perto de mim"}
+              </Pilula>
+              <Pilula ativo={maisAtivo || aberto} onClick={() => setAberto((valor) => !valor)} aria-expanded={aberto} aria-controls={painelId}>
+                <SlidersHorizontal className="size-4" aria-hidden />
+                Mais filtros
+              </Pilula>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -170,7 +232,7 @@ export function EventosBusca({
             ref={painelRef}
             role="dialog"
             aria-label="Mais filtros"
-            className="fixed inset-x-0 bottom-0 z-50 grid max-h-[80vh] gap-5 overflow-y-auto rounded-t-card bg-card p-5 shadow-card md:absolute md:inset-x-auto md:bottom-auto md:right-4 md:top-36 md:w-80 md:rounded-card"
+            className="fixed inset-x-0 bottom-0 z-50 grid max-h-[80vh] gap-5 overflow-y-auto rounded-t-card bg-card p-5 shadow-card md:inset-x-auto md:bottom-auto md:right-4 md:top-28 md:w-80 md:rounded-card"
           >
             <div className="flex items-center justify-between">
               <p className="font-display text-lg font-semibold text-on-light">Mais filtros</p>
