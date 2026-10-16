@@ -7,6 +7,9 @@ import { requireAdmin, requireRole } from "@/lib/admin";
 import { registrarLog } from "@/lib/admin-log";
 import { linkSeguro } from "@/lib/anuncios";
 import { detalhesDoLog, importarMapasCulturais } from "@/lib/mapas-culturais-importer";
+import { enviarEmail } from "@/lib/email";
+import { emailAprovado, emailRecusaManual } from "@/lib/emails/pedidos";
+import { motivoManual } from "@/lib/pedido-acesso";
 import { prisma } from "@/lib/prisma";
 import { syncTicketmaster } from "@/lib/ticketmaster";
 import { salvarImagem } from "@/lib/upload";
@@ -18,6 +21,8 @@ function refreshAdmin() {
   revalidatePath("/admin");
   revalidatePath("/admin/eventos");
   revalidatePath("/admin/organizadores");
+  revalidatePath("/admin/empresas");
+  revalidatePath("/conta");
   revalidatePath("/admin/anuncios");
   revalidatePath("/admin/historico");
   revalidatePath("/eventos");
@@ -57,23 +62,81 @@ export async function decidirOrganizador(_prev: FormState, formData: FormData): 
   const autor = await requireAdmin();
   const id = String(formData.get("id") ?? "");
   const decisao = String(formData.get("decisao") ?? "") as StatusVerificacao;
+  const motivo = String(formData.get("motivo") ?? "");
+  const motivoTexto = String(formData.get("motivoTexto") ?? "").trim();
 
   if (!id || (decisao !== "aprovado" && decisao !== "rejeitado")) {
     return { error: "Decisão inválida." };
   }
+  if (decisao === "rejeitado" && !motivoManual(motivo)) return { error: "Escolha o motivo da recusa." };
 
-  const organizer = await prisma.organizer.findUnique({ where: { id } });
+  const organizer = await prisma.organizer.findUnique({
+    where: { id },
+    include: { user: { select: { nome: true, email: true } } },
+  });
   if (!organizer) return { error: "Organizador não encontrado." };
 
   await prisma.organizer.update({
     where: { id },
-    data: { statusVerificacao: decisao, dataVerificacao: new Date() },
+    data: {
+      statusVerificacao: decisao,
+      dataVerificacao: new Date(),
+      motivoCodigo: decisao === "rejeitado" ? motivo : null,
+      motivoTexto: decisao === "rejeitado" ? motivoTexto || null : null,
+    },
   });
   await registrarLog(autor, "organizador.decidir", "organizador", id, {
     nomeEmpresa: organizer.nomeEmpresa,
     statusAntes: organizer.statusVerificacao,
     status: decisao,
+    motivo,
   });
+
+  if (decisao === "aprovado") {
+    await enviarEmail(emailAprovado({ perfil: "organizador", nome: organizer.user.nome, para: organizer.user.email }));
+  } else {
+    await enviarEmail(
+      emailRecusaManual({
+        perfil: "organizador",
+        nome: organizer.user.nome,
+        para: organizer.user.email,
+        motivoCodigo: motivo,
+        motivoTexto,
+      }),
+    );
+  }
+
+  refreshAdmin();
+  return { ok: true };
+}
+
+export async function reabrirPedido(_prev: FormState, formData: FormData): Promise<FormState> {
+  const autor = await requireAdmin();
+  const id = String(formData.get("id") ?? "");
+  const tipo = String(formData.get("tipo") ?? "");
+  if (!id || (tipo !== "organizador" && tipo !== "empresa")) return { error: "Pedido inválido." };
+
+  if (tipo === "organizador") {
+    const organizer = await prisma.organizer.findUnique({ where: { id }, select: { statusVerificacao: true, nomeEmpresa: true } });
+    if (!organizer || organizer.statusVerificacao !== "recusado_automaticamente") {
+      return { error: "Só dá para reabrir um pedido recusado automaticamente." };
+    }
+    await prisma.organizer.update({
+      where: { id },
+      data: { statusVerificacao: "pendente", dataVerificacao: null, motivoCodigo: null, motivoTexto: null, observacao: "Reaberto pela equipe para análise." },
+    });
+    await registrarLog(autor, "organizador.decidir", "organizador", id, { nomeEmpresa: organizer.nomeEmpresa, status: "pendente" });
+  } else {
+    const empresa = await prisma.empresa.findUnique({ where: { id }, select: { status: true, razaoSocial: true } });
+    if (!empresa || empresa.status !== "recusado_automaticamente") {
+      return { error: "Só dá para reabrir um pedido recusado automaticamente." };
+    }
+    await prisma.empresa.update({
+      where: { id },
+      data: { status: "pendente", dataVerificacao: null, motivoCodigo: null, motivoTexto: null, observacao: "Reaberto pela equipe para análise." },
+    });
+    await registrarLog(autor, "empresa.decidir", "empresa", id, { razaoSocial: empresa.razaoSocial, status: "pendente" });
+  }
 
   refreshAdmin();
   return { ok: true };

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { CliqueExterno } from "@/components/clique-externo";
+import { RegistrarVisualizacao } from "@/components/registrar-visualizacao";
 import { RotaPainel } from "@/components/rota-painel";
 import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import { getUsuarioPainel } from "@/lib/admin";
 import { estaNoAr } from "@/lib/event-filters";
 import { formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
-import { registrarInteracao } from "@/lib/insights-coleta";
 import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -38,8 +38,6 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
         : instancia
           ? `Ver no ${instancia}`
           : "Saiba mais";
-  if (!foraDoAr) await registrarInteracao(event.id, "visualizacao");
-
   const favorito = session?.user?.id
     ? Boolean(await prisma.favorite.findUnique({ where: { userId_eventId: { userId: session.user.id, eventId: event.id } } }))
     : false;
@@ -52,6 +50,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
 
   return (
     <main className="mx-auto max-w-page px-4 py-16">
+      {!foraDoAr ? <RegistrarVisualizacao eventoId={event.id} /> : null}
       <Link href="/eventos" className="link-quiet text-caption">
         Voltar aos eventos
       </Link>

@@ -8,13 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function EmpresaForm() {
+export function EmpresaForm({ reenvio = false }: { reenvio?: boolean }) {
   const [state, action] = useFormState(cadastrarEmpresa, {} as FormState);
+  if (state.ok && state.aviso) {
+    return <p className="rounded-card bg-muted px-4 py-3 text-sm text-foreground">{state.aviso}</p>;
+  }
   return (
     <form action={action} className="grid gap-4">
       {state.error ? (
         <p role="alert" className="rounded-card bg-warning-bg px-3 py-2 text-sm text-warning">
           {state.error}
+        </p>
+      ) : null}
+      {state.aviso ? (
+        <p role="status" className="rounded-card bg-warning-bg px-3 py-2 text-sm text-warning">
+          {state.aviso}
         </p>
       ) : null}
       <div className="grid gap-2">
@@ -27,7 +35,7 @@ export function EmpresaForm() {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="senha">Senha</Label>
-        <Input id="senha" name="senha" type="password" autoComplete="new-password" minLength={8} required />
+        <Input id="senha" name="senha" type="password" autoComplete="new-password" minLength={8} required={!reenvio} />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="razaoSocial">Razão social</Label>
@@ -44,7 +52,7 @@ export function EmpresaForm() {
         </span>
       </label>
       <Button type="submit" className="w-full">
-        Pedir acesso
+        {reenvio ? "Enviar novo pedido" : "Pedir acesso"}
       </Button>
     </form>
   );

@@ -9,6 +9,7 @@ import { inicioDoPainel } from "@/lib/admin-permissoes";
 import { ensureCategorias } from "@/lib/categorias";
 import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { iniciais, visualCategoria } from "@/lib/perfil";
+import { textoMotivoVisivel } from "@/lib/pedido-acesso";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ function seloConta(tipo: UserTipo, organizer: Organizer | null): { rotulo: strin
   if (tipo === "empresa") return { rotulo: "Empresa", icone: Megaphone };
   if (organizer?.statusVerificacao === "aprovado") return { rotulo: "Organizador", icone: Megaphone };
   if (organizer?.statusVerificacao === "pendente") return { rotulo: "Em análise", icone: Clock };
+  if (organizer) return { rotulo: "Recusado", icone: Clock };
   return { rotulo: "Explorador", icone: Sparkles };
 }
 
@@ -42,11 +44,16 @@ function Numero({ valor, rotulo }: { valor: number; rotulo: string }) {
   );
 }
 
-function textoOrganizador(organizer: Organizer): string {
-  if (organizer.statusVerificacao === "aprovado") return "Crie, edite e acompanhe o que você publicou.";
-  if (organizer.statusVerificacao === "pendente")
-    return "Seu cadastro está em análise. Enquanto isso, você já pode salvar eventos como rascunho.";
-  return "Seu cadastro de organizador não foi aprovado. Seus rascunhos continuam guardados.";
+function textoOrganizador(status: string): string {
+  if (status === "aprovado") return "Crie, edite e acompanhe o que você publicou.";
+  if (status === "pendente") return "Seu pedido está em análise. Enquanto isso, você já pode salvar eventos como rascunho.";
+  return "Seu pedido de organizador foi recusado.";
+}
+
+function rotuloPedido(status: string) {
+  if (status === "aprovado") return "Aprovado";
+  if (status === "pendente") return "Em análise";
+  return "Recusado";
 }
 
 export default async function ContaPage() {
@@ -57,7 +64,7 @@ export default async function ContaPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { organizer: true },
+    include: { organizer: true, empresa: true },
   });
 
   if (!user) {
@@ -138,11 +145,21 @@ export default async function ContaPage() {
                 <h2 id="organizador-titulo" className="mt-4 font-display text-2xl font-semibold tracking-display">
                   Meus eventos
                 </h2>
-                <p className="mt-2 max-w-[42ch] text-muted-on-dark">{textoOrganizador(user.organizer)}</p>
-                <Link href="/conta/eventos" className={cn(buttonVariants(), "mt-6 h-11 gap-2 px-5", FOCO_ESCURO)}>
-                  Abrir meus eventos
-                  <ArrowRight className="size-4" aria-hidden />
-                </Link>
+                <p className="mt-2 text-sm font-medium text-accent-hover">{rotuloPedido(user.organizer.statusVerificacao)}</p>
+                <p className="mt-2 max-w-[42ch] text-muted-on-dark">{textoOrganizador(user.organizer.statusVerificacao)}</p>
+                {user.organizer.statusVerificacao === "rejeitado" || user.organizer.statusVerificacao === "recusado_automaticamente" ? (
+                  <>
+                    <p className="mt-3 max-w-[48ch] text-sm text-on-dark">{textoMotivoVisivel(user.organizer.motivoCodigo, user.organizer.motivoTexto)}</p>
+                    <Link href="/cadastro/organizador" className={cn(buttonVariants(), "mt-6 h-11 px-5", FOCO_ESCURO)}>
+                      Enviar novo pedido
+                    </Link>
+                  </>
+                ) : (
+                  <Link href="/conta/eventos" className={cn(buttonVariants(), "mt-6 h-11 gap-2 px-5", FOCO_ESCURO)}>
+                    Abrir meus eventos
+                    <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                )}
               </>
             ) : (
               <>
@@ -158,6 +175,34 @@ export default async function ContaPage() {
               </>
             )}
           </section>
+
+          {user.empresa ? (
+            <section aria-labelledby="empresa-titulo" className="panel-dark rounded-card p-6 shadow-card sm:p-8">
+              <h2 id="empresa-titulo" className="font-display text-2xl font-semibold tracking-display">
+                Plano Empresa
+              </h2>
+              <p className="mt-2 text-sm font-medium text-accent-hover">{rotuloPedido(user.empresa.status)}</p>
+              <p className="mt-2 max-w-[42ch] text-muted-on-dark">
+                {user.empresa.status === "aprovado"
+                  ? "O Culturama Insights está liberado para esta conta."
+                  : user.empresa.status === "pendente"
+                    ? "Seu pedido de plano Empresa está em análise."
+                    : "Seu pedido de plano Empresa foi recusado."}
+              </p>
+              {user.empresa.status === "rejeitado" || user.empresa.status === "recusado_automaticamente" ? (
+                <>
+                  <p className="mt-3 max-w-[48ch] text-sm text-on-dark">{textoMotivoVisivel(user.empresa.motivoCodigo, user.empresa.motivoTexto)}</p>
+                  <Link href="/cadastro/empresa" className={cn(buttonVariants(), "mt-6 h-11 px-5", FOCO_ESCURO)}>
+                    Enviar novo pedido
+                  </Link>
+                </>
+              ) : user.empresa.status === "aprovado" ? (
+                <Link href="/insights" className={cn(buttonVariants(), "mt-6 h-11 px-5", FOCO_ESCURO)}>
+                  Abrir o Insights
+                </Link>
+              ) : null}
+            </section>
+          ) : null}
         </div>
 
         <div className="grid gap-6">

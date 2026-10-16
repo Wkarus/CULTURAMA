@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { garantirOrganizadorAdmin } from "../src/lib/admin-email";
 
 const prisma = new PrismaClient();
 
@@ -10,11 +11,12 @@ async function main() {
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new Error(`Nenhuma conta com ${email}. Cadastre-se no site e rode de novo: npm run db:admin`);
+    throw new Error("Nenhuma conta com o e-mail de ADMIN_EMAIL. Cadastre-se no site e rode de novo: npm run db:admin");
   }
 
   await prisma.user.update({ where: { email }, data: { tipo: "admin" } });
-  console.log(`Conta ${email} agora é admin. Saia e entre de novo no site.`);
+  await garantirOrganizadorAdmin(prisma, user.id, user.nome);
+  console.log("A conta de ADMIN_EMAIL agora é admin e organizador aprovado. Saia e entre de novo no site.");
 }
 
 main()

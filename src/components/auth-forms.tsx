@@ -385,20 +385,23 @@ export function CompletarPerfilForm() {
   );
 }
 
-export function OrganizadorForm() {
+export function OrganizadorForm({ modoTeste = false }: { modoTeste?: boolean }) {
   const [state, action] = useFormState(cadastrarOrganizador, {});
 
-  if (state.ok) {
+  if (state.ok || state.aviso) {
     return (
       <p className="rounded-card bg-muted px-4 py-3 text-sm">
-        Cadastro enviado. Seu status é <strong>pendente</strong> — a aprovação manual entra no painel admin (Fase 4).
-        Você já consegue entrar, mas ainda não poderá publicar eventos.
+        {state.aviso ??
+          (modoTeste
+            ? "Cadastro enviado. O pedido ficou pendente para aprovar em /admin/organizadores."
+            : "Cadastro enviado. CNPJ ativo já pode publicar. CPF fica pendente até a equipe aprovar.")}
       </p>
     );
   }
 
   return (
     <form action={action} className="grid gap-4">
+      {modoTeste ? <p className="text-sm text-muted-foreground">Modo de teste: use dados fictícios</p> : null}
       <FieldError state={state} />
       <div className="grid gap-1.5">
         <Label htmlFor="nomeEmpresa">Nome da empresa ou coletivo</Label>
@@ -422,7 +425,8 @@ export function OrganizadorForm() {
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="documentoArquivo">Arquivo do documento (PDF ou imagem)</Label>
-        <Input id="documentoArquivo" name="documentoArquivo" type="file" required accept=".pdf,image/jpeg,image/png,image/webp" />
+        <Input id="documentoArquivo" name="documentoArquivo" type="file" required={!modoTeste} accept=".pdf,image/jpeg,image/png" />
+        {modoTeste ? <p className="text-xs text-muted-foreground">Opcional neste modo. Se enviar, só o nome do arquivo fica registrado.</p> : null}
       </div>
       <SubmitButton>Enviar para verificação</SubmitButton>
     </form>

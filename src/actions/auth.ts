@@ -7,7 +7,7 @@ import { signIn, signOut, unstable_update } from "@/auth";
 import { isMaiorDe18, parseDataNascimento } from "@/lib/idade";
 import { prisma } from "@/lib/prisma";
 
-export type FormState = { error?: string; ok?: boolean };
+export type FormState = { error?: string; ok?: boolean; aviso?: string };
 
 export async function cadastrarUsuario(_prev: FormState, formData: FormData): Promise<FormState> {
   const nome = String(formData.get("nome") ?? "").trim();

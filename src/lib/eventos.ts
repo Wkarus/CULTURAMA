@@ -162,6 +162,14 @@ export async function capasDecorativas(quantidade = 3): Promise<{ id: string; im
 }
 
 export async function getOrganizerForUser(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { nome: true, tipo: true, suspensoEm: true },
+  });
+  if (user?.tipo === "admin" && !user.suspensoEm) {
+    const { garantirOrganizadorAdmin } = await import("@/lib/admin-email");
+    return garantirOrganizadorAdmin(prisma, userId, user.nome);
+  }
   return prisma.organizer.findUnique({ where: { userId }, include: { user: { select: { suspensoEm: true } } } });
 }
 

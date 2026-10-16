@@ -10,7 +10,7 @@ import { sair } from "@/actions/auth";
 import { iniciais } from "@/lib/perfil";
 import { cn } from "@/lib/utils";
 
-export type UsuarioHeader = { nome: string | null; email: string | null; admin: boolean; empresa?: boolean };
+export type UsuarioHeader = { nome: string | null; email: string | null; admin: boolean; moderador?: boolean; empresa?: boolean };
 
 const LINKS = [
   { href: "/eventos", label: "Eventos" },
@@ -41,12 +41,19 @@ function ativo(pathname: string, href: string) {
 }
 
 function itensConta(usuario: UsuarioHeader) {
+  if (usuario.admin) {
+    return [
+      { href: "/admin", label: "Admin" },
+      { href: "/conta/eventos", label: "Meus eventos" },
+      { href: "/insights", label: "Insights" },
+    ];
+  }
   return [
     { href: "/conta", label: "Conta" },
     { href: "/conta/eventos", label: "Meus eventos" },
     { href: "/conta/favoritos", label: "Favoritos" },
     ...(usuario.empresa ? [{ href: "/insights", label: "Insights" }] : []),
-    ...(usuario.admin ? [{ href: "/admin", label: "Admin" }] : []),
+    ...(usuario.moderador ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 }
 

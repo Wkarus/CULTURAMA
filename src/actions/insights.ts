@@ -6,8 +6,8 @@ import { exigirEmpresa } from "@/lib/insights-acesso";
 import { modoDemo, registrarInteracao } from "@/lib/insights-coleta";
 import { prisma } from "@/lib/prisma";
 
-export async function registrarClique(eventoId: string, tipo: "como_chegar" | "ingresso") {
-  if (tipo !== "como_chegar" && tipo !== "ingresso") return;
+export async function registrarClique(eventoId: string, tipo: "visualizacao" | "como_chegar" | "ingresso") {
+  if (tipo !== "visualizacao" && tipo !== "como_chegar" && tipo !== "ingresso") return;
   await registrarInteracao(eventoId, tipo);
 }
 

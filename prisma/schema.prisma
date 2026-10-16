@@ -41,6 +41,7 @@ enum StatusVerificacao {
   pendente
   aprovado
   rejeitado
+  recusado_automaticamente
 }
 
 enum EventFonte {
@@ -125,6 +126,10 @@ model Organizer {
   tipoDocumento     TipoDocumento     @map("tipo_documento")
   statusVerificacao StatusVerificacao @default(pendente) @map("status_verificacao")
   dataVerificacao   DateTime?         @map("data_verificacao")
+  pedidoEm          DateTime          @default(now()) @map("pedido_em")
+  motivoCodigo      String?           @map("motivo_codigo")
+  motivoTexto       String?           @map("motivo_texto")
+  observacao        String?
   documentoUrl      String            @map("documento_url")
   /// Suspenso: eventos somem do site público até reativar.
   suspensoEm        DateTime?         @map("suspenso_em")
@@ -287,6 +292,10 @@ model Empresa {
   cnpj            String            @unique
   status          StatusVerificacao @default(pendente)
   dataVerificacao DateTime?         @map("data_verificacao")
+  pedidoEm        DateTime          @default(now()) @map("pedido_em")
+  motivoCodigo    String?           @map("motivo_codigo")
+  motivoTexto     String?           @map("motivo_texto")
+  observacao      String?
   criadoEm        DateTime          @default(now()) @map("criado_em")
 
   user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -305,7 +314,7 @@ model InteracaoEvento {
   bairro      String        @default("")
   cidade      String        @default("")
   faixaEtaria FaixaEtaria?  @map("faixa_etaria")
-  /// Hash só para contar pessoas distintas dentro do servidor. Não entra em resposta nem em CSV.
+  /// Coluna antiga, sempre vazia. A repetição de 30 min fica num cookie anônimo, sem id de usuário.
   coorte      String?
 
   evento Event @relation(fields: [eventoId], references: [id], onDelete: Cascade)

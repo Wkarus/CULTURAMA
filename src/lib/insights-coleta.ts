@@ -1,10 +1,13 @@
-import { createHash } from "crypto";
+import { cookies } from "next/headers";
 import type { FaixaEtaria } from "@prisma/client";
 import { auth } from "@/auth";
 import { idadeEmAnos } from "@/lib/idade";
 import type { FaixaInsight, TipoInsight } from "@/lib/insights-agregar";
 import { cidadeDeEndereco, localDoEvento } from "@/lib/eventos";
+import { JANELA_VISITA_MS, marcasVigentes, visitaRepetida, type MarcaVisita } from "@/lib/insights-visita";
 import { prisma } from "@/lib/prisma";
+
+const COOKIE_VISITA = "culturama_visita";
 
 export function modoDemo() {
   return process.env.INSIGHTS_MODO_DEMO === "true";
@@ -20,14 +23,37 @@ export function faixaDeNascimento(dataNascimento: Date, hoje = new Date()): Faix
   return "de_55_ou_mais";
 }
 
-function coorteDe(userId: string) {
-  const sal = process.env.AUTH_SECRET || "culturama-insights";
-  return createHash("sha256").update(`${sal}:${userId}`).digest("hex").slice(0, 24);
+function lerMarcas(): MarcaVisita[] {
+  const bruto = cookies().get(COOKIE_VISITA)?.value;
+  if (!bruto) return [];
+  try {
+    const lista = JSON.parse(bruto) as MarcaVisita[];
+    if (!Array.isArray(lista)) return [];
+    return lista.filter((item) => item && typeof item.e === "string" && typeof item.t === "string" && typeof item.a === "number");
+  } catch {
+    return [];
+  }
+}
+
+function gravarMarcas(marcas: MarcaVisita[]) {
+  cookies().set(COOKIE_VISITA, JSON.stringify(marcas.slice(-40)), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: JANELA_VISITA_MS / 1000,
+  });
 }
 
 export async function registrarInteracao(eventoId: string, tipo: TipoInsight) {
   if (modoDemo() || !eventoId) return;
   try {
+    const agora = Date.now();
+    const vigentes = marcasVigentes(lerMarcas(), agora);
+    if (visitaRepetida(vigentes, eventoId, tipo, agora)) {
+      gravarMarcas(vigentes);
+      return;
+    }
+
     const evento = await prisma.event.findUnique({
       where: { id: eventoId },
       select: {
@@ -41,13 +67,11 @@ export async function registrarInteracao(eventoId: string, tipo: TipoInsight) {
 
     const session = await auth();
     let faixaEtaria: FaixaEtaria | null = null;
-    let coorte: string | null = null;
     if (session?.user?.id) {
       const pessoa = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { dataNascimento: true },
       });
-      coorte = coorteDe(session.user.id);
       if (pessoa?.dataNascimento) faixaEtaria = faixaDeNascimento(pessoa.dataNascimento);
     }
 
@@ -61,9 +85,10 @@ export async function registrarInteracao(eventoId: string, tipo: TipoInsight) {
         bairro,
         cidade,
         faixaEtaria,
-        coorte,
+        coorte: null,
       },
     });
+    gravarMarcas([...vigentes, { e: evento.id, t: tipo, a: agora }]);
   } catch {
     // A coleta não pode derrubar a página do evento.
   }

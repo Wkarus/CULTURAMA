@@ -1,9 +1,9 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import type { AdSlot, Event, Organizer, User } from "@prisma/client";
+import type { AdSlot, Event } from "@prisma/client";
 import type { FormState } from "@/actions/auth";
-import { decidirOrganizador, moderarEvento, salvarAnuncio, alternarAnuncio } from "@/actions/admin";
+import { moderarEvento, salvarAnuncio, alternarAnuncio } from "@/actions/admin";
 import { areaAdmin, botaoAdmin, campoAdmin, dicaAdmin, rotuloAdmin } from "@/components/admin/estilos";
 import { labelStatus } from "@/lib/eventos";
 import { cn } from "@/lib/utils";
@@ -61,23 +61,6 @@ export function ModeracaoForm({ event }: { event: Event }) {
         </p>
       ) : null}
       <Submit label="Salvar moderação" />
-    </form>
-  );
-}
-
-export function OrganizadorDecisao({ organizer }: { organizer: Organizer & { user: User } }) {
-  const [state, action] = useFormState(decidirOrganizador, {} as FormState);
-
-  return (
-    <form action={action} className="flex flex-wrap items-center gap-2">
-      <input type="hidden" name="id" value={organizer.id} />
-      {state.error ? <p className="w-full text-sm text-danger">{state.error}</p> : null}
-      <button type="submit" name="decisao" value="aprovado" className={botaoAdmin("primario", "sm")}>
-        Aprovar
-      </button>
-      <button type="submit" name="decisao" value="rejeitado" className={botaoAdmin("perigo", "sm")}>
-        Rejeitar
-      </button>
     </form>
   );
 }
