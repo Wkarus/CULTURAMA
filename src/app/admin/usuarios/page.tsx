@@ -12,6 +12,7 @@ const FUSO = "-03:00";
 const PAPEIS: { valor: UserTipo; rotulo: string }[] = [
   { valor: "comum", rotulo: "Público" },
   { valor: "organizador", rotulo: "Organizador" },
+  { valor: "empresa", rotulo: "Empresa" },
   { valor: "moderador", rotulo: "Moderador" },
   { valor: "admin", rotulo: "Admin" },
 ];

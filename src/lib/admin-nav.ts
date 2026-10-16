@@ -13,6 +13,7 @@ const ITENS: Omit<ItemNav, "badge">[] = [
   { href: "/admin/denuncias", label: "Denúncias", secao: "denuncias" },
   { href: "/admin/comentarios", label: "Comentários", secao: "comentarios" },
   { href: "/admin/anuncios", label: "Anúncios", secao: "anuncios" },
+  { href: "/admin/empresas", label: "Empresas", secao: "empresas" },
   { href: "/admin/historico", label: "Histórico", secao: "historico" },
 ];
 

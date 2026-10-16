@@ -38,7 +38,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           name: user.nome,
           email: user.email,
           tipo: isAdmin ? "admin" : user.tipo,
-          needsCompletion: !user.dataNascimento || !user.aceitePrivacidadeEm,
+          needsCompletion: user.tipo === "empresa" ? false : !user.dataNascimento || !user.aceitePrivacidadeEm,
           statusVerificacao: user.organizer?.statusVerificacao ?? null,
         };
       },

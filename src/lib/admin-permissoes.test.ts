@@ -13,6 +13,7 @@ const TODAS: SecaoPainel[] = [
   "denuncias",
   "anuncios",
   "historico",
+  "empresas",
 ];
 
 test("admin acessa todas as seções", () => {

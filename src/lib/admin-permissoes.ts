@@ -10,7 +10,8 @@ export type SecaoPainel =
   | "comentarios"
   | "denuncias"
   | "anuncios"
-  | "historico";
+  | "historico"
+  | "empresas";
 
 const SECOES_MODERADOR = new Set<SecaoPainel>(["revisao", "eventos", "comentarios", "denuncias"]);
 

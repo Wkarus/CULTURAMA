@@ -23,6 +23,7 @@ const LINK_ACCENT = cn(
 function seloConta(tipo: UserTipo, organizer: Organizer | null): { rotulo: string; icone: LucideIcon } {
   if (tipo === "admin") return { rotulo: "Admin", icone: ShieldCheck };
   if (tipo === "moderador") return { rotulo: "Moderação", icone: ShieldCheck };
+  if (tipo === "empresa") return { rotulo: "Empresa", icone: Megaphone };
   if (organizer?.statusVerificacao === "aprovado") return { rotulo: "Organizador", icone: Megaphone };
   if (organizer?.statusVerificacao === "pendente") return { rotulo: "Em análise", icone: Clock };
   return { rotulo: "Explorador", icone: Sparkles };

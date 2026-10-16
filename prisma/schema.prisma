@@ -13,6 +13,23 @@ enum UserTipo {
   organizador
   admin
   moderador
+  empresa
+}
+
+enum TipoInteracao {
+  visualizacao
+  favorito
+  como_chegar
+  ingresso
+}
+
+enum FaixaEtaria {
+  ate_17
+  de_18_a_24
+  de_25_a_34
+  de_35_a_44
+  de_45_a_54
+  de_55_ou_mais
 }
 
 enum TipoDocumento {
@@ -95,6 +112,7 @@ model User {
   adminLogs           AdminLog[]
   denuncias           Denuncia[]      @relation("denunciante")
   denunciasResolvidas Denuncia[]      @relation("resolvedor")
+  empresa             Empresa?
 
   @@map("users")
 }
@@ -151,9 +169,11 @@ model Event {
 
   organizer Organizer? @relation(fields: [organizerId], references: [id])
   category  Category?  @relation(fields: [categoriaId], references: [id])
-  favorites Favorite[]
-  comments  Comment[]
-  denuncias Denuncia[]
+  favorites  Favorite[]
+  comments   Comment[]
+  denuncias  Denuncia[]
+  interacoes InteracaoEvento[]
+  pedidos    PedidoContato[]
 
   @@unique([fonte, fonteInstancia, idExterno])
   @@map("events")
@@ -258,6 +278,55 @@ model AdSlot {
   cliques      Int        @default(0)
 
   @@map("ad_slots")
+}
+
+model Empresa {
+  id              String            @id @default(cuid())
+  userId          String            @unique @map("user_id")
+  razaoSocial     String            @map("razao_social")
+  cnpj            String            @unique
+  status          StatusVerificacao @default(pendente)
+  dataVerificacao DateTime?         @map("data_verificacao")
+  criadoEm        DateTime          @default(now()) @map("criado_em")
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pedidos  PedidoContato[]
+
+  @@map("empresas")
+}
+
+/// Interação anônima com um evento. Sem nome, e-mail ou id de usuário.
+model InteracaoEvento {
+  id          String        @id @default(cuid())
+  eventoId    String        @map("evento_id")
+  tipo        TipoInteracao
+  data        DateTime      @default(now())
+  categoria   String
+  bairro      String        @default("")
+  cidade      String        @default("")
+  faixaEtaria FaixaEtaria?  @map("faixa_etaria")
+  /// Hash só para contar pessoas distintas dentro do servidor. Não entra em resposta nem em CSV.
+  coorte      String?
+
+  evento Event @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  @@index([data])
+  @@index([eventoId, data])
+  @@index([categoria, data])
+  @@map("interacoes_evento")
+}
+
+model PedidoContato {
+  id        String   @id @default(cuid())
+  empresaId String   @map("empresa_id")
+  eventoId  String   @map("evento_id")
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  evento  Event   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, eventoId])
+  @@map("pedidos_contato")
 }
 
 model AdminLog {

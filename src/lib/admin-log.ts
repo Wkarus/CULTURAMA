@@ -18,6 +18,7 @@ export const ACOES_LOG = {
   "categoria.reordenar": "Reordenou categoria",
   "categoria.excluir": "Excluiu categoria",
   "organizador.decidir": "Decidiu organizador",
+  "empresa.decidir": "Decidiu empresa do Insights",
   "organizador.suspender": "Suspendeu organizador",
   "organizador.reativar": "Reativou organizador",
   "usuario.suspender": "Suspendeu usuário",
@@ -37,7 +38,7 @@ export const ACOES_LOG = {
 
 export type AcaoLog = keyof typeof ACOES_LOG;
 
-export type AlvoLog = "evento" | "organizador" | "anuncio" | "comentario" | "usuario" | "categoria" | "denuncia" | "sistema";
+export type AlvoLog = "evento" | "organizador" | "anuncio" | "comentario" | "usuario" | "categoria" | "denuncia" | "empresa" | "sistema";
 
 export const AUTOR_CRON = "Sistema (cron)";
 

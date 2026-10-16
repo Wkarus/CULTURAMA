@@ -10,12 +10,13 @@ import { sair } from "@/actions/auth";
 import { iniciais } from "@/lib/perfil";
 import { cn } from "@/lib/utils";
 
-export type UsuarioHeader = { nome: string | null; email: string | null; admin: boolean };
+export type UsuarioHeader = { nome: string | null; email: string | null; admin: boolean; empresa?: boolean };
 
 const LINKS = [
   { href: "/eventos", label: "Eventos" },
   { href: "/mapa", label: "Mapa" },
   { href: "/cadastro/organizador", label: "Para organizadores" },
+  { href: "/cadastro/empresa", label: "Para empresas" },
 ];
 
 /** Páginas que abrem sobre fundo escuro: o header começa transparente e sobrepõe o topo, como na home. */
@@ -44,6 +45,7 @@ function itensConta(usuario: UsuarioHeader) {
     { href: "/conta", label: "Conta" },
     { href: "/conta/eventos", label: "Meus eventos" },
     { href: "/conta/favoritos", label: "Favoritos" },
+    ...(usuario.empresa ? [{ href: "/insights", label: "Insights" }] : []),
     ...(usuario.admin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 }

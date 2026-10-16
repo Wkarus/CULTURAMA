@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { CliqueExterno } from "@/components/clique-externo";
 import { RotaPainel } from "@/components/rota-painel";
 import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { getUsuarioPainel } from "@/lib/admin";
 import { estaNoAr } from "@/lib/event-filters";
 import { formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
+import { registrarInteracao } from "@/lib/insights-coleta";
 import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -36,6 +38,8 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
         : instancia
           ? `Ver no ${instancia}`
           : "Saiba mais";
+  if (!foraDoAr) await registrarInteracao(event.id, "visualizacao");
+
   const favorito = session?.user?.id
     ? Boolean(await prisma.favorite.findUnique({ where: { userId_eventId: { userId: session.user.id, eventId: event.id } } }))
     : false;
@@ -108,9 +112,15 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
           ) : null}
           <div className="grid gap-3 pt-3">
             {ctaHref ? (
-              <a href={ctaHref} target="_blank" rel="noreferrer" className={cn(buttonVariants(), "w-full")}>
-                {ctaLabel}
-              </a>
+              event.linkIngresso && ctaHref === event.linkIngresso ? (
+                <CliqueExterno href={ctaHref} eventoId={event.id} tipo="ingresso" className={cn(buttonVariants(), "w-full")}>
+                  {ctaLabel}
+                </CliqueExterno>
+              ) : (
+                <a href={ctaHref} target="_blank" rel="noreferrer" className={cn(buttonVariants(), "w-full")}>
+                  {ctaLabel}
+                </a>
+              )
             ) : null}
             {event.fonte === "interno" && event.linkSaibaMais && event.linkSaibaMais !== event.linkIngresso ? (
               <a href={event.linkSaibaMais} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: "outline" }), "w-full")}>

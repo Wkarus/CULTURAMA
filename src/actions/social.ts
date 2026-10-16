@@ -31,6 +31,8 @@ export async function toggleFavorite(eventId: string): Promise<FormState> {
     await prisma.favorite.delete({ where: { userId_eventId: { userId, eventId } } });
   } else {
     await prisma.favorite.create({ data: { userId, eventId } });
+    const { registrarInteracao } = await import("@/lib/insights-coleta");
+    await registrarInteracao(eventId, "favorito");
   }
 
   revalidatePath("/");

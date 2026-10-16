@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Dialog } from "@base-ui/react/dialog";
 import {
   BadgeCheck,
+  BarChart3,
   CalendarDays,
   ClipboardCheck,
   Flag,
@@ -34,6 +35,7 @@ const ICONES: Record<SecaoPainel, LucideIcon> = {
   comentarios: MessageSquareWarning,
   denuncias: Flag,
   anuncios: Megaphone,
+  empresas: BarChart3,
   historico: History,
 };
 

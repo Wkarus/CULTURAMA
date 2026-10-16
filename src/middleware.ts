@@ -3,7 +3,7 @@ import { authConfig } from "@/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const protectedPaths = ["/conta", "/boas-vindas", "/cadastro/organizador", "/cadastro/completar", "/admin"];
+const protectedPaths = ["/conta", "/boas-vindas", "/cadastro/organizador", "/cadastro/completar", "/admin", "/insights"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -23,5 +23,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/conta", "/conta/:path*", "/boas-vindas", "/cadastro/organizador", "/cadastro/organizador/:path*", "/cadastro/completar", "/admin", "/admin/:path*"],
+  matcher: ["/conta", "/conta/:path*", "/boas-vindas", "/cadastro/organizador", "/cadastro/organizador/:path*", "/cadastro/completar", "/admin", "/admin/:path*", "/insights", "/insights/:path*"],
 };

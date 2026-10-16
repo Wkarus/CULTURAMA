@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { Bus, Car, PersonStanding } from "lucide-react";
+import { CliqueExterno } from "@/components/clique-externo";
 import { RotaMapa } from "@/components/rota-mapa";
+import { registrarClique } from "@/actions/insights";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { isRotaOk, type ModoRota, type RotaModo, type RotaOk } from "@/lib/directions";
 import { mensagemGeolocalizacao } from "@/lib/geo";
@@ -97,15 +99,22 @@ export function RotaPainel({
           Mapa e passos a partir de onde você está agora. A localização não fica salva.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={calcular} disabled={carregando}>
+          <Button
+            type="button"
+            onClick={() => {
+              void registrarClique(eventId, "como_chegar");
+              calcular();
+            }}
+            disabled={carregando}
+          >
             {carregando ? "Traçando rota…" : modos ? "Atualizar rota" : "Traçar rota"}
           </Button>
-          <a href={uber} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: "outline" }))}>
+          <CliqueExterno href={uber} eventoId={eventId} tipo="como_chegar" className={cn(buttonVariants({ variant: "outline" }))}>
             Ir de Uber
-          </a>
-          <a href={noventaNove} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: "outline" }))}>
+          </CliqueExterno>
+          <CliqueExterno href={noventaNove} eventoId={eventId} tipo="como_chegar" className={cn(buttonVariants({ variant: "outline" }))}>
             Ir de 99
-          </a>
+          </CliqueExterno>
         </div>
         {erro ? (
           <p role="alert" className="text-sm text-destructive">
