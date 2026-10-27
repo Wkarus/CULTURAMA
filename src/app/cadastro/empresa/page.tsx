@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EmpresaForm } from "@/components/empresa-form";
@@ -6,6 +7,8 @@ import { capasDecorativas } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { title: "Cadastro de empresa" };
 
 export default async function CadastroEmpresaPage() {
   const session = await auth();

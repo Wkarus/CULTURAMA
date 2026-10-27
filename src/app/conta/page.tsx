@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Organizer, UserTipo } from "@prisma/client";
@@ -55,6 +56,8 @@ function rotuloPedido(status: string) {
   if (status === "pendente") return "Em análise";
   return "Recusado";
 }
+
+export const metadata: Metadata = { title: "Minha conta" };
 
 export default async function ContaPage() {
   const session = await auth();

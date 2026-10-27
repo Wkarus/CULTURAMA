@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+export const metadata: Metadata = { title: "Privacidade" };
+
 export default function PrivacidadePage() {
   return (
     <main className="mx-auto max-w-page px-4 py-12 sm:py-16">

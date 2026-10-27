@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth-forms";
 import { AuthShell, AuthTroca } from "@/components/auth-shell";
 import { capasDecorativas } from "@/lib/eventos";
+
+export const metadata: Metadata = { title: "Entrar" };
 
 export default async function LoginPage({
   searchParams,

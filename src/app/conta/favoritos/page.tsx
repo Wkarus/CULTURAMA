@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EventCard } from "@/components/event-card";
 import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Favoritos" };
 
 export default async function FavoritosPage() {
   const session = await auth();

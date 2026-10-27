@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -6,6 +7,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { getOrganizerForUser, labelStatus } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = { title: "Meus eventos" };
 
 export default async function MeusEventosPage() {
   const session = await auth();

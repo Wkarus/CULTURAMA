@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ContatoOrganizador } from "@/components/insights/contato-organizador";
 import { GraficoCrescimento } from "@/components/insights/grafico-crescimento";
@@ -211,6 +212,8 @@ function Painel({ painel, filtros }: { painel: PainelInsights; filtros: FiltrosI
     </>
   );
 }
+
+export const metadata: Metadata = { title: "Culturama Insights" };
 
 export default async function InsightsPage({ searchParams }: { searchParams: { dias?: string; regiao?: string; categoria?: string } }) {
   const filtros = lerFiltros(searchParams);

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { OrganizadorForm } from "@/components/auth-forms";
 import { AuthPanel } from "@/components/auth-panel";
 import { modoTesteOrganizador } from "@/lib/cnpj";
+
+export const metadata: Metadata = { title: "Cadastro de organizador" };
 
 export default function CadastroOrganizadorPage() {
   const modoTeste = modoTesteOrganizador();

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -8,12 +9,21 @@ import { RotaPainel } from "@/components/rota-painel";
 import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/social-forms";
 import { buttonVariants } from "@/components/ui/button";
 import { getUsuarioPainel } from "@/lib/admin";
-import { estaNoAr } from "@/lib/event-filters";
+import { EVENTO_PUBLICO, estaNoAr } from "@/lib/event-filters";
 import { formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
 import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
+
+/** Título da aba e do link compartilhado. Evento fora do ar não entrega o nome. */
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const event = await prisma.event
+    .findFirst({ where: { id: params.id, ...EVENTO_PUBLICO }, select: { titulo: true, endereco: true, dataHora: true } })
+    .catch(() => null);
+  if (!event) return { title: "Evento" };
+  return { title: event.titulo, description: `${formatEventoQuando(event.dataHora)} · ${event.endereco}` };
+}
 
 export default async function EventoDetalhePage({ params }: { params: { id: string } }) {
   const session = await auth();

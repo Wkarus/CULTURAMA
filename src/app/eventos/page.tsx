@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { EventMosaic } from "@/components/event-mosaic";
 import { EventosBusca } from "@/components/eventos-busca";
@@ -6,6 +7,8 @@ import { expandirInteresses, idsDaCategoria } from "@/lib/categorias-arvore";
 import { uniqueByCapa } from "@/lib/eventos";
 import { eventWhereFromParams, filtraBusca, filterPublishedEvents, normalizeSearchParams } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Eventos" };
 
 export default async function EventosPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const session = await auth();

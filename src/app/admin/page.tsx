@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Heart } from "lucide-react";
 import { CabecalhoAdmin, Vazio } from "@/components/admin/cabecalho";
@@ -63,6 +64,8 @@ function CartaoNumero({ cartao }: { cartao: Cartao }) {
     <dl className={cn(painelAdmin, "relative p-5")}>{conteudo}</dl>
   );
 }
+
+export const metadata: Metadata = { title: "Painel" };
 
 export default async function AdminHomePage() {
   await requireSecao("visao-geral");

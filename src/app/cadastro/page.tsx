@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { CadastroForm } from "@/components/auth-forms";
 import { AuthShell, AuthTroca } from "@/components/auth-shell";
 import { capasDecorativas } from "@/lib/eventos";
+
+export const metadata: Metadata = { title: "Criar conta" };
 
 export default async function CadastroPage() {
   const capas = await capasDecorativas();

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -19,8 +19,13 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Culturama",
-  description: "Descubra eventos culturais no mapa. Rota, Uber e 99 até o destino.",
+  title: { default: "Culturama", template: "%s · Culturama" },
+  description: "Batalha de rima, roda de samba, encontro de carros, geek e mais: as cenas da sua cidade no mapa, com rota, Uber e 99.",
+};
+
+/** Barra do navegador no celular com a cor do cabeçalho. */
+export const viewport: Viewport = {
+  themeColor: "#1c1f26",
 };
 
 export default function RootLayout({

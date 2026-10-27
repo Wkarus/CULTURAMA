@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { EventCard } from "@/components/event-card";
 import { EventFilters } from "@/components/event-filters";
@@ -11,6 +12,8 @@ import { parseCoord } from "@/lib/geo";
 import { prisma } from "@/lib/prisma";
 
 const LIMITE_PINOS = 300;
+
+export const metadata: Metadata = { title: "Mapa" };
 
 export default async function MapaPage({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const filters = normalizeSearchParams(searchParams);
