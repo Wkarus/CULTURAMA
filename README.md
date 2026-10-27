@@ -95,7 +95,7 @@ Na Vercel, o cron diário está em `vercel.json`. Lá defina `CRON_SECRET` e cha
 
 ### Mapas Culturais (SP Cultura, Mapa da Cultura, Paraíba…)
 
-Importa eventos da API pública `/api/` das instâncias em `MAPAS_CULTURAIS_INSTANCIAS` (formato `Nome|URL|Fuso`, separado por `;`). Roda todo dia às 8h30 UTC pelo cron de `vercel.json`.
+Importa eventos da API pública `/api/` das instâncias em `MAPAS_CULTURAIS_INSTANCIAS` (formato `Nome|URL|Fuso`, separado por `;`; `|basico` no fim liga o modo só dados básicos). Roda todo dia às 8h30 UTC pelo cron de `vercel.json`.
 
 ```bash
 npx tsx scripts/importar-mapas-culturais.ts --simular --instancia=https://mapacultural.pb.gov.br   # só busca e mostra, não grava
@@ -116,10 +116,13 @@ No PowerShell use `npx tsx ...` (o `--` do `npm run` some). Em dev também dá p
 
 **O Mapa da Cultura (mapa.cultura.gov.br) e o SP Cultura (spcultura.prefeitura.sp.gov.br) só podem ser importados em produção depois de autorização formal dos respectivos gestores.** Até lá, não os inclua em `MAPAS_CULTURAIS_INSTANCIAS` na Vercel. Teste local com `--simular` ou na página `/teste/mapas-culturais` não grava nada e é o limite do uso sem autorização. Ao receber a autorização, registre aqui quem autorizou, quando e por qual canal.
 
+**Modo só dados básicos (`|basico`)**, para fonte sem bloqueio a robôs e sem termos que proíbam o uso, enquanto a autorização não chega: a API nem é consultada sobre descrição e imagens. Entram só título, data, local, endereço, coordenadas, categoria, classificação etária, gratuidade e o link para a página original, com o crédito "Fonte: X". A descrição vira um texto padrão que manda para a página original. Dados factuais não têm proteção autoral (Lei 9.610, art. 8º); imagens e textos podem ter autor. Com a autorização, basta tirar o `|basico`.
+
 | Instância | Autorização formal |
 |---|---|
 | Mapa da Cultura (federal) | pendente |
 | SP Cultura | pendente |
+| CulturAZ (Santo André) | pendente (e-mail à Secult e pedido pela LAI no e-SIC). Pode ir para produção só em `|basico`. |
 
 #### Regras de acesso (sem exceção)
 

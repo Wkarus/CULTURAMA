@@ -18,6 +18,8 @@ const IDS_POR_LOTE = 40;
 
 const CAMPOS_EVENTO = "id,name,subTitle,shortDescription,longDescription,classificacaoEtaria,singleUrl,terms";
 const ARQUIVOS_EVENTO = "(avatar.avatarBig,header.header):url";
+/** Instância `basico`: nem pede descrições e imagens à API. */
+const CAMPOS_EVENTO_BASICO = "id,name,classificacaoEtaria,singleUrl,terms";
 const CAMPOS_ESPACO = "id,name,endereco,En_Nome_Logradouro,En_Num,En_Bairro,En_Municipio,En_Estado,location";
 
 type DataApi = string | { date?: string } | null | undefined;
@@ -274,7 +276,10 @@ async function buscarPorIds<T>(cliente: ClienteMapas, entidade: string, ids: num
 }
 
 export function buscarEventos(cliente: ClienteMapas, ids: number[]) {
-  return buscarPorIds<EventoApi>(cliente, "event", ids, { "@select": CAMPOS_EVENTO, "@files": ARQUIVOS_EVENTO });
+  const params: Record<string, string> = cliente.instancia.basico
+    ? { "@select": CAMPOS_EVENTO_BASICO }
+    : { "@select": CAMPOS_EVENTO, "@files": ARQUIVOS_EVENTO };
+  return buscarPorIds<EventoApi>(cliente, "event", ids, params);
 }
 
 export function buscarEspacos(cliente: ClienteMapas, ids: number[]) {
@@ -448,6 +453,11 @@ function descricaoDe(evento: EventoApi, titulo: string): string {
   return (unicas.join("\n\n") || titulo).slice(0, 5000);
 }
 
+/** Texto padrão do modo `basico`: nada escrito pela fonte, só o convite para a página original. */
+export function descricaoBasica(instancia: InstanciaMapas): string {
+  return `Evento divulgado em ${instancia.nome}. Veja a descrição completa, imagens e detalhes na página original do evento.`;
+}
+
 /** Evento + ocorrências do período → linha da tabela `events`. Lança erro se faltar o essencial. */
 export function normalizarEvento(
   evento: EventoApi,
@@ -482,7 +492,7 @@ export function normalizarEvento(
   return {
     idExterno: String(evento.id),
     titulo: titulo.slice(0, 300),
-    descricao: descricaoDe(evento, titulo),
+    descricao: instancia.basico ? descricaoBasica(instancia) : descricaoDe(evento, titulo),
     dataHora: proxima.inicio,
     dataFim: ultimoFim > proxima.inicio ? ultimoFim : null,
     local,
@@ -498,7 +508,7 @@ export function normalizarEvento(
     restricaoIdade: restricaoDe(evento.classificacaoEtaria),
     gratuito: precos.length > 0 && precos.every((preco) => GRATUITO.test(preco)),
     linkSaibaMais: linkDaFonte(evento.singleUrl, instancia),
-    imagemCapa: imagemDe(evento),
+    imagemCapa: instancia.basico ? null : imagemDe(evento),
     encerrado: vigentes.length === 0,
   };
 }

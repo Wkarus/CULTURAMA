@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { CATEGORIAS_ARVORE } from "./categorias-dados";
 import {
+  buscarEventos,
   ClienteMapas,
   coletarInstancia,
   dentroDaRegiao,
+  descricaoBasica,
   ErroMapas,
   InstanciaPulada,
   listarOcorrencias,
@@ -374,4 +376,42 @@ test("coleta só pede à API os eventos da região", async () => {
   const pedidoDeEventos = chamadas.find((c) => c.pathname === "/api/event/find");
   assert.equal(pedidoDeEventos?.searchParams.get("id"), "IN(300)", "o evento da Paraíba nem é buscado");
   assert.deepEqual(chamadas.map((c) => c.pathname), ["/robots.txt", "/api/event/findOccurrences", "/api/space/find", "/api/event/find"]);
+});
+
+test("instância com |basico: lida da config, com ou sem fuso", () => {
+  const lista = lerInstancias("CulturAZ|https://culturaz.santoandre.sp.gov.br|America/Sao_Paulo|basico;PB|https://mapacultural.pb.gov.br|básico;X|https://x.example");
+  assert.deepEqual(lista, [
+    { nome: "CulturAZ", url: "https://culturaz.santoandre.sp.gov.br", fuso: "America/Sao_Paulo", basico: true },
+    { nome: "PB", url: "https://mapacultural.pb.gov.br", fuso: "America/Sao_Paulo", basico: true },
+    { nome: "X", url: "https://x.example", fuso: "America/Sao_Paulo" },
+  ]);
+});
+
+test("modo basico: sem imagem e sem texto da fonte, mas com data, local, categoria e link", () => {
+  const basico = { ...PB, basico: true as const };
+  const n = normalizarEvento(EVENTO_197, OCORRENCIAS_197, ESPACOS, basico, ANTES);
+  const completo = normalizarEvento(EVENTO_197, OCORRENCIAS_197, ESPACOS, PB, ANTES);
+  assert.equal(n.imagemCapa, null);
+  assert.equal(n.descricao, descricaoBasica(basico));
+  assert.equal(n.titulo, completo.titulo);
+  assert.equal(n.dataHora.getTime(), completo.dataHora.getTime());
+  assert.equal(n.endereco, completo.endereco);
+  assert.equal(n.categoriaSlug, completo.categoriaSlug);
+  assert.equal(n.linkSaibaMais, completo.linkSaibaMais);
+});
+
+test("modo basico nem pede descrições e imagens à API", async () => {
+  const pedidos: URL[] = [];
+  const fetcher = (async (url: URL) => {
+    pedidos.push(url);
+    return new Response("[]", { status: 200, headers: { "content-type": "application/json" } });
+  }) as unknown as typeof fetch;
+  const opcoes = { pausaMs: 0, timeoutMs: 1000, tentativas: 0, userAgent: "Culturama/teste" };
+  await buscarEventos(new ClienteMapas({ ...PB, basico: true }, opcoes, fetcher, async () => {}), [1]);
+  await buscarEventos(new ClienteMapas(PB, opcoes, fetcher, async () => {}), [1]);
+  const [basico, completo] = pedidos.map((url) => url.searchParams);
+  assert.doesNotMatch(basico.get("@select") ?? "", /Description|subTitle/);
+  assert.equal(basico.get("@files"), null);
+  assert.match(completo.get("@select") ?? "", /longDescription/);
+  assert.ok(completo.get("@files"));
 });

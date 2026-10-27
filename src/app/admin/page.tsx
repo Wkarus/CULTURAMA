@@ -248,7 +248,7 @@ export default async function AdminHomePage() {
           </h2>
           <p className="text-sm text-muted-on-dark">
             {instanciasMapas.length
-              ? instanciasMapas.map((i) => i.nome).join(" · ")
+              ? instanciasMapas.map((i) => (i.basico ? `${i.nome} (só dados básicos)` : i.nome)).join(" · ")
               : "Nenhuma instância em MAPAS_CULTURAIS_INSTANCIAS."}
           </p>
           <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-flow-col sm:auto-cols-max">

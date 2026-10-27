@@ -7,6 +7,11 @@ export type InstanciaMapas = {
   url: string;
   /** Fuso IANA das datas da instância (as ocorrências vêm em horário local). */
   fuso: string;
+  /**
+   * Só dados factuais (título, data, local, categoria, link): sem imagem e sem descrição da fonte.
+   * Para instâncias ainda sem autorização formal; as imagens e os textos podem ter autor.
+   */
+  basico?: true;
 };
 
 export type FiltroRegiao = {
@@ -63,19 +68,21 @@ export function normalizarUrlBase(raw: string): string | null {
 }
 
 /**
- * `MAPAS_CULTURAIS_INSTANCIAS`: entradas separadas por `;` ou quebra de linha, cada uma `Nome|URL` ou `Nome|URL|Fuso`.
- * Entradas sem URL válida são ignoradas.
+ * `MAPAS_CULTURAIS_INSTANCIAS`: entradas separadas por `;` ou quebra de linha, cada uma `Nome|URL`, `Nome|URL|Fuso`
+ * ou com `|basico` no fim (`Nome|URL|basico`, `Nome|URL|Fuso|basico`). Entradas sem URL válida são ignoradas.
  */
 export function lerInstancias(raw: string | undefined): InstanciaMapas[] {
   const vistas = new Set<string>();
   const instancias: InstanciaMapas[] = [];
   for (const entrada of (raw ?? "").split(/[;\n]/)) {
-    const [nomeRaw, urlRaw, fusoRaw] = entrada.split("|").map((parte) => parte.trim());
+    const [nomeRaw, urlRaw, ...resto] = entrada.split("|").map((parte) => parte.trim());
     const url = urlRaw ? normalizarUrlBase(urlRaw) : null;
     if (!url || vistas.has(url)) continue;
     vistas.add(url);
+    const basico = resto.some((parte) => /^b[aá]sico$/i.test(parte));
+    const fusoRaw = resto.find((parte) => !/^b[aá]sico$/i.test(parte));
     const fuso = fusoRaw && fusoValido(fusoRaw) ? fusoRaw : FUSO_PADRAO;
-    instancias.push({ nome: nomeRaw || new URL(url).hostname, url, fuso });
+    instancias.push({ nome: nomeRaw || new URL(url).hostname, url, fuso, ...(basico ? { basico: true as const } : {}) });
   }
   return instancias;
 }
