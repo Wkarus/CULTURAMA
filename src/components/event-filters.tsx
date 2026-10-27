@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import type { Category } from "@prisma/client";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { acharCategoria, montarArvore } from "@/lib/categorias-arvore";
-import type { EventSearchParams } from "@/lib/event-filters";
-import { DISTANCIAS_KM } from "@/lib/event-filters";
+import { RAIO_KM, raioDoFiltro, type EventSearchParams } from "@/lib/event-filters";
 import { mensagemGeolocalizacao } from "@/lib/geo";
 import { iconeLucide } from "@/lib/perfil";
 import { cn } from "@/lib/utils";
@@ -66,8 +66,14 @@ export function EventFilters({
   values: EventSearchParams;
   action: "/eventos" | "/mapa";
 }) {
+  const router = useRouter();
   const [buscando, setBuscando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const perto = Boolean(values.lat && values.lng);
+  const [km, setKm] = useState(() => raioDoFiltro(values.distancia) ?? RAIO_KM.padrao);
+  useEffect(() => {
+    setKm(raioDoFiltro(values.distancia) ?? RAIO_KM.padrao);
+  }, [values.distancia]);
   const arvore = useMemo(() => montarArvore(categorias), [categorias]);
   const [maeId, setMaeId] = useState(() => {
     const atual = acharCategoria(categorias, values.categoria);
@@ -101,8 +107,7 @@ export function EventFilters({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const next = paramsFromForm(form, values);
-        const distancia = next.get("distancia");
-        if (!distancia || distancia === "todas") next.set("distancia", "10");
+        next.set("distancia", String(km));
         next.set("lat", pos.coords.latitude.toFixed(6));
         next.set("lng", pos.coords.longitude.toFixed(6));
         window.location.assign(`${action}?${next.toString()}`);
@@ -113,6 +118,24 @@ export function EventFilters({
       },
       { enableHighAccuracy: false, maximumAge: 60_000, timeout: 20_000 },
     );
+  }
+
+  /** Soltar o controle já refaz a busca com o novo raio, sem precisar clicar em Filtrar. */
+  function aplicarRaio(input: HTMLInputElement) {
+    if (!perto || !input.form) return;
+    const next = paramsFromForm(input.form, values);
+    next.set("lat", values.lat ?? "");
+    next.set("lng", values.lng ?? "");
+    if (next.get("distancia") === values.distancia) return;
+    router.push(`${action}?${next.toString()}`, { scroll: false });
+  }
+
+  function verTudo(event: MouseEvent<HTMLButtonElement>) {
+    const form = event.currentTarget.form;
+    if (!form) return;
+    const next = paramsFromForm(form, values);
+    next.delete("distancia");
+    router.push(`${action}?${next.toString()}`, { scroll: false });
   }
 
   const hoje = hojeISO();
@@ -164,17 +187,23 @@ export function EventFilters({
         </select>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor="distancia" className="text-xs text-muted-foreground">
-          Distância
+        <Label htmlFor="distancia" className="flex justify-between text-xs text-muted-foreground">
+          Raio <span className="text-foreground">{perto ? `até ${km} km` : "Brasil todo"}</span>
         </Label>
-        <select id="distancia" name="distancia" defaultValue={values.distancia ?? "todas"} className={selectClass}>
-          <option value="todas">Qualquer</option>
-          {DISTANCIAS_KM.map((km) => (
-            <option key={km} value={String(km)}>
-              Até {km} km
-            </option>
-          ))}
-        </select>
+        <input
+          id="distancia"
+          name={perto ? "distancia" : undefined}
+          type="range"
+          min={RAIO_KM.min}
+          max={RAIO_KM.max}
+          value={km}
+          disabled={!perto}
+          aria-valuetext={`até ${km} quilômetros`}
+          onChange={(event) => setKm(Number(event.target.value))}
+          onPointerUp={(event) => aplicarRaio(event.currentTarget)}
+          onKeyUp={(event) => aplicarRaio(event.currentTarget)}
+          className="h-9 w-full accent-[var(--color-accent-solid)] disabled:opacity-40"
+        />
       </div>
       {mae && mae.filhas.length > 0 ? (
         <div role="group" aria-label={`Subcategorias de ${mae.nome}`} className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5">
@@ -188,24 +217,25 @@ export function EventFilters({
           ))}
         </div>
       ) : null}
-      <input type="hidden" name="lat" defaultValue={values.lat ?? ""} />
-      <input type="hidden" name="lng" defaultValue={values.lng ?? ""} />
+      <input type="hidden" name="lat" value={values.lat ?? ""} />
+      <input type="hidden" name="lng" value={values.lng ?? ""} />
       <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-5">
         <Button type="submit">Filtrar</Button>
         <Button type="button" variant="outline" onClick={usarLocalizacao} disabled={buscando}>
           {buscando ? "Buscando sua localização…" : "Perto de mim"}
         </Button>
+        {perto ? (
+          <Button type="button" variant="ghost" onClick={verTudo}>
+            Ver o Brasil todo
+          </Button>
+        ) : null}
       </div>
       {erro ? <p className="text-sm text-destructive sm:col-span-2 lg:col-span-5">{erro}</p> : null}
-      {values.lat && values.lng ? (
-        <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-5">
-          Mostrando o que está perto da sua posição atual. A localização não fica salva.
-        </p>
-      ) : values.distancia && values.distancia !== "todas" ? (
-        <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-5">
-          Distância só vale depois de Perto de mim.
-        </p>
-      ) : null}
+      <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-5">
+        {perto
+          ? "Arraste o raio para ver mais longe ou mais perto da sua posição. A localização não fica salva."
+          : "Mostrando eventos de todo o Brasil. Use Perto de mim para limitar por distância."}
+      </p>
     </form>
   );
 }

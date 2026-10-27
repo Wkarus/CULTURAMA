@@ -109,7 +109,7 @@ No PowerShell use `npx tsx ...` (o `--` do `npm run` some). Em dev também dá p
 - Editar o texto no admin trava a sobrescrita daquele evento (`editado_pela_equipe`).
 - Linguagem → categoria: `src/lib/mapas-culturais-categorias.ts`. O que não estiver mapeado vai para "Outros" e aparece no painel.
 - Nunca importamos dados de agentes (nome pessoal, e-mail, telefone, documento): o `@select` é uma lista fechada.
-- Região: por padrão só o estado de SP. `MAPAS_CULTURAIS_UFS="SP,RJ"` (ou `*`) e/ou `MAPAS_CULTURAIS_RAIO="lat,lng,km"`. Local sem estado conhecido fica de fora; evento que sai da região vira `inativo`.
+- Região: por padrão o Brasil todo; quem limita por distância é o usuário, no Perto de mim. Para restringir a importação: `MAPAS_CULTURAIS_UFS="SP,RJ"` e/ou `MAPAS_CULTURAIS_RAIO="lat,lng,km"`. Com filtro ligado, local sem estado conhecido fica de fora e evento que sai da região vira `inativo`.
 - robots.txt: lido antes de cada instância. Se bloquear `/api/` (ou não responder), a instância é pulada sem nenhuma chamada à API e o aviso fica no histórico do admin. 404 = sem restrições (RFC 9309).
 
 #### Autorização das fontes

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { eventWhereFromParams } from "./event-filters";
+import { eventWhereFromParams, raioDoFiltro } from "./event-filters";
 
 function gteDe(where: ReturnType<typeof eventWhereFromParams>) {
   const filtro = where.dataHora;
@@ -19,4 +19,22 @@ test("data futura no filtro de vence a data de agora", () => {
   const gte = gteDe(eventWhereFromParams({ de: "2099-06-15" }));
   assert.ok(gte instanceof Date);
   assert.equal(gte.toISOString().slice(0, 10), "2099-06-15");
+});
+
+test("Perto de mim limita o banco a uma caixa em volta do raio; sem posição não há limite geográfico", () => {
+  assert.equal(eventWhereFromParams({}).latitude, undefined);
+  assert.equal(eventWhereFromParams({ distancia: "10" }).latitude, undefined, "raio sem posição não filtra");
+  const where = eventWhereFromParams({ lat: "-23.55", lng: "-46.63", distancia: "10" });
+  const lat = where.latitude as { gte: number; lte: number };
+  const lng = where.longitude as { gte: number; lte: number };
+  assert.ok(lat.gte < -23.55 && lat.lte > -23.55);
+  assert.ok(Math.abs(lat.lte - lat.gte - 20 / 111) < 1e-9);
+  assert.ok(lng.lte - lng.gte > lat.lte - lat.gte, "longitude abre mais longe do equador");
+});
+
+test("raio fora da faixa é ignorado", () => {
+  assert.equal(raioDoFiltro("0"), null);
+  assert.equal(raioDoFiltro("51"), null);
+  assert.equal(raioDoFiltro("abc"), null);
+  assert.equal(raioDoFiltro("25"), 25);
 });

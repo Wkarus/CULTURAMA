@@ -84,7 +84,6 @@ export const UFS_BRASIL = [
   "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA",
   "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
 ];
-const UFS_PADRAO = ["SP"];
 
 /** `lat,lng,km`, com ponto decimal: "-23.5505,-46.6333,50". Inválido = sem raio. */
 function lerRaio(raw: string | undefined): FiltroRegiao["raio"] {
@@ -98,15 +97,14 @@ function lerRaio(raw: string | undefined): FiltroRegiao["raio"] {
 /**
  * `MAPAS_CULTURAIS_UFS`: siglas separadas por vírgula ("SP,RJ") ou `*` para todos os estados.
  * `MAPAS_CULTURAIS_RAIO`: `lat,lng,km`. Com os dois, o evento precisa passar nos dois.
- * Sem nenhum dos dois: só SP. Só com raio: vale o raio, sem filtro de estado.
+ * Sem nenhum dos dois: todo o Brasil. Quem limita por distância é o usuário, no Perto de mim.
  */
 export function lerRegiao(env: NodeJS.ProcessEnv = process.env): FiltroRegiao {
   const raio = lerRaio(env.MAPAS_CULTURAIS_RAIO);
   const brutoUfs = env.MAPAS_CULTURAIS_UFS?.trim();
-  if (!brutoUfs) return { ufs: raio ? null : UFS_PADRAO, raio };
-  if (/^(\*|todos)$/i.test(brutoUfs)) return { ufs: null, raio };
+  if (!brutoUfs || /^(\*|todos)$/i.test(brutoUfs)) return { ufs: null, raio };
   const ufs = [...new Set(brutoUfs.toUpperCase().split(/[\s,;]+/))].filter((uf) => UFS_BRASIL.includes(uf));
-  return { ufs: ufs.length ? ufs : UFS_PADRAO, raio };
+  return { ufs: ufs.length ? ufs : null, raio };
 }
 
 export function descreverRegiao(filtro: FiltroRegiao): string {

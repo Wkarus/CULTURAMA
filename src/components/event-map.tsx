@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { AdvancedMarker, APIProvider, InfoWindow, Map, Pin, useAdvancedMarkerRef } from "@vis.gl/react-google-maps";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdvancedMarker, APIProvider, InfoWindow, Map, Pin, useAdvancedMarkerRef, useMap } from "@vis.gl/react-google-maps";
 import Link from "next/link";
 import { visual } from "@/lib/visual-tokens";
 import type { MapEventPin } from "@/lib/event-filters";
@@ -33,14 +33,41 @@ function MarkerWithInfo({ event, selectedId, onSelect }: { event: MapEventPin; s
   );
 }
 
+/** Círculo do Perto de mim; o mapa enquadra o raio inteiro. */
+function RaioBusca({ center, km }: { center: { lat: number; lng: number }; km: number }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    const circulo = new google.maps.Circle({
+      map,
+      center,
+      radius: km * 1000,
+      strokeColor: visual.accentTo,
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      fillColor: visual.accentTo,
+      fillOpacity: 0.08,
+      clickable: false,
+    });
+    const limites = circulo.getBounds();
+    if (limites) map.fitBounds(limites, 24);
+    return () => circulo.setMap(null);
+  }, [map, center.lat, center.lng, km]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+}
+
 function MapCanvas({
   events,
   center,
   userCenter,
+  raioKm,
 }: {
   events: MapEventPin[];
   center: { lat: number; lng: number };
   userCenter?: { lat: number; lng: number } | null;
+  raioKm?: number | null;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const onSelect = useCallback((id: string | null) => setSelectedId(id), []);
@@ -57,6 +84,7 @@ function MapCanvas({
       style={{ width: "100%", height: "100%" }}
       clickableIcons={false}
     >
+      {userCenter && raioKm ? <RaioBusca center={userCenter} km={raioKm} /> : null}
       {userCenter ? (
         <AdvancedMarker position={userCenter} title="Você está aqui">
           <Pin background={visual.onLight} borderColor={visual.onDark} glyphColor={visual.onDark} />
@@ -72,10 +100,12 @@ function MapCanvas({
 export function EventMap({
   events,
   userCenter,
+  raioKm,
   apiKey,
 }: {
   events: MapEventPin[];
   userCenter?: { lat: number; lng: number } | null;
+  raioKm?: number | null;
   apiKey?: string;
 }) {
   const key = (apiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
@@ -108,7 +138,7 @@ export function EventMap({
       ) : null}
       <div className="overflow-hidden rounded-card shadow-card" style={{ height: "min(70dvh, 640px)" }}>
         <APIProvider apiKey={key} language="pt-BR" region="BR">
-          <MapCanvas events={pins} center={center} userCenter={userCenter} />
+          <MapCanvas events={pins} center={center} userCenter={userCenter} raioKm={raioKm} />
         </APIProvider>
       </div>
     </div>

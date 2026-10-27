@@ -5,7 +5,7 @@ import { EventMap } from "@/components/event-map";
 import { PageHeading } from "@/components/page-heading";
 import { ensureCategorias } from "@/lib/categorias";
 import { idsDaCategoria } from "@/lib/categorias-arvore";
-import { eventWhereFromParams, filterPublishedEvents, normalizeSearchParams, toMapEvent } from "@/lib/event-filters";
+import { eventWhereFromParams, filterPublishedEvents, normalizeSearchParams, raioDoFiltro, toMapEvent } from "@/lib/event-filters";
 import { uniqueByCapa } from "@/lib/eventos";
 import { parseCoord } from "@/lib/geo";
 import { prisma } from "@/lib/prisma";
@@ -48,7 +48,7 @@ export default async function MapaPage({ searchParams }: { searchParams: Record<
         <EventFilters categorias={categorias} values={filters} action="/mapa" />
       </div>
       <div className="mt-8">
-        <EventMap events={pins} userCenter={userCenter} apiKey={mapsKey} />
+        <EventMap events={pins} userCenter={userCenter} raioKm={raioDoFiltro(filters.distancia)} apiKey={mapsKey} />
       </div>
       <div className="mt-16 flex items-end justify-between gap-3">
         <h2 className="text-display">{events.length} no filtro</h2>
@@ -56,7 +56,7 @@ export default async function MapaPage({ searchParams }: { searchParams: Record<
       {events.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
           {userCenter
-            ? "Nenhum evento nesta distância. Aumente o raio em Distância e clique em Filtrar."
+            ? "Nenhum evento neste raio. Arraste o Raio para aumentar a distância."
             : "Nada neste recorte. Limpe um filtro ou use Perto de mim."}
         </p>
       ) : (

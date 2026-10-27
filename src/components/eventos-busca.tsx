@@ -14,7 +14,7 @@ import {
   temFiltro,
 } from "@/lib/busca-eventos";
 import { acharCategoria, montarArvore, type CategoriaBase } from "@/lib/categorias-arvore";
-import type { EventSearchParams } from "@/lib/event-filters";
+import { RAIO_KM, raioDoFiltro, type EventSearchParams } from "@/lib/event-filters";
 import { mensagemGeolocalizacao } from "@/lib/geo";
 import { iconeLucide } from "@/lib/perfil";
 import { cn } from "@/lib/utils";
@@ -272,8 +272,8 @@ export function EventosBusca({
               </span>
               <input
                 type="range"
-                min={1}
-                max={50}
+                min={RAIO_KM.min}
+                max={RAIO_KM.max}
                 value={km}
                 aria-valuetext={`até ${km} quilômetros`}
                 onChange={(event) => setKm(Number(event.target.value))}
@@ -377,8 +377,7 @@ export function EventosBusca({
 }
 
 function kmInicial(distancia: string | undefined): number {
-  const km = Number(distancia);
-  return Number.isInteger(km) && km >= 1 && km <= 50 ? km : 10;
+  return raioDoFiltro(distancia) ?? RAIO_KM.padrao;
 }
 
 function chipsAtivos(filters: EventSearchParams): { id: string; rotulo: string; href: string }[] {

@@ -324,14 +324,14 @@ test("desafio no robots.txt ou no meio da coleta encerra a instância sem mais c
   assert.ok(!noLote.chamadas.some((c) => c.pathname === "/api/event/find"));
 });
 
-test("config de região: padrão SP, lista de UFs, todos e raio", () => {
+test("config de região: padrão todo o Brasil, lista de UFs, todos e raio", () => {
   const env = (vars: Record<string, string>) => vars as unknown as NodeJS.ProcessEnv;
-  assert.deepEqual(lerRegiao(env({})), { ufs: ["SP"], raio: null });
+  assert.deepEqual(lerRegiao(env({})), { ufs: null, raio: null });
   assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_UFS: "sp, rj;XX" })), { ufs: ["SP", "RJ"], raio: null });
-  assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_UFS: "XX" })), { ufs: ["SP"], raio: null }, "sigla inválida cai no padrão");
+  assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_UFS: "XX" })), { ufs: null, raio: null }, "sigla inválida cai no padrão");
   assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_UFS: "*" })), { ufs: null, raio: null });
   assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_RAIO: "-23.5505,-46.6333,50" })), { ufs: null, raio: { lat: -23.5505, lng: -46.6333, km: 50 } });
-  assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_RAIO: "lixo" })), { ufs: ["SP"], raio: null });
+  assert.deepEqual(lerRegiao(env({ MAPAS_CULTURAIS_RAIO: "lixo" })), { ufs: null, raio: null });
   assert.equal(descreverRegiao({ ufs: ["SP"], raio: { lat: -23.5, lng: -46.6, km: 30 } }), "estado SP e até 30 km de -23.5,-46.6");
 });
 
