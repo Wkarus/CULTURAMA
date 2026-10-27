@@ -151,6 +151,8 @@ export function cidadeDoEvento(event: { endereco: string; fonte: EventFonte }): 
     .split(",")
     .map((part) => part.trim())
     .filter(Boolean);
+  // Só o nome do local ("MorumBis", "Cine Lido"): a fonte não disse a cidade.
+  if (parts.length < 2) return null;
   const cidade = event.fonte === "ticketmaster" && parts.length >= 3 ? parts[parts.length - 2] : cidadeDeEndereco(event.endereco);
   return cidade && cidade !== "Brasil" ? cidade : null;
 }

@@ -36,6 +36,7 @@ test("cidade do evento ignora bairro e estado", () => {
     cidadeDoEvento({ endereco: "Biblioteca Parque Erasmo, Rua X, 10 - Parque Erasmo Assunção, Santo André - SP", fonte: "mapas_culturais" }),
     "Santo André",
   );
-  assert.equal(cidadeDoEvento({ endereco: "Allianz Parque, Av. Francisco Matarazzo, 1705, São Paulo, SP", fonte: "ticketmaster" }), "São Paulo");
+  assert.equal(cidadeDoEvento({ endereco: "Qualistage, Av. Ayrton Senna, 3000 - Barra da Tijuca, Rio de Janeiro, Rio de Janeiro", fonte: "ticketmaster" }), "Rio de Janeiro");
+  assert.equal(cidadeDoEvento({ endereco: "MorumBis", fonte: "ticketmaster" }), null, "só o local, sem cidade");
   assert.equal(cidadeDoEvento({ endereco: "Brasil", fonte: "interno" }), null);
 });

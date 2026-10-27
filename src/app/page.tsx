@@ -34,6 +34,15 @@ const CENAS_DO_FUNDO = [
   "Sarau",
 ];
 
+/** Cidades na ordem em que aparecem; "SANTO ANDRÉ" e "Santo André" contam uma vez só, com a primeira grafia. */
+function cidadesUnicas(eventos: { endereco: string; fonte: EventFonte }[]): string[] {
+  const porChave = new Map<string, string>();
+  for (const cidade of eventos.map(cidadeDoEvento)) {
+    if (cidade && !porChave.has(cidade.toLocaleLowerCase("pt-BR"))) porChave.set(cidade.toLocaleLowerCase("pt-BR"), cidade);
+  }
+  return [...porChave.values()];
+}
+
 export default async function HomePage() {
   const where = eventWhereFromParams({});
   let events: EventoHome[] = [];
@@ -89,7 +98,7 @@ export default async function HomePage() {
 
   const unique = uniqueByCapa(events);
   const featuredList = uniqueByCapa([...destaques, ...unique.filter((event) => event.imagemCapa)]).slice(0, 6);
-  const cidades = new Set(addresses.map(cidadeDoEvento).filter(Boolean)).size;
+  const cidades = cidadesUnicas(addresses).length;
   const proximos = unique.slice(0, 3).map((event) => ({
     id: event.id,
     titulo: nomeCurtoEvento(event.titulo, 40),
@@ -111,9 +120,7 @@ export default async function HomePage() {
         ]
       : [],
   ).slice(0, 8);
-  const heroCidades = Array.from(
-    new Set(events.map(cidadeDoEvento).filter((cidade): cidade is string => Boolean(cidade))),
-  ).slice(0, 8);
+  const heroCidades = cidadesUnicas(events).slice(0, 8);
 
   const destaquesParticles = featuredList.flatMap((event) =>
     event.imagemCapa

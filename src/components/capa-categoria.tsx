@@ -29,7 +29,7 @@ export function CapaCategoria({
       aria-hidden={!rotulo}
     >
       <Icone
-        className="pointer-events-none absolute -bottom-[12%] -right-[8%] size-[70%] rotate-[18deg] text-[color-mix(in_srgb,var(--color-on-dark)_82%,transparent)]"
+        className="pointer-events-none absolute -bottom-[10%] -right-[4%] h-[75%] w-auto max-w-[60%] rotate-[18deg] text-[color-mix(in_srgb,var(--color-on-dark)_82%,transparent)]"
         strokeWidth={1.1}
         aria-hidden
       />
