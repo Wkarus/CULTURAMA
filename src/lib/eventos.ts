@@ -116,8 +116,8 @@ export function nomeCurtoEvento(titulo: string, max = 32): string {
 export function cidadeDeEndereco(endereco: string): string {
   const parts = endereco
     .split(",")
-    .map((part) => part.replace(/\d{5}-?\d{3}/g, "").replace(/\s*-?\s*[A-Z]{2}\s*$/i, "").trim())
-    .filter(Boolean);
+    .map((part) => part.replace(/\d{5}-?\d{3}/g, "").replace(/\s+-\s*[A-Z]{2}\s*$/, "").trim())
+    .filter((part) => part && !/^[A-Z]{2}$/.test(part));
   return parts[parts.length - 1] ?? endereco.trim();
 }
 
@@ -142,6 +142,16 @@ export function localDoEvento(event: { endereco: string; fonte: EventFonte }): s
     .filter(Boolean);
   if (event.fonte === "ticketmaster" && parts.length >= 3) return parts[parts.length - 2];
   const cidade = cidadeDeEndereco(endereco);
+  return cidade && cidade !== "Brasil" ? cidade : null;
+}
+
+/** Só a cidade ("Santo André", "São Paulo"), sem bairro. Ticketmaster grava "Local, rua, Cidade, Estado". */
+export function cidadeDoEvento(event: { endereco: string; fonte: EventFonte }): string | null {
+  const parts = event.endereco
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const cidade = event.fonte === "ticketmaster" && parts.length >= 3 ? parts[parts.length - 2] : cidadeDeEndereco(event.endereco);
   return cidade && cidade !== "Brasil" ? cidade : null;
 }
 

@@ -96,6 +96,7 @@ export function eventWhereFromParams(params: EventSearchParams, categoriaIds?: s
     ...EVENTO_PUBLICO,
     ...(categoriaIds ? { categoriaId: { in: categoriaIds } } : {}),
     ...(perto ? caixaDoRaio(perto) : {}),
+    ...(params.preco === "gratuito" ? { gratuito: true } : params.preco === "pago" ? { gratuito: false } : {}),
     dataHora: {
       gte: inicio,
       ...(ate ? { lte: ate } : {}),

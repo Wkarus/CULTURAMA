@@ -446,7 +446,6 @@ export function HomeHero({ nomes, capas, locais, patrocinadores }: HomeHeroProps
       )}
 
       {nomes.length >= MIN_NOMES_FUNDO ? <NomesAoFundo nomes={nomes} /> : null}
-      {nomes.length > 0 ? <p className="sr-only">Próximos eventos: {nomes.join(", ")}</p> : null}
 
       <div className="relative flex flex-1 flex-col">
         {capasHero.length > 0 ? <CapasFlutuantes capas={capasHero} /> : null}
@@ -454,14 +453,15 @@ export function HomeHero({ nomes, capas, locais, patrocinadores }: HomeHeroProps
         <div className="pointer-events-none relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-16 text-center md:py-20">
           <p className="mb-4 inline-flex items-center gap-2 rounded-pill border border-on-dark/15 bg-on-dark/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent-hover backdrop-blur-sm">
             <Sparkles className="size-3.5" aria-hidden />
-            Culturama · mapa e lista
+            Subculturas · mapa e lista
           </p>
           <TituloCulturama />
           <h2 className="mt-4 max-w-3xl font-display text-2xl font-bold leading-snug tracking-display text-on-dark sm:text-3xl md:text-4xl">
-            Sua próxima experiência cultural começa aqui.
+            As cenas da sua cidade, num mapa só.
           </h2>
           <p className="mt-3 max-w-2xl text-base text-muted-on-dark sm:text-lg">
-            Shows, teatro e rua. Compare carro, metrô e caminhada até o destino.
+            Batalha de rima, roda de samba, encontro de carros, anime e games, dança urbana, corrida de rua. Ache perto de você e
+            compare carro, metrô e caminhada até lá.
           </p>
           <LinhaDeApoio locais={locais} reduce={reduce} />
           <div className="pointer-events-auto mt-8 flex flex-wrap items-center justify-center gap-3">

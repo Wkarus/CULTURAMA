@@ -51,3 +51,10 @@ test("todo slug devolvido existe na árvore", () => {
     }
   }
 });
+
+test("samba ou rap no título vence o gênero genérico de outro segmento", () => {
+  assert.equal(mapCategoriaSlug(tm("Arts & Theatre", "Fine Art", "Undefined", "Samba nas Alturas | Sampa Sky")), "samba");
+  assert.equal(mapCategoriaSlug(tm("Miscellaneous", "Undefined", "Undefined", "Batalha de Rima da Aldeia")), "rap-e-rima");
+  assert.equal(mapCategoriaSlug(tm("Arts & Theatre", "Fine Art", "Undefined", "Exposição Sambaqui")), "exposicoes", "palavra parecida não conta");
+  assert.equal(mapCategoriaSlug(tm("Music", "Rock", "Undefined", "Rock com samba")), "rock", "em Música o gênero manda");
+});

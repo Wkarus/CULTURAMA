@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
+import { CapaCategoria } from "@/components/capa-categoria";
 import { CliqueExterno } from "@/components/clique-externo";
 import { RegistrarVisualizacao } from "@/components/registrar-visualizacao";
 import { RotaPainel } from "@/components/rota-painel";
@@ -61,9 +62,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
             // eslint-disable-next-line @next/next/no-img-element
             <img src={event.imagemCapa} alt="" className="size-full object-cover" />
           ) : (
-            <div className="flex size-full items-end bg-surface-dark p-6">
-              <p className="text-display text-on-dark">{event.category?.nome ?? "Evento"}</p>
-            </div>
+            <CapaCategoria categoria={event.category} rotulo />
           )}
         </div>
         <div className="grid gap-3 p-6">

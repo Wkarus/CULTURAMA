@@ -113,6 +113,22 @@ const REGRAS_TITULO: Regra[] = [
   { slug: "encontros-de-carros", teste: /encontro de carros|carros antigos/ },
 ];
 
+/**
+ * Cena nomeada no título vence o gênero genérico de outro segmento: "Samba nas Alturas" vem como
+ * Arts & Theatre / Fine Art, mas é samba. Só fora de Música (lá o gênero já resolve) e de Esportes.
+ */
+const TITULO_VENCE = new Set<SlugCategoria>([
+  "roda-de-samba",
+  "samba-de-raiz",
+  "samba-de-roda",
+  "ensaios-de-escola-de-samba",
+  "partido-alto",
+  "samba-rock",
+  "pagode",
+  "samba",
+  "rap-e-rima",
+]);
+
 const MAES = new Set<SlugCategoria>(CATEGORIAS_ARVORE.map((m) => m.slug));
 const ESPORTES = new Set<SlugCategoria>(
   CATEGORIAS_ARVORE.find((m) => m.slug === "esportes")!.filhas.map((f) => f.slug),
@@ -128,6 +144,11 @@ export function mapCategoriaSlug(evento: { name?: string; classifications?: TmCl
   const segmento = REGRAS_POR_SEGMENTO[normalizar(valido(c?.segment))];
   const generos = normalizar([c?.genre, c?.subGenre, c?.type, c?.subType].map(valido).filter(Boolean).join(" | "));
   const titulo = normalizar(evento.name);
+
+  if (segmento?.mae !== "musica" && segmento?.mae !== "esportes") {
+    const cena = REGRAS_TITULO.find((r) => TITULO_VENCE.has(r.slug) && r.teste.test(titulo));
+    if (cena) return cena.slug;
+  }
 
   const conjuntos = segmento ? [segmento] : Object.values(REGRAS_POR_SEGMENTO);
   for (const { regras } of conjuntos) {

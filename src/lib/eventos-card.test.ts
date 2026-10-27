@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dataDoCard, linhaDoLocal, seloRestricaoCard } from "./eventos";
+import { cidadeDoEvento, dataDoCard, linhaDoLocal, seloRestricaoCard } from "./eventos";
 
 test("data do card no fuso de São Paulo", () => {
   const sexta = dataDoCard(new Date("2026-10-17T01:00:00.000Z"));
@@ -29,4 +29,13 @@ test("local e bairro, e selo só para 16+ e 18+", () => {
   assert.equal(seloRestricaoCard("quatorze"), null);
   assert.equal(seloRestricaoCard("dezesseis"), "16+");
   assert.equal(seloRestricaoCard("dezoito"), "18+");
+});
+
+test("cidade do evento ignora bairro e estado", () => {
+  assert.equal(
+    cidadeDoEvento({ endereco: "Biblioteca Parque Erasmo, Rua X, 10 - Parque Erasmo Assunção, Santo André - SP", fonte: "mapas_culturais" }),
+    "Santo André",
+  );
+  assert.equal(cidadeDoEvento({ endereco: "Allianz Parque, Av. Francisco Matarazzo, 1705, São Paulo, SP", fonte: "ticketmaster" }), "São Paulo");
+  assert.equal(cidadeDoEvento({ endereco: "Brasil", fonte: "interno" }), null);
 });

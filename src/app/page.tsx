@@ -1,4 +1,4 @@
-import type { AdSlotTipo, Prisma } from "@prisma/client";
+import type { AdSlotTipo, EventFonte, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 import { BannerPatrocinado } from "@/components/banner-patrocinado";
@@ -12,11 +12,27 @@ import { HomeMarketInvestors } from "@/components/home-market-investors";
 import { HomePainSolution } from "@/components/home-pain-solution";
 import { HomeStats } from "@/components/home-stats";
 import { anuncioNoAr, contaComoExibicao, hrefDoAnuncio } from "@/lib/anuncios";
-import { cidadeDeEndereco, formatEventoCurto, localDoEvento, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
+import { cidadeDoEvento, formatEventoCurto, nomeCurtoEvento, uniqueByCapa } from "@/lib/eventos";
 import { eventWhereFromParams } from "@/lib/event-filters";
 import { prisma } from "@/lib/prisma";
 
 type EventoHome = Prisma.EventGetPayload<{ include: { category: true } }>;
+
+/** Letreiro de fundo do hero: as cenas que o Culturama cobre, não títulos de eventos (que mudam e às vezes não dizem nada). */
+const CENAS_DO_FUNDO = [
+  "Batalha de rima",
+  "Roda de samba",
+  "Encontro de carros",
+  "Anime",
+  "Games",
+  "Breaking",
+  "Slam",
+  "Corrida de rua",
+  "Eletrônica",
+  "Skate",
+  "Cosplay",
+  "Sarau",
+];
 
 export default async function HomePage() {
   const where = eventWhereFromParams({});
@@ -24,7 +40,7 @@ export default async function HomePage() {
   let destaques: EventoHome[] = [];
   let eventCount = 0;
   let organizerCount = 0;
-  let addresses: { endereco: string }[] = [];
+  let addresses: { endereco: string; fonte: EventFonte }[] = [];
   let anuncios: { id: string; tipo: AdSlotTipo; patrocinador: string; imagem: string }[] = [];
   try {
     const now = new Date();
@@ -43,7 +59,7 @@ export default async function HomePage() {
       }),
       prisma.event.count({ where }),
       prisma.organizer.count({ where: { statusVerificacao: "aprovado" } }),
-      prisma.event.findMany({ where, select: { endereco: true } }),
+      prisma.event.findMany({ where, select: { endereco: true, fonte: true } }),
       prisma.adSlot.findMany({
         where: anuncioNoAr(now),
         select: { id: true, tipo: true, patrocinador: true, imagem: true },
@@ -73,7 +89,7 @@ export default async function HomePage() {
 
   const unique = uniqueByCapa(events);
   const featuredList = uniqueByCapa([...destaques, ...unique.filter((event) => event.imagemCapa)]).slice(0, 6);
-  const cidades = new Set(addresses.map((row) => cidadeDeEndereco(row.endereco)).filter(Boolean)).size;
+  const cidades = new Set(addresses.map(cidadeDoEvento).filter(Boolean)).size;
   const proximos = unique.slice(0, 3).map((event) => ({
     id: event.id,
     titulo: nomeCurtoEvento(event.titulo, 40),
@@ -82,7 +98,6 @@ export default async function HomePage() {
     gratuito: event.gratuito,
     imagemCapa: event.imagemCapa,
   }));
-  const heroNomes = Array.from(new Set(unique.map((event) => nomeCurtoEvento(event.titulo, 28)))).slice(0, 18);
   const heroCapas = unique.flatMap((event) =>
     event.imagemCapa
       ? [
@@ -96,8 +111,8 @@ export default async function HomePage() {
         ]
       : [],
   ).slice(0, 8);
-  const heroLocais = Array.from(
-    new Set(events.map(localDoEvento).filter((local): local is string => Boolean(local))),
+  const heroCidades = Array.from(
+    new Set(events.map(cidadeDoEvento).filter((cidade): cidade is string => Boolean(cidade))),
   ).slice(0, 8);
 
   const destaquesParticles = featuredList.flatMap((event) =>
@@ -117,7 +132,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      <HomeHero nomes={heroNomes} capas={heroCapas} locais={heroLocais} patrocinadores={faixa.map(({ nome, href }) => ({ nome, href }))} />
+      <HomeHero nomes={CENAS_DO_FUNDO} capas={heroCapas} locais={heroCidades} patrocinadores={faixa.map(({ nome, href }) => ({ nome, href }))} />
       <HomePainSolution />
       <HomeAppFeatures />
       <HomeInteractiveDemo events={proximos} />

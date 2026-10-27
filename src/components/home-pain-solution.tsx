@@ -85,7 +85,7 @@ export function HomePainSolution() {
                 Cultura por perto, num só app.
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-on-dark sm:text-base">
-                De festivais e shows a saraus, rodas de samba e teatro de bairro. O que está publicado aparece no mapa, com data e endereço.
+                Das batalhas de rima e rodas de samba aos encontros de carros, eventos geek e festivais. O que está publicado aparece no mapa, com data e endereço.
               </p>
             </div>
 

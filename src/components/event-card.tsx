@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Category, Event } from "@prisma/client";
 import { Heart } from "lucide-react";
 import { toggleFavorite } from "@/actions/social";
+import { CapaCategoria } from "@/components/capa-categoria";
 import { dataDoCard, linhaDoLocal, seloRestricaoCard } from "@/lib/eventos";
 import { cn } from "@/lib/utils";
 
@@ -48,7 +49,9 @@ export function EventCard({
               alt=""
               className="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04] motion-reduce:transform-none motion-reduce:transition-none"
             />
-          ) : null}
+          ) : (
+            <CapaCategoria categoria={event.category} />
+          )}
           <p className="absolute left-3 top-3 flex flex-col items-center rounded-control bg-[color-mix(in_srgb,var(--color-surface-light)_84%,transparent)] px-2.5 py-1.5 text-on-light backdrop-blur-md">
             <span className="text-[0.65rem] font-semibold uppercase tracking-wider">{data.mes}</span>
             <span className="font-display text-xl font-semibold leading-none">{data.dia}</span>
