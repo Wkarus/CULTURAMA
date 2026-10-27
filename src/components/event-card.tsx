@@ -78,6 +78,7 @@ export function EventCard({
       {logado ? (
         <form
           action={async () => {
+            "use server";
             await toggleFavorite(event.id);
           }}
           className="absolute right-3 top-3 z-10"
