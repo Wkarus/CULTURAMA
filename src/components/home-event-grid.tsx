@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { EventCard } from "@/components/event-card";
 import { eventWhereFromParams } from "@/lib/event-filters";
-import { uniqueByCapa } from "@/lib/eventos";
+import { misturarVitrine, uniqueByCapa } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 
 type EventoCard = Event & { category: Category | null };
@@ -66,16 +66,17 @@ export async function HomeSemana() {
   try {
     const agora = new Date();
     const limite = new Date(agora.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const [session, rows] = await Promise.all([
-      auth(),
+    const semana = { ...eventWhereFromParams({}), dataHora: { gte: agora, lte: limite } };
+    const consulta = (comFoto: boolean) =>
       prisma.event.findMany({
-        where: { ...eventWhereFromParams({}), dataHora: { gte: agora, lte: limite } },
+        where: { ...semana, imagemCapa: comFoto ? { not: null } : null },
         include: { category: { include: { parent: { select: { nome: true } } } } },
         orderBy: { dataHora: "asc" },
-        take: 24,
-      }),
-    ]);
-    const events = uniqueByCapa(rows).slice(0, 8);
+        take: 40,
+      });
+    // Busca separada: com uma só consulta por data, a fonte que publica mais (e sem foto) ocupava as 24 primeiras.
+    const [session, comFoto, semFoto] = await Promise.all([auth(), consulta(true), consulta(false)]);
+    const events = misturarVitrine(uniqueByCapa([...comFoto, ...semFoto]), 8);
     if (events.length === 0) return null;
     const marcados = session?.user?.id
       ? await prisma.favorite.findMany({

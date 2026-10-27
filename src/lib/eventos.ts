@@ -87,6 +87,36 @@ export function seloDaFonte(fonte: EventFonte): string {
   return "Na rua";
 }
 
+/**
+ * Vitrine da home: eventos com foto primeiro e, dentro de cada grupo, um de cada fonte e categoria por vez,
+ * para a fileira não virar oito capas iguais da mesma fonte. A ordem por data se mantém dentro de cada combinação.
+ * As fotos ocupam no máximo 3/4 dos lugares: quando só uma fonte tem foto, as outras ainda aparecem no fim.
+ */
+export function misturarVitrine<T extends { imagemCapa: string | null; fonte: string; categoriaId: string | null }>(
+  events: T[],
+  quantidade: number,
+): T[] {
+  const intercalar = (lista: T[]) => {
+    const grupos = new Map<string, T[]>();
+    for (const event of lista) {
+      const chave = `${event.fonte}|${event.categoriaId ?? ""}`;
+      grupos.set(chave, [...(grupos.get(chave) ?? []), event]);
+    }
+    const filas = [...grupos.values()];
+    const saida: T[] = [];
+    for (let i = 0; filas.some((fila) => i < fila.length); i++) {
+      for (const fila of filas) if (i < fila.length) saida.push(fila[i]);
+    }
+    return saida;
+  };
+  const fotos = intercalar(events.filter((e) => e.imagemCapa));
+  const primeiras = fotos.slice(0, Math.ceil(quantidade * 0.75));
+  const resto = intercalar([...fotos.slice(primeiras.length), ...events.filter((e) => !e.imagemCapa)]);
+  const outrasFontes = resto.filter((e) => !primeiras.some((p) => p.fonte === e.fonte));
+  const mesmaFonte = resto.filter((e) => primeiras.some((p) => p.fonte === e.fonte));
+  return [...primeiras, ...outrasFontes, ...mesmaFonte].slice(0, quantidade);
+}
+
 export function uniqueByCapa<T extends { titulo: string; imagemCapa: string | null }>(events: T[]): T[] {
   const seenTitle = new Set<string>();
   const seenImage = new Set<string>();
