@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { ChartColumn, Handshake, MapPin, ShieldCheck } from "lucide-react";
 import { auth } from "@/auth";
 import { EmpresaForm } from "@/components/empresa-form";
-import { AuthShell, AuthTroca } from "@/components/auth-shell";
+import { AuthShell, AuthTroca, type Beneficio } from "@/components/auth-shell";
 import { capasDecorativas } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Cadastro de empresa" };
+
+const BENEFICIOS_INSIGHTS: Beneficio[] = [
+  { icone: ChartColumn, texto: "Veja quais cenas e categorias atraem mais interesse" },
+  { icone: MapPin, texto: "Descubra onde o público procura eventos, por região" },
+  { icone: Handshake, texto: "Encontre eventos e organizadores para patrocinar" },
+  { icone: ShieldCheck, texto: "Só dados agregados e anônimos, dentro da LGPD" },
+];
 
 export default async function CadastroEmpresaPage() {
   const session = await auth();
@@ -28,10 +36,8 @@ export default async function CadastroEmpresaPage() {
           Culturama <span className="text-accent-gradient">Insights</span>
         </>
       }
+      beneficios={BENEFICIOS_INSIGHTS}
     >
-      <p className="mb-4 text-sm text-muted-foreground">
-        Conta de empresa, com CNPJ. O acesso ao painel começa depois da aprovação da equipe.
-      </p>
       <EmpresaForm reenvio={reenvio} />
       <AuthTroca pergunta="Já tem conta?" href="/login?callbackUrl=/insights" acao="Entrar" />
     </AuthShell>

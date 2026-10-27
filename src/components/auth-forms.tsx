@@ -30,7 +30,7 @@ function FieldError({ state }: { state: FormState }) {
 }
 
 const SENHA_MINIMA = 8;
-const CAMPO = "auth-field h-12 w-full rounded-control px-4 text-base";
+export const CAMPO = "auth-field h-12 w-full rounded-control px-4 text-base";
 const FOCO_ESCURO =
   "outline-none focus-visible:ring-2 focus-visible:ring-accent-hover focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark";
 
@@ -112,7 +112,7 @@ function MensagemErro({ id, texto }: { id: string; texto?: string }) {
   );
 }
 
-function AvisoTopo({ texto }: { texto?: string }) {
+export function AvisoTopo({ texto }: { texto?: string }) {
   if (!texto) return null;
   return (
     <p
@@ -128,7 +128,7 @@ function AvisoTopo({ texto }: { texto?: string }) {
 
 type A11yCampo = { id: string; "aria-invalid"?: true; "aria-describedby"?: string };
 
-function Campo({
+export function Campo({
   id,
   rotulo,
   erro,
@@ -158,18 +158,20 @@ function Campo({
   );
 }
 
-function CampoSenha({
+export function CampoSenha({
   id,
   autoComplete,
   minLength,
   dica,
   erro,
+  obrigatoria = true,
 }: {
   id: string;
   autoComplete: string;
   minLength?: number;
   dica?: string;
   erro?: string;
+  obrigatoria?: boolean;
 }) {
   const [visivel, setVisivel] = useState(false);
   return (
@@ -180,7 +182,7 @@ function CampoSenha({
             {...a11y}
             name={id}
             type={visivel ? "text" : "password"}
-            required
+            required={obrigatoria}
             minLength={minLength}
             autoComplete={autoComplete}
             className={cn(CAMPO, "pr-12")}
@@ -203,7 +205,7 @@ function CampoSenha({
   );
 }
 
-function BotaoEnviar({ rotulo, carregando }: { rotulo: string; carregando: string }) {
+export function BotaoEnviar({ rotulo, carregando }: { rotulo: string; carregando: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -256,7 +258,7 @@ function BlocoGoogle({ callbackUrl }: { callbackUrl: string }) {
   );
 }
 
-function CartaoAuth({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children: ReactNode }) {
+export function CartaoAuth({ titulo, subtitulo, children }: { titulo: string; subtitulo?: string; children: ReactNode }) {
   return (
     <div className="panel-dark rounded-card p-6 shadow-card sm:p-8">
       <h2 className="font-display text-2xl font-semibold tracking-display text-on-dark">{titulo}</h2>

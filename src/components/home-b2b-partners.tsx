@@ -18,7 +18,7 @@ export function HomeB2BPartners() {
     {
       icone: CreditCard,
       titulo: "Pagamentos",
-      descricao: "Em breve: Mercado Pago, Stripe e Pix. Ainda não há checkout no site.",
+      descricao: "Venda de ingresso com Mercado Pago e Pix no próximo passo. Hoje o evento leva o link do seu próprio ingresso.",
       emBreve: true,
     },
     {
@@ -41,22 +41,18 @@ export function HomeB2BPartners() {
               Publique seu evento para quem está procurando cultura.
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-on-light">
-              Festival, galeria, teatro ou casa de shows: o cadastro de organizador libera a publicação no mapa e na lista.
+              Batalha, roda, encontro, festa ou festival: o cadastro de organizador é grátis e coloca seu evento no mapa e na lista.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link href="/cadastro/organizador" className={cn(buttonVariants(), "gap-2 px-6 font-medium shadow-cta")}>
-                Cadastrar como organizador
+              <Link href="/para-organizadores" className={cn(buttonVariants(), "gap-2 px-6 font-medium shadow-cta")}>
+                Conhecer o cadastro
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
-              <Link href="/login" className={cn(buttonVariants({ variant: "outline" }), "font-medium")}>
+              <Link href="/login?callbackUrl=/cadastro/organizador" className={cn(buttonVariants({ variant: "outline" }), "font-medium")}>
                 Já tenho conta
               </Link>
             </div>
-
-            <p className="mt-8 border-t border-border-light pt-6 text-xs text-muted-on-light">
-              Pagamentos por Mercado Pago, Stripe e Pix: em breve.
-            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:col-span-6">

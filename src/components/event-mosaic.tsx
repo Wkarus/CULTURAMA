@@ -3,7 +3,7 @@ import { EventCard } from "@/components/event-card";
 
 type EventoCard = Event & { category: Category | null };
 
-/** Lista uniforme: 2 colunas no tablet, 4 no desktop. No mobile os cards empilham para a página inteira continuar rolável. */
+/** Lista uniforme: 2 colunas já no celular (cabem 4 eventos por tela), 4 no desktop. */
 export function EventMosaic({
   events,
   favoritos,
@@ -14,7 +14,7 @@ export function EventMosaic({
   logado: boolean;
 }) {
   return (
-    <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-5 lg:grid-cols-4">
       {events.map((event) => (
         <li key={event.id}>
           <EventCard event={event} favorito={favoritos.has(event.id)} logado={logado} />

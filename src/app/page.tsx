@@ -2,7 +2,6 @@ import type { AdSlotTipo, EventFonte, Prisma } from "@prisma/client";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 import { BannerPatrocinado } from "@/components/banner-patrocinado";
-import { HomeAppFeatures } from "@/components/home-app-features";
 import { HomeB2BPartners } from "@/components/home-b2b-partners";
 import { HomeEventGridSkeleton, HomeSemana } from "@/components/home-event-grid";
 import { HomeFeaturedParticles } from "@/components/home-featured-particles";
@@ -140,26 +139,20 @@ export default async function HomePage() {
   return (
     <main>
       <HomeHero nomes={CENAS_DO_FUNDO} capas={heroCapas} locais={heroCidades} patrocinadores={faixa.map(({ nome, href }) => ({ nome, href }))} />
-      <HomePainSolution />
-      <HomeAppFeatures />
-      <HomeInteractiveDemo events={proximos} />
-      {destaquesParticles.length > 0 ? <HomeFeaturedParticles events={destaquesParticles} /> : null}
-      <HomeStats eventos={eventCount} cidades={cidades} organizadores={organizerCount} />
-      {banner ? (
-        <BannerPatrocinado anuncio={{ href: hrefDoAnuncio(banner.id), imagem: banner.imagem, patrocinador: banner.patrocinador }} />
-      ) : null}
-      {eventCount === 0 && featuredList.length === 0 ? (
-        <section className="mx-auto max-w-page px-4 py-16">
-          <p className="max-w-md text-caption text-muted-foreground">
-            Ainda não há eventos futuros na base. Quando o cron da Ticketmaster rodar, eles aparecem aqui.
-          </p>
-        </section>
-      ) : (
+      {/* Evento de verdade logo depois do topo: quem chega vê o produto antes do discurso. */}
+      {eventCount === 0 && featuredList.length === 0 ? null : (
         <Suspense fallback={<HomeEventGridSkeleton />}>
           <HomeSemana />
         </Suspense>
       )}
+      <HomePainSolution />
+      {destaquesParticles.length > 0 ? <HomeFeaturedParticles events={destaquesParticles} /> : null}
+      <HomeInteractiveDemo events={proximos} />
+      {banner ? (
+        <BannerPatrocinado anuncio={{ href: hrefDoAnuncio(banner.id), imagem: banner.imagem, patrocinador: banner.patrocinador }} />
+      ) : null}
       <HomeB2BPartners />
+      <HomeStats eventos={eventCount} cidades={cidades} organizadores={organizerCount} />
       <HomeMarketInvestors />
     </main>
   );

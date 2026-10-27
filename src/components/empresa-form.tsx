@@ -4,56 +4,48 @@ import Link from "next/link";
 import { useFormState } from "react-dom";
 import { cadastrarEmpresa } from "@/actions/empresa";
 import type { FormState } from "@/actions/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AvisoTopo, BotaoEnviar, CAMPO, Campo, CampoSenha, CartaoAuth } from "@/components/auth-forms";
 
+/** Mesmo cartão escuro e mesmos campos do login, para a empresa não cair num formulário com outra cara. */
 export function EmpresaForm({ reenvio = false }: { reenvio?: boolean }) {
   const [state, action] = useFormState(cadastrarEmpresa, {} as FormState);
   if (state.ok && state.aviso) {
-    return <p className="rounded-card bg-muted px-4 py-3 text-sm text-foreground">{state.aviso}</p>;
+    return (
+      <CartaoAuth titulo="Pedido enviado">
+        <p className="text-sm text-on-dark">{state.aviso}</p>
+      </CartaoAuth>
+    );
   }
   return (
-    <form action={action} className="grid gap-4">
-      {state.error ? (
-        <p role="alert" className="rounded-card bg-warning-bg px-3 py-2 text-sm text-warning">
-          {state.error}
-        </p>
-      ) : null}
-      {state.aviso ? (
-        <p role="status" className="rounded-card bg-warning-bg px-3 py-2 text-sm text-warning">
-          {state.aviso}
-        </p>
-      ) : null}
-      <div className="grid gap-2">
-        <Label htmlFor="nome">Seu nome</Label>
-        <Input id="nome" name="nome" autoComplete="name" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="email">E-mail de trabalho</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="senha">Senha</Label>
-        <Input id="senha" name="senha" type="password" autoComplete="new-password" minLength={8} required={!reenvio} />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="razaoSocial">Razão social</Label>
-        <Input id="razaoSocial" name="razaoSocial" required />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="cnpj">CNPJ</Label>
-        <Input id="cnpj" name="cnpj" inputMode="numeric" autoComplete="off" required />
-      </div>
-      <label className="flex items-start gap-2 text-sm text-muted-foreground">
-        <input type="checkbox" name="aceite" className="mt-1" required />
-        <span>
-          Li a <Link href="/privacidade" className="link-quiet">Política de Privacidade</Link>. O painel mostra só dados agregados.
-        </span>
-      </label>
-      <Button type="submit" className="w-full">
-        {reenvio ? "Enviar novo pedido" : "Pedir acesso"}
-      </Button>
-    </form>
+    <CartaoAuth titulo={reenvio ? "Novo pedido de acesso" : "Pedir acesso"} subtitulo="Conta de empresa, com CNPJ. O painel abre depois da aprovação da equipe.">
+      <form action={action} className="grid gap-5">
+        <AvisoTopo texto={state.error} />
+        <AvisoTopo texto={state.aviso} />
+        <Campo id="nome" rotulo="Seu nome">
+          {(a11y) => <input {...a11y} name="nome" autoComplete="name" required className={CAMPO} />}
+        </Campo>
+        <Campo id="email" rotulo="E-mail de trabalho">
+          {(a11y) => <input {...a11y} name="email" type="email" autoComplete="email" spellCheck={false} required className={CAMPO} />}
+        </Campo>
+        <CampoSenha id="senha" autoComplete="new-password" minLength={8} dica="Mínimo de 8 caracteres." obrigatoria={!reenvio} />
+        <Campo id="razaoSocial" rotulo="Razão social">
+          {(a11y) => <input {...a11y} name="razaoSocial" autoComplete="organization" required className={CAMPO} />}
+        </Campo>
+        <Campo id="cnpj" rotulo="CNPJ">
+          {(a11y) => <input {...a11y} name="cnpj" inputMode="numeric" autoComplete="off" placeholder="00.000.000/0000-00" required className={CAMPO} />}
+        </Campo>
+        <label className="flex items-start gap-3 text-sm text-muted-on-dark">
+          <input type="checkbox" name="aceite" className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent-solid)]" required />
+          <span>
+            Li a{" "}
+            <Link href="/privacidade" className="font-medium text-accent-hover underline-offset-4 hover:underline">
+              Política de Privacidade
+            </Link>
+            . O painel mostra só dados agregados, sem nome de quem visitou.
+          </span>
+        </label>
+        <BotaoEnviar rotulo={reenvio ? "Enviar novo pedido" : "Pedir acesso"} carregando="Enviando…" />
+      </form>
+    </CartaoAuth>
   );
 }

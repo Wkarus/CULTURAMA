@@ -331,14 +331,17 @@ export function EventosBusca({
           ) : null}
         </section>
       ) : (
-        <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <ul
+          className="-mx-4 mt-6 flex snap-x gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden"
+          aria-label="Categorias"
+        >
           {arvore.map((item) => {
             const Icone = iconeLucide(item.icone);
             return (
-              <li key={item.id}>
+              <li key={item.id} className="w-36 shrink-0 snap-start sm:w-auto">
                 <Link
                   href={hrefBusca("/eventos", filters, { categoria: item.slug })}
-                  className={cn("group relative block h-28 overflow-hidden rounded-card p-4", FOCO)}
+                  className={cn("group relative block h-24 overflow-hidden rounded-card p-4 sm:h-28", FOCO)}
                   style={{ backgroundColor: corDaCategoria(item.slug) }}
                 >
                   <span className="font-display text-lg font-semibold leading-tight text-on-dark">{item.nome}</span>
@@ -438,7 +441,7 @@ function SubPilula({ href, ativo, cor, children }: { href: string; ativo: boolea
     <Link
       href={href}
       aria-current={ativo ? "true" : undefined}
-      className={cn("inline-flex shrink-0 rounded-full px-3.5 py-2 text-sm font-medium", FOCO, ativo ? "text-on-dark" : "bg-card text-on-light shadow-card")}
+      className={cn("inline-flex shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium", FOCO, ativo ? "text-on-dark" : "bg-card text-on-light shadow-card")}
       style={ativo ? { backgroundColor: cor } : undefined}
     >
       {children}

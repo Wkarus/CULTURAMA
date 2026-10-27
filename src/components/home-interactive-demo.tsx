@@ -17,7 +17,7 @@ export function HomeInteractiveDemo({ events }: { events: EventoTela[] }) {
           Experimente o Culturama
         </h2>
         <p className="mx-auto mt-3 max-w-2xl text-base text-muted-on-dark sm:text-lg">
-          O celular abaixo usa os eventos que estão no ar. Sem evento publicado, a interface aparece vazia.
+          O celular abaixo usa os eventos que estão no ar. Sem evento publicado, a tela aparece vazia.
         </p>
 
         <div className="mx-auto mt-10 grid max-w-3xl gap-4 sm:grid-cols-2">

@@ -15,7 +15,7 @@ export type UsuarioHeader = { nome: string | null; email: string | null; admin: 
 const LINKS = [
   { href: "/eventos", label: "Eventos" },
   { href: "/mapa", label: "Mapa" },
-  { href: "/cadastro/organizador", label: "Para organizadores" },
+  { href: "/para-organizadores", label: "Para organizadores" },
   { href: "/cadastro/empresa", label: "Para empresas" },
 ];
 

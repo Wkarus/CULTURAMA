@@ -12,7 +12,7 @@ export function SiteFooter() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <AppDownloadModal triggerText="Baixar o App Culturama" />
             <Link
-              href="/cadastro/organizador"
+              href="/para-organizadores"
               className="inline-flex min-h-11 items-center justify-center rounded-pill border border-on-dark/20 bg-on-dark/5 px-5 text-sm font-medium text-on-dark outline-none hover:bg-on-dark/10 focus-visible:ring-2 focus-visible:ring-accent-hover"
             >
               Publicar evento
@@ -28,7 +28,7 @@ export function SiteFooter() {
             <TextLink href="/eventos">Eventos</TextLink>
             <TextLink href="/mapa">Mapa</TextLink>
             <TextLink href="/#demo">Demonstração</TextLink>
-            <TextLink href="/cadastro/organizador">Publicar evento</TextLink>
+            <TextLink href="/para-organizadores">Publicar evento</TextLink>
             <TextLink href="/privacidade">Privacidade</TextLink>
           </nav>
         </div>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { BarChart3, Target, TrendingUp } from "lucide-react";
 
 const FONTE_84 =
@@ -22,7 +21,7 @@ export function HomeMarketInvestors() {
             Cultura presencial ainda é hábito da maioria
           </h2>
           <p className="mt-3 text-base text-muted-on-dark sm:text-lg">
-            O número abaixo vem de pesquisa publicada. As fontes de receita são o modelo planejado, não o que o site cobra hoje.
+            O público existe e já sai de casa. Abaixo, o dado de pesquisa e como o Culturama gera receita sem cobrar de quem usa.
           </p>
         </div>
 
@@ -49,9 +48,9 @@ export function HomeMarketInvestors() {
           </article>
           <article className="rounded-card border border-on-dark/10 bg-on-dark/[0.04] p-6 text-center">
             <p className="text-accent-gradient font-display text-4xl font-extrabold sm:text-5xl">3</p>
-            <p className="mt-1 font-display text-sm font-bold uppercase tracking-wider text-on-dark">fontes planejadas</p>
+            <p className="mt-1 font-display text-sm font-bold uppercase tracking-wider text-on-dark">fontes de receita</p>
             <p className="mt-2 text-xs text-muted-on-dark">
-              Modelo planejado: uso gratuito, comissão de organizador e cota de patrocínio. Nenhuma delas está cobrando no site agora.
+              Uso gratuito para o público; quem paga é quem quer alcançá-lo: organizadores e marcas.
             </p>
           </article>
           <article className="rounded-card border border-on-dark/10 bg-on-dark/[0.04] p-6 text-center">
@@ -66,12 +65,12 @@ export function HomeMarketInvestors() {
         <div className="mt-16">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-accent-hover">Modelo planejado</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-accent-hover">Modelo de negócio</p>
               <h3 className="font-display text-xl font-bold text-on-dark sm:text-2xl">Como a receita está desenhada</h3>
             </div>
             <p className="flex items-center gap-2 text-xs text-muted-on-dark">
               <BarChart3 className="size-4 text-accent-from" aria-hidden />
-              Ainda não está em operação
+              Entra em operação em etapas
             </p>
           </div>
 
@@ -80,17 +79,17 @@ export function HomeMarketInvestors() {
               {
                 tipo: "Quem usa",
                 modelo: "Gratuito",
-                detalhe: "Descobrir evento continua livre. Plano pago, se existir, entra depois.",
+                detalhe: "Descobrir evento, ver a rota e salvar favoritos é livre. Sempre.",
               },
               {
                 tipo: "Quem organiza",
                 modelo: "Comissão e assinatura",
-                detalhe: "Planejado: taxa sobre ingresso e ferramentas de público. O checkout ainda não existe.",
+                detalhe: "Destaque pago do evento e taxa sobre ingresso vendido no Culturama, com o checkout do Mercado Pago.",
               },
               {
                 tipo: "Marcas",
                 modelo: "Patrocínio",
-                detalhe: "Anúncio na home já conta exibição e clique. Cota comercial é o passo seguinte.",
+                detalhe: "Patrocínio por categoria, anúncio na rota e relatório de público agregado no Insights. O anúncio da home já mede exibição e clique.",
               },
             ].map((item) => (
               <article key={item.tipo} className="flex flex-col justify-between rounded-card border border-on-dark/10 bg-surface-raised p-6">
@@ -101,25 +100,13 @@ export function HomeMarketInvestors() {
                 </div>
                 <p className="mt-6 flex items-center gap-2 text-[11px] font-medium text-accent-hover">
                   <Target className="size-3.5" aria-hidden />
-                  Modelo planejado
+                  Fonte de receita
                 </p>
               </article>
             ))}
           </div>
         </div>
 
-        <div className="mt-14 rounded-card border border-on-dark/10 bg-accent-from/10 p-8 text-center sm:p-10">
-          <h3 className="font-display text-2xl font-bold text-on-dark">Quer publicar um evento?</h3>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-on-dark">
-            O caminho que existe hoje é o cadastro de organizador. Não há e-mail comercial separado.
-          </p>
-          <Link
-            href="/cadastro/organizador"
-            className="mt-6 inline-flex min-h-11 items-center justify-center rounded-pill bg-accent-gradient px-6 text-sm font-semibold text-on-dark shadow-cta outline-none focus-visible:ring-2 focus-visible:ring-accent-hover focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
-          >
-            Cadastrar como organizador
-          </Link>
-        </div>
       </div>
     </section>
   );

@@ -29,7 +29,7 @@ const passos: Passo[] = [
     kicker: "01",
     title: "Encontre o que rola perto",
     description:
-      "Abra o mapa e veja shows, teatro e rua ao redor. O pin mostra só o que ainda vai acontecer.",
+      "Abra o mapa e veja batalhas, rodas, encontros e shows ao redor. Só aparece o que ainda vai acontecer.",
     href: "/mapa",
     cta: "Ver no mapa",
     Tela: TelaMapa,
