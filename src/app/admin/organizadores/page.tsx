@@ -58,6 +58,8 @@ export default async function AdminOrganizadoresPage({ searchParams }: { searchP
                 >
                   Ver documento enviado
                 </a>
+              ) : item.statusVerificacao !== "pendente" ? (
+                <p className="text-sm text-muted-on-dark">Arquivo do documento apagado após a verificação (LGPD).</p>
               ) : null}
               <div className="flex flex-wrap items-center gap-3">
                 {item.statusVerificacao === "pendente" ? <DecisaoAcesso id={item.id} acao={decidirOrganizador} /> : null}

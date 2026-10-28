@@ -2,14 +2,17 @@
 
 import { compare, hash } from "bcryptjs";
 import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { signIn, signOut, unstable_update } from "@/auth";
 import { isMaiorDe18, parseDataNascimento } from "@/lib/idade";
+import { AVISO_LIMITE_CADASTRO, estourouLimite, ipDe, registrarTentativa } from "@/lib/limite";
 import { prisma } from "@/lib/prisma";
 
 export type FormState = { error?: string; ok?: boolean; aviso?: string };
 
 export async function cadastrarUsuario(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await registrarTentativa("cadastro", ipDe(headers())))) return { error: AVISO_LIMITE_CADASTRO };
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const senha = String(formData.get("senha") ?? "");
@@ -71,6 +74,10 @@ export async function loginUsuario(_prev: FormState, formData: FormData): Promis
     await signIn("credentials", { email, password, redirectTo: callbackUrl });
   } catch (error) {
     if (error instanceof AuthError) {
+      const ip = ipDe(headers());
+      if ((await estourouLimite("login", ip)) || (await estourouLimite("loginConta", email))) {
+        return { error: "Muitas tentativas de entrar. Espere 15 minutos e tente de novo." };
+      }
       const conta = await prisma.user.findUnique({ where: { email }, select: { senhaHash: true, suspensoEm: true } });
       if (conta?.suspensoEm && conta.senhaHash && (await compare(password, conta.senhaHash))) {
         return { error: "Esta conta está suspensa. Fale com a equipe do Culturama." };

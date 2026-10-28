@@ -9,6 +9,7 @@ import { ensureCategorias } from "@/lib/categorias";
 import { normalizarInteresses } from "@/lib/categorias-arvore";
 import { lerDenuncia } from "@/lib/denuncias";
 import { EVENTO_PUBLICO } from "@/lib/event-filters";
+import { registrarTentativa } from "@/lib/limite";
 import { prisma } from "@/lib/prisma";
 
 async function requireUser() {
@@ -62,6 +63,7 @@ export async function salvarInteresses(_prev: FormState, formData: FormData): Pr
 export async function comentarEvento(_prev: FormState, formData: FormData): Promise<FormState> {
   const userId = await requireUser();
   if (!userId) return { error: "Entre na conta para comentar." };
+  if (!(await registrarTentativa("comentario", userId))) return { error: "Muitos comentários seguidos. Espere alguns minutos." };
 
   const eventId = String(formData.get("eventId") ?? "");
   const texto = String(formData.get("texto") ?? "").trim();
@@ -81,6 +83,7 @@ export async function comentarEvento(_prev: FormState, formData: FormData): Prom
 export async function denunciarComentario(_prev: FormState, formData: FormData): Promise<FormState> {
   const userId = await requireUser();
   if (!userId) return { error: "Entre na conta para denunciar." };
+  if (!(await registrarTentativa("denuncia", userId))) return { error: "Muitas denúncias seguidas. Tente de novo mais tarde." };
 
   const commentId = String(formData.get("commentId") ?? "");
   const dados = lerDenuncia(formData);
@@ -109,6 +112,7 @@ const REABRIR = { status: "aberta", resolvidoEm: null, resolvidoPorId: null, res
 export async function denunciarEvento(_prev: FormState, formData: FormData): Promise<FormState> {
   const userId = await requireUser();
   if (!userId) return { error: "Entre na conta para denunciar." };
+  if (!(await registrarTentativa("denuncia", userId))) return { error: "Muitas denúncias seguidas. Tente de novo mais tarde." };
 
   const eventId = String(formData.get("eventId") ?? "");
   const dados = lerDenuncia(formData);

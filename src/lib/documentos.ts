@@ -1,9 +1,49 @@
-import { readFile } from "fs/promises";
+import { readFile, unlink } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getUsuarioPainel } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { documentoVencido, RETENCAO_DOCUMENTO_DIAS } from "@/lib/retencao-documento";
+import { PREFIXO_PRIVADO, removerArquivo } from "@/lib/storage";
+
+/**
+ * Apaga o arquivo de CPF/CNPJ dos pedidos decididos há mais de RETENCAO_DOCUMENTO_DIAS. Roda no cron diário.
+ * Só limpa a referência no banco quando o arquivo saiu de fato; se o Storage falhar, tenta de novo amanhã.
+ */
+export async function apagarDocumentosVencidos(agora = new Date()): Promise<{ apagados: number; falhas: number }> {
+  const corte = new Date(agora.getTime() - RETENCAO_DOCUMENTO_DIAS * 24 * 60 * 60 * 1000);
+  const candidatos = await prisma.organizer.findMany({
+    where: { documentoUrl: { not: "" }, statusVerificacao: { not: "pendente" }, dataVerificacao: { lt: corte } },
+    select: { id: true, statusVerificacao: true, dataVerificacao: true, documentoUrl: true },
+    take: 200,
+  });
+  let apagados = 0;
+  let falhas = 0;
+  for (const organizer of candidatos.filter((o) => documentoVencido(o, agora))) {
+    const url = organizer.documentoUrl;
+    let saiu = true;
+    if (url.startsWith(PREFIXO_PRIVADO)) {
+      saiu = await removerArquivo("documentos", url.slice(PREFIXO_PRIVADO.length));
+    } else if (url.startsWith("/api/uploads/")) {
+      const nome = url.slice("/api/uploads/".length);
+      if (!nome.includes("/") && !nome.includes("\\") && !nome.includes("..")) {
+        saiu = await unlink(path.join(process.cwd(), "uploads", nome)).then(
+          () => true,
+          (erro: NodeJS.ErrnoException) => erro.code === "ENOENT",
+        );
+      }
+    }
+    // Outros valores (modo de teste guarda só o nome do arquivo) não têm arquivo para apagar.
+    if (!saiu) {
+      falhas++;
+      continue;
+    }
+    await prisma.organizer.update({ where: { id: organizer.id }, data: { documentoUrl: "" } });
+    apagados++;
+  }
+  return { apagados, falhas };
+}
 
 const TIPOS: Record<string, string> = {
   pdf: "application/pdf",

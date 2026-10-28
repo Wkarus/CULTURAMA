@@ -3,6 +3,7 @@ import { z } from "zod";
 import { isRotaOk, stripHtmlInstrucao, type ModoRota, type PassoRota, type RotaModo } from "@/lib/directions";
 import { EVENTO_PUBLICO } from "@/lib/event-filters";
 import { hasValidCoords } from "@/lib/geo";
+import { ipDe, registrarTentativa } from "@/lib/limite";
 import { prisma } from "@/lib/prisma";
 
 const bodySchema = z.object({
@@ -143,6 +144,10 @@ export async function POST(request: Request) {
   const key = (process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY)?.trim();
   if (!key) {
     return NextResponse.json({ error: "Defina GOOGLE_MAPS_API_KEY ou NEXT_PUBLIC_GOOGLE_MAPS_API_KEY." }, { status: 503 });
+  }
+
+  if (!(await registrarTentativa("rota", ipDe(request.headers)))) {
+    return NextResponse.json({ error: "Muitas rotas pedidas em pouco tempo. Tente de novo daqui a pouco." }, { status: 429 });
   }
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));

@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import type { StatusVerificacao, TipoDocumento } from "@prisma/client";
 import { auth, unstable_update } from "@/auth";
 import type { FormState } from "@/actions/auth";
@@ -9,6 +10,7 @@ import { enviarEmail } from "@/lib/email";
 import { emailNovoPedidoAdmin, emailRecusaAutomatica } from "@/lib/emails/pedidos";
 import { adminEmail } from "@/lib/admin-email";
 import { isMaiorDe18 } from "@/lib/idade";
+import { AVISO_LIMITE_CADASTRO, ipDe, registrarTentativa } from "@/lib/limite";
 import { arquivoDocumentoInvalido, avaliarPedido, type ConsultaPedido } from "@/lib/pedido-acesso";
 import { prisma } from "@/lib/prisma";
 import { salvarDocumento } from "@/lib/upload";
@@ -22,6 +24,7 @@ function avisoDoPedido(status: StatusVerificacao) {
 }
 
 export async function cadastrarOrganizador(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await registrarTentativa("cadastro", ipDe(headers())))) return { error: AVISO_LIMITE_CADASTRO };
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "Entre na sua conta para se cadastrar como organizador." };

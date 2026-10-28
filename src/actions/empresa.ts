@@ -3,6 +3,7 @@
 import { hash } from "bcryptjs";
 import { AuthError } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import type { StatusVerificacao } from "@prisma/client";
 import type { FormState } from "@/actions/auth";
 import { requireAdmin } from "@/lib/admin";
@@ -13,6 +14,7 @@ import { isValidCnpj, lookupCnpj, normalizeCnpj } from "@/lib/cnpj";
 import { enviarEmail } from "@/lib/email";
 import { emailAprovado, emailNovoPedidoAdmin, emailRecusaAutomatica, emailRecusaManual } from "@/lib/emails/pedidos";
 import { isMaiorDe18 } from "@/lib/idade";
+import { AVISO_LIMITE_CADASTRO, ipDe, registrarTentativa } from "@/lib/limite";
 import { avaliarPedido, motivoManual, type ConsultaPedido } from "@/lib/pedido-acesso";
 import { prisma } from "@/lib/prisma";
 
@@ -40,6 +42,7 @@ async function avisarFilaEmpresa(entrada: {
 }
 
 export async function cadastrarEmpresa(_prev: FormState, formData: FormData): Promise<FormState> {
+  if (!(await registrarTentativa("cadastro", ipDe(headers())))) return { error: AVISO_LIMITE_CADASTRO };
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const senha = String(formData.get("senha") ?? "");

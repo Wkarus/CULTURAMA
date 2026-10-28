@@ -1,12 +1,22 @@
 import { randomUUID } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
+import { tipoPelosBytes, type TipoArquivo } from "@/lib/arquivo-tipo";
 import { PREFIXO_PRIVADO, enviarArquivo, storageConfigurado, urlPublica } from "@/lib/storage";
 
 const ALLOWED = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 const MAX_BYTES = 5 * 1024 * 1024;
 
 type Resultado = { ok: true; url: string } | { ok: false; message: string };
+
+const IMAGENS: TipoArquivo[] = ["image/jpeg", "image/png", "image/webp"];
+const DOCUMENTOS: TipoArquivo[] = ["application/pdf", ...IMAGENS];
+
+/** O tipo declarado pelo navegador só vale se os primeiros bytes confirmarem: arquivo renomeado não passa. */
+async function conteudoConfere(file: File, aceitos: TipoArquivo[]): Promise<boolean> {
+  const real = tipoPelosBytes(new Uint8Array(await file.slice(0, 12).arrayBuffer()));
+  return real !== null && aceitos.includes(real) && real === file.type;
+}
 
 function validarImagem(file: File): string | null {
   if (!file || file.size === 0) return "Envie uma imagem.";
@@ -19,6 +29,7 @@ function validarImagem(file: File): string | null {
 export async function salvarImagem(file: File): Promise<Resultado> {
   const erro = validarImagem(file);
   if (erro) return { ok: false, message: erro };
+  if (!(await conteudoConfere(file, IMAGENS))) return { ok: false, message: "O arquivo não é uma imagem JPG, PNG ou WebP de verdade." };
   if (!storageConfigurado()) return saveDocumentoLocal(file);
 
   const enviado = await enviarArquivo("capas", file, file.type.split("/")[1]);
@@ -32,6 +43,7 @@ export async function salvarDocumento(file: File): Promise<Resultado> {
   if (!file || file.size === 0) return { ok: false, message: "Envie um arquivo do documento (PDF ou imagem)." };
   if (file.size > MAX_BYTES) return { ok: false, message: "Arquivo maior que 5 MB." };
   if (!ALLOWED.has(file.type)) return { ok: false, message: "Formato inválido. Use PDF, JPG, PNG ou WebP." };
+  if (!(await conteudoConfere(file, DOCUMENTOS))) return { ok: false, message: "O arquivo não é um PDF ou uma imagem de verdade." };
 
   const ext = file.type === "application/pdf" ? "pdf" : file.type.split("/")[1];
   const enviado = await enviarArquivo("documentos", file, ext);
@@ -55,6 +67,9 @@ export async function saveDocumentoLocal(file: File): Promise<Resultado> {
   }
   if (!ALLOWED.has(file.type)) {
     return { ok: false, message: "Formato inválido. Use PDF, JPG, PNG ou WebP." };
+  }
+  if (!(await conteudoConfere(file, DOCUMENTOS))) {
+    return { ok: false, message: "O arquivo não é um PDF ou uma imagem de verdade." };
   }
 
   const ext = file.type === "application/pdf" ? "pdf" : file.type.split("/")[1];

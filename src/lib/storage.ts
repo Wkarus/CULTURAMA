@@ -83,15 +83,17 @@ export async function urlAssinada(bucket: Bucket, caminho: string, segundos = 30
   return signedURL ? `${cfg.url}/storage/v1${signedURL}` : null;
 }
 
-export async function removerArquivo(bucket: Bucket, caminho: string): Promise<void> {
+/** `true` quando o Storage confirmou a remoção; sem Storage configurado, `false`. */
+export async function removerArquivo(bucket: Bucket, caminho: string): Promise<boolean> {
   const cfg = config();
-  if (!cfg) return;
-  await fetch(`${cfg.url}/storage/v1/object/${bucket}`, {
+  if (!cfg) return false;
+  const resposta = await fetch(`${cfg.url}/storage/v1/object/${bucket}`, {
     method: "DELETE",
     headers: cabecalhos(cfg.chave, { "Content-Type": "application/json" }),
     body: JSON.stringify({ prefixes: [caminho] }),
     cache: "no-store",
-  }).catch(() => undefined);
+  }).catch(() => null);
+  return Boolean(resposta?.ok);
 }
 
 /** Caminho dentro do bucket `capas` quando a URL pública é nossa; senão null (Ticketmaster, uploads locais). */

@@ -172,8 +172,8 @@ model Event {
   editadoPelaEquipe   Boolean           @default(false) @map("editado_pela_equipe")
   sincronizadoEm      DateTime?         @map("sincronizado_em")
 
-  organizer Organizer? @relation(fields: [organizerId], references: [id])
-  category  Category?  @relation(fields: [categoriaId], references: [id])
+  organizer  Organizer?        @relation(fields: [organizerId], references: [id])
+  category   Category?         @relation(fields: [categoriaId], references: [id])
   favorites  Favorite[]
   comments   Comment[]
   denuncias  Denuncia[]
@@ -298,8 +298,8 @@ model Empresa {
   observacao      String?
   criadoEm        DateTime          @default(now()) @map("criado_em")
 
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pedidos  PedidoContato[]
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pedidos PedidoContato[]
 
   @@map("empresas")
 }
@@ -355,4 +355,14 @@ model AdminLog {
   @@index([autorId])
   @@index([acao])
   @@map("admin_logs")
+}
+
+/// Contador de tentativas por janela (login, cadastro, comentário, rota). `chave` é hash, nunca IP ou e-mail puro.
+model RateLimit {
+  chave    String   @id
+  contagem Int
+  expiraEm DateTime @map("expira_em")
+
+  @@index([expiraEm])
+  @@map("rate_limits")
 }

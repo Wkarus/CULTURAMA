@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { authConfig } from "@/auth.config";
 import { promoteIfAdminEmail } from "@/lib/admin-email";
+import { ipDe, registrarTentativa } from "@/lib/limite";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
@@ -15,12 +16,19 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
         email: { label: "E-mail", type: "email" },
         password: { label: "Senha", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const email = String(credentials?.email ?? "")
           .trim()
           .toLowerCase();
         const password = String(credentials?.password ?? "");
         if (!email || !password) return null;
+
+        // Aqui, e não só no formulário: a rota /api/auth/callback/credentials também chega neste ponto.
+        const [porIp, porConta] = await Promise.all([
+          registrarTentativa("login", ipDe(request.headers)),
+          registrarTentativa("loginConta", email),
+        ]);
+        if (!porIp || !porConta) return null;
 
         const user = await prisma.user.findUnique({
           where: { email },

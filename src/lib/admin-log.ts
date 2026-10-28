@@ -33,6 +33,7 @@ export const ACOES_LOG = {
   "denuncia.despublicar": "Despublicou evento por denúncia",
   "denuncia.remover_comentario": "Removeu comentário por denúncia",
   "ticketmaster.sincronizar": "Sincronizou Ticketmaster",
+  "documentos.apagar_vencidos": "Apagou documentos de verificação vencidos",
   "mapas.importar": "Importou Mapas Culturais",
 } as const;
 
