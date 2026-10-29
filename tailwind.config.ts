@@ -42,6 +42,7 @@ const config: Config = {
           from: "var(--color-accent-from)",
           to: "var(--color-accent-to)",
           solid: "var(--color-accent-solid)",
+          ink: "var(--color-accent-ink)",
           hover: "var(--color-accent-hover-text)",
         },
         destructive: {

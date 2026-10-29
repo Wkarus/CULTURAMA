@@ -23,7 +23,7 @@ function MarkerWithInfo({ event, selectedId, onSelect }: { event: MapEventPin; s
             <p className="text-sm font-medium text-black">{event.titulo}</p>
             <p className="mt-1 text-xs text-neutral-600">{data}</p>
             <p className="mt-1 text-xs text-neutral-600">{event.gratuito ? "Entrada franca" : "Pago"}</p>
-            <Link href={`/eventos/${event.id}`} className="mt-2 inline-block text-sm text-accent-solid underline underline-offset-4">
+            <Link href={`/eventos/${event.id}`} className="mt-2 inline-block text-sm text-accent-ink underline underline-offset-4">
               Ver evento
             </Link>
           </div>

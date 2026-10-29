@@ -355,14 +355,16 @@
     --color-accent-from: #d98054;
     --color-accent-to: #c3724b;
     --color-accent-solid: #c3724b;
+    /* Texto e ícone terracota sobre fundo claro: o #c3724b dá 3,3:1 e a WCAG pede 4,5:1. */
+    --color-accent-ink: #a65a36;
     --color-accent-hover-text: #e5956e;
     --color-muted-on-dark: #e0e0e0;
     --color-muted-on-light: #666666;
     --color-border-light: #e5e0d5;
     --color-surface-card: #ffffff;
-    --color-success-fg: #2e8540;
+    --color-success-fg: #26733a;
     --color-success-bg: #eaf6ee;
-    --color-warning-fg: #c3724b;
+    --color-warning-fg: #a65a36;
     --color-warning-bg: #fdf3ed;
     --color-danger-fg: #f87171;
     /* Uma cor por categoria-mãe. Texto branco passa AA (contraste ≥ 7:1). */

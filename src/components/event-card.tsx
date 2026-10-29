@@ -16,7 +16,7 @@ function nomeCategoria(category: CategoriaCard | null): string | null {
 }
 
 const BOTAO_FAVORITO =
-  "grid size-9 place-items-center rounded-full bg-[color-mix(in_srgb,var(--color-surface-light)_84%,transparent)] text-on-light shadow-card backdrop-blur-md transition-colors hover:text-accent-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-solid";
+  "grid size-9 place-items-center rounded-full bg-[color-mix(in_srgb,var(--color-surface-light)_84%,transparent)] text-on-light shadow-card backdrop-blur-md transition-colors hover:text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-solid";
 
 export function EventCard({
   event,
@@ -32,7 +32,7 @@ export function EventCard({
   const local = linhaDoLocal(event);
   const restricao = seloRestricaoCard(event.restricaoIdade);
   const coracao = (
-    <Heart className={cn("size-4", favorito && "fill-accent-solid text-accent-solid")} strokeWidth={1.75} aria-hidden />
+    <Heart className={cn("size-4", favorito && "fill-accent-solid text-accent-ink")} strokeWidth={1.75} aria-hidden />
   );
 
   return (
@@ -58,7 +58,7 @@ export function EventCard({
           </p>
         </div>
         <div className="grid gap-1.5 px-1 pt-3">
-          <p className="text-caption text-accent-solid">{meta}</p>
+          <p className="text-caption text-accent-ink">{meta}</p>
           <h3 className="line-clamp-2 font-display text-[1.05rem] font-semibold leading-snug tracking-display text-on-light">
             {event.titulo}
           </h3>

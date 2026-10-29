@@ -25,7 +25,7 @@ export function HomeEventGrid({
     <section className="mx-auto max-w-page px-4 py-16">
       <div className="flex items-end justify-between gap-4">
         <h2 className="font-display text-2xl font-semibold tracking-display text-on-light">Acontecendo esta semana</h2>
-        <Link href="/eventos" className="shrink-0 text-sm font-medium text-accent-solid underline-offset-4 hover:underline">
+        <Link href="/eventos" className="shrink-0 text-sm font-medium text-accent-ink underline-offset-4 hover:underline">
           Ver todos
         </Link>
       </div>

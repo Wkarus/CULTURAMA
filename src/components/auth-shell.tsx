@@ -29,8 +29,9 @@ function CapasEmpilhadas({ capas }: { capas: { id: string; imagemCapa: string }[
             outline: "1px solid color-mix(in srgb, var(--color-on-dark) 14%, transparent)",
           }}
         >
+          {/* Sem loading="lazy": no topo da tela o carregamento preguiçoso não disparava e sobrava só a moldura. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={capa.imagemCapa} alt="" loading="lazy" decoding="async" draggable={false} className="size-full object-cover" />
+          <img src={capa.imagemCapa} alt="" decoding="async" draggable={false} className="size-full object-cover" />
         </div>
       ))}
     </div>

@@ -63,12 +63,13 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
   return (
     <main className="mx-auto max-w-page px-4 py-16">
       {!foraDoAr ? <RegistrarVisualizacao eventoId={event.id} /> : null}
-      <Link href="/eventos" className="link-quiet text-caption">
+      <Link href="/eventos" className="link-quiet inline-flex min-h-6 items-center text-caption">
         Voltar aos eventos
       </Link>
 
       <article className="mt-8 overflow-hidden rounded-card bg-card shadow-card">
-        <div className="aspect-[16/10] bg-muted">
+        {/* 16:10 no celular; no computador fica mais baixa para o título aparecer sem rolar. */}
+        <div className="aspect-[16/10] bg-muted lg:aspect-[21/8]">
           {event.imagemCapa ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={event.imagemCapa} alt="" className="size-full object-cover" />
@@ -90,12 +91,18 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
 
       <div className="mt-16 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="grid gap-3">
-          <p className="whitespace-pre-wrap text-body-lg">{event.descricao}</p>
-          {event.tags.length > 0 ? <p className="text-caption text-muted-foreground">{event.tags.join(" · ")}</p> : null}
+          {/* A Ticketmaster costuma mandar o próprio título como descrição: repetir não informa nada. */}
+          {event.descricao.trim().toLowerCase() !== event.titulo.trim().toLowerCase() ? (
+            <p className="whitespace-pre-wrap text-body-lg">{event.descricao}</p>
+          ) : null}
+          {/* Etiquetas da Ticketmaster vêm em inglês ("Fine Art · Arts & Theatre"); a categoria já aparece no topo. */}
+          {event.tags.length > 0 && event.fonte !== "ticketmaster" ? (
+            <p className="text-caption text-muted-foreground">{event.tags.join(" · ")}</p>
+          ) : null}
           {event.libras || event.audiodescricao || event.acessibilidade.length > 0 ? (
             <section aria-labelledby="acessibilidade-titulo" className="mt-6 rounded-card bg-card p-5 shadow-card">
               <h2 id="acessibilidade-titulo" className="flex items-center gap-2 font-display text-lg font-semibold">
-                <Accessibility className="size-5 text-accent-solid" strokeWidth={1.75} aria-hidden />
+                <Accessibility className="size-5 text-accent-ink" strokeWidth={1.75} aria-hidden />
                 Acessibilidade
               </h2>
               <ul className="mt-3 flex flex-wrap gap-2">
@@ -115,7 +122,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
           {event.inscricoes ? (
             <section aria-labelledby="inscricoes-titulo" className="mt-2 rounded-card bg-card p-5 shadow-card">
               <h2 id="inscricoes-titulo" className="flex items-center gap-2 font-display text-lg font-semibold">
-                <ClipboardList className="size-5 text-accent-solid" strokeWidth={1.75} aria-hidden />
+                <ClipboardList className="size-5 text-accent-ink" strokeWidth={1.75} aria-hidden />
                 Como se inscrever
               </h2>
               <p className="mt-2 text-body">{event.inscricoes}</p>

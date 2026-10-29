@@ -33,7 +33,7 @@ export function HomeB2BPartners() {
       <div className="mx-auto max-w-page">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-6">
-            <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-from/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-solid">
+            <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-from/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-ink">
               <Sparkles className="size-3.5" aria-hidden />
               Para quem organiza
             </span>
@@ -61,7 +61,7 @@ export function HomeB2BPartners() {
               return (
                 <div key={item.titulo} className="rounded-card border border-border-light bg-card p-6 shadow-card">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex size-11 items-center justify-center rounded-control bg-accent-from/10 text-accent-solid">
+                    <div className="flex size-11 items-center justify-center rounded-control bg-accent-from/10 text-accent-ink">
                       <Icone className="size-5" aria-hidden />
                     </div>
                     {item.emBreve ? (

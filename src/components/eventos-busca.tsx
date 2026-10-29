@@ -185,7 +185,7 @@ export function EventosBusca({
         </div>
       </div>
 
-      <div className="sticky top-16 z-30">
+      <div className="sticky top-16 z-30 transition-[top] duration-300 ease-out motion-reduce:transition-none [[data-cabecalho=oculto]_&]:top-0">
         <div className="relative left-1/2 w-screen -translate-x-1/2 border-b border-border-light bg-surface-light">
           <FundoIcones maes={arvore} />
           <div className={cn("relative z-10 mx-auto max-w-page px-4 transition-[padding] duration-300 ease-out motion-reduce:transition-none", compacta ? "py-2" : "py-3")}>

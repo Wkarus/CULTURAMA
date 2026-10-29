@@ -14,7 +14,7 @@ export function TextLink({
   className?: string;
 }) {
   return (
-    <Link000 href={href} className={cn("link-quiet text-caption", className)}>
+    <Link000 href={href} className={cn("link-quiet inline-flex min-h-6 items-center text-caption", className)}>
       {children}
     </Link000>
   );

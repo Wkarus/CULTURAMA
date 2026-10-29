@@ -41,7 +41,7 @@ export function HomePainSolution() {
     <section className="relative border-t border-border-light bg-surface-light px-4 py-20 text-on-light md:py-28">
       <div className="mx-auto max-w-page">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-from/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-solid">
+          <span className="inline-flex items-center gap-1.5 rounded-pill bg-accent-from/15 px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent-ink">
             <Sparkles className="size-3.5" aria-hidden />
             O desafio da cultura urbana
           </span>
@@ -54,7 +54,7 @@ export function HomePainSolution() {
         </div>
 
         <div className="mt-14">
-          <p className="text-xs font-bold uppercase tracking-wider text-accent-solid">Os problemas atuais</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-accent-ink">Os problemas atuais</p>
           <div className="mt-3 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {dores.map((dor) => {
               const Icone = dor.icone;
@@ -63,7 +63,7 @@ export function HomePainSolution() {
                   key={dor.titulo}
                   className="group relative rounded-card border border-border-light bg-card p-6 shadow-card transition hover:border-accent-from/40 motion-reduce:transition-none"
                 >
-                  <div className="flex size-12 items-center justify-center rounded-control bg-accent-from/10 text-accent-solid transition group-hover:bg-accent-gradient group-hover:text-on-dark motion-reduce:transition-none">
+                  <div className="flex size-12 items-center justify-center rounded-control bg-accent-from/10 text-accent-ink transition group-hover:bg-accent-gradient group-hover:text-on-dark motion-reduce:transition-none">
                     <Icone className="size-6" aria-hidden />
                   </div>
                   <h3 className="mt-4 font-display text-xl font-semibold text-on-light">{dor.titulo}</h3>

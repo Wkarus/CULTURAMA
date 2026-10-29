@@ -269,6 +269,11 @@ export function SiteHeaderClient({ usuario }: { usuario: UsuarioHeader | null })
   const solido = !sobreEscuro || rolou;
   const oculto = escondido && !menuAberto;
 
+  // Barras fixas abaixo do cabeçalho (busca de /eventos) sobem junto quando ele some; sem isso sobrava um vão de 64 px.
+  useEffect(() => {
+    document.documentElement.dataset.cabecalho = oculto ? "oculto" : "visivel";
+  }, [oculto]);
+
   return (
     <header
       className={cn(

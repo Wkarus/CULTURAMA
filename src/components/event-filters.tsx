@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { Category } from "@prisma/client";
-import type { LucideIcon } from "lucide-react";
+import { SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,6 +68,10 @@ export function EventFilters({
 }) {
   const router = useRouter();
   const [buscando, setBuscando] = useState(false);
+  /** No celular os campos ficam recolhidos para o mapa aparecer logo; no computador sempre abertos. */
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  const idFiltros = useId();
+  const campo = cn("grid gap-1.5", !filtrosAbertos && "hidden lg:grid");
   const [erro, setErro] = useState<string | null>(null);
   const perto = Boolean(values.lat && values.lng);
   const [km, setKm] = useState(() => raioDoFiltro(values.distancia) ?? RAIO_KM.padrao);
@@ -141,8 +145,8 @@ export function EventFilters({
   const hoje = hojeISO();
 
   return (
-    <form action={action} method="get" className="grid gap-3 rounded-card bg-card p-3 shadow-card sm:grid-cols-2 lg:grid-cols-5">
-      <div className="grid gap-1.5">
+    <form id={idFiltros} action={action} method="get" className="grid gap-3 rounded-card bg-card p-3 shadow-card sm:grid-cols-2 lg:grid-cols-5">
+      <div className={campo}>
         <Label htmlFor="categoria" className="text-xs text-muted-foreground">
           Categoria
         </Label>
@@ -164,19 +168,19 @@ export function EventFilters({
         </select>
         <input type="hidden" name="categoria" value={valorCategoria} />
       </div>
-      <div className="grid gap-1.5">
+      <div className={campo}>
         <Label htmlFor="de" className="text-xs text-muted-foreground">
           A partir de
         </Label>
         <Input id="de" name="de" type="date" min={hoje} defaultValue={values.de ?? ""} />
       </div>
-      <div className="grid gap-1.5">
+      <div className={campo}>
         <Label htmlFor="ate" className="text-xs text-muted-foreground">
           Até
         </Label>
         <Input id="ate" name="ate" type="date" min={hoje} defaultValue={values.ate ?? ""} />
       </div>
-      <div className="grid gap-1.5">
+      <div className={campo}>
         <Label htmlFor="preco" className="text-xs text-muted-foreground">
           Entrada
         </Label>
@@ -186,7 +190,7 @@ export function EventFilters({
           <option value="pago">Paga</option>
         </select>
       </div>
-      <div className="grid gap-1.5">
+      <div className={perto ? "grid gap-1.5" : campo}>
         <Label htmlFor="distancia" className="flex justify-between text-xs text-muted-foreground">
           Raio <span className="text-foreground">{perto ? `até ${km} km` : "Brasil todo"}</span>
         </Label>
@@ -206,7 +210,7 @@ export function EventFilters({
         />
       </div>
       {mae && mae.filhas.length > 0 ? (
-        <div role="group" aria-label={`Subcategorias de ${mae.nome}`} className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5">
+        <div role="group" aria-label={`Subcategorias de ${mae.nome}`} className={cn("flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5", !filtrosAbertos && "hidden lg:flex")}>
           <ChipSub ativo={!subId} onClick={() => setSubId("")} icone={iconeLucide(mae.icone)}>
             Tudo em {mae.nome}
           </ChipSub>
@@ -220,7 +224,20 @@ export function EventFilters({
       <input type="hidden" name="lat" value={values.lat ?? ""} />
       <input type="hidden" name="lng" value={values.lng ?? ""} />
       <div className="flex flex-wrap items-center gap-2 sm:col-span-2 lg:col-span-5">
-        <Button type="submit">Filtrar</Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="gap-2 lg:hidden"
+          aria-expanded={filtrosAbertos}
+          aria-controls={idFiltros}
+          onClick={() => setFiltrosAbertos((atual) => !atual)}
+        >
+          <SlidersHorizontal className="size-4" aria-hidden />
+          {filtrosAbertos ? "Fechar filtros" : "Filtros"}
+        </Button>
+        <Button type="submit" className={cn(!filtrosAbertos && "hidden lg:inline-flex")}>
+          Filtrar
+        </Button>
         <Button type="button" variant="outline" onClick={usarLocalizacao} disabled={buscando}>
           {buscando ? "Buscando sua localização…" : "Perto de mim"}
         </Button>

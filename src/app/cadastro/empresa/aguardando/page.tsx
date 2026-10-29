@@ -25,11 +25,11 @@ export default async function AguardandoEmpresaPage() {
           : `${empresa.razaoSocial} está na fila. O painel abre quando a equipe aprovar o plano Empresa.`}
       </p>
       {rejeitada ? (
-        <Link href="/cadastro/empresa" className="text-sm font-semibold text-accent-solid">
+        <Link href="/cadastro/empresa" className="text-sm font-semibold text-accent-ink">
           Enviar novo pedido
         </Link>
       ) : null}
-      <Link href="/" className="text-sm font-medium text-accent-solid">
+      <Link href="/" className="text-sm font-medium text-accent-ink">
         Voltar ao início
       </Link>
     </main>

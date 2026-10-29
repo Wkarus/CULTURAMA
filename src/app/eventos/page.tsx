@@ -42,6 +42,8 @@ export default async function EventosPage({ searchParams }: { searchParams: Reco
   return (
     <main className="mx-auto max-w-page px-4 pb-16 pt-6">
       <EventosBusca filters={filters} categorias={categorias} total={visual.length}>
+        {/* Título só para leitor de tela: os cards usam h3 e sem um h2 antes a página pulava de h1 para h3. */}
+        <h2 className="sr-only">Resultados</h2>
         {visual.length > 0 ? <EventMosaic events={visual} favoritos={favoritos} logado={Boolean(session?.user?.id)} /> : null}
       </EventosBusca>
     </main>
