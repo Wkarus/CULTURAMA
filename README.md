@@ -122,7 +122,7 @@ No PowerShell use `npx tsx ...` (o `--` do `npm run` some). Em dev também dá p
 |---|---|
 | Mapa da Cultura (federal) | pendente |
 | SP Cultura | pendente |
-| CulturAZ (Santo André) | pendente (e-mail à Secult e pedido pela LAI no e-SIC). Pode ir para produção só em `|basico`. |
+| CulturAZ (Santo André) | **autorizado** em 28/10/2026, por e-mail, por Gabrielle Siqueira Tripiciano de Souza, responsável pelos Mapas Culturais na Prefeitura de Santo André. Combinado no pedido: crédito "Fonte: CulturAZ — Prefeitura de Santo André" com link para o evento original, no máximo uma consulta à API por dia (o cron), só dados de eventos e espaços, sem dados pessoais de agentes. O e-mail fica arquivado com a equipe. |
 
 #### Regras de acesso (sem exceção)
 
