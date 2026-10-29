@@ -1,7 +1,7 @@
 import type { EventSearchParams } from "@/lib/event-filters";
 
 const FUSO = "America/Sao_Paulo";
-const CHAVES = ["q", "categoria", "de", "ate", "preco", "distancia", "lat", "lng"] as const;
+const CHAVES = ["q", "categoria", "de", "ate", "preco", "distancia", "lat", "lng", "acessivel"] as const;
 
 export function diaISO(date: Date): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: FUSO, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);

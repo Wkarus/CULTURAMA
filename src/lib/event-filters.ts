@@ -10,6 +10,8 @@ export type EventSearchParams = {
   distancia?: string;
   lat?: string;
   lng?: string;
+  /** "1": só eventos com Libras, audiodescrição ou espaço acessível. */
+  acessivel?: string;
 };
 
 /** Raio do Perto de mim, ajustado pelo usuário no controle de arrastar. É o único limite geográfico da busca. */
@@ -61,6 +63,7 @@ export function normalizeSearchParams(params: Record<string, string | string[] |
     distancia: firstParam(params.distancia),
     lat: firstParam(params.lat),
     lng: firstParam(params.lng),
+    acessivel: firstParam(params.acessivel),
   };
 }
 
@@ -97,6 +100,7 @@ export function eventWhereFromParams(params: EventSearchParams, categoriaIds?: s
     ...(categoriaIds ? { categoriaId: { in: categoriaIds } } : {}),
     ...(perto ? caixaDoRaio(perto) : {}),
     ...(params.preco === "gratuito" ? { gratuito: true } : params.preco === "pago" ? { gratuito: false } : {}),
+    ...(params.acessivel === "1" ? { OR: [{ libras: true }, { audiodescricao: true }, { NOT: { acessibilidade: { isEmpty: true } } }] } : {}),
     dataHora: {
       gte: inicio,
       ...(ate ? { lte: ate } : {}),

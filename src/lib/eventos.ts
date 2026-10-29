@@ -175,6 +175,15 @@ export function localDoEvento(event: { endereco: string; fonte: EventFonte }): s
   return cidade && cidade !== "Brasil" ? cidade : null;
 }
 
+/** Selos curtos para card e filtro. Ordem fixa: o recurso mais específico primeiro. */
+export function selosAcessibilidade(event: { libras: boolean; audiodescricao: boolean; acessibilidade: string[] }): string[] {
+  return [
+    event.libras ? "Libras" : null,
+    event.audiodescricao ? "Audiodescrição" : null,
+    event.acessibilidade.length > 0 ? "Acessível" : null,
+  ].filter((selo): selo is string => selo !== null);
+}
+
 /** Só a cidade ("Santo André", "São Paulo"), sem bairro. Ticketmaster grava "Local, rua, Cidade, Estado". */
 export function cidadeDoEvento(event: { endereco: string; fonte: EventFonte }): string | null {
   const parts = event.endereco

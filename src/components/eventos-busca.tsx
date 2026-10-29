@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Accessibility, Search, SlidersHorizontal, X } from "lucide-react";
 import {
   corDaCategoria,
   diaISO,
@@ -161,8 +161,9 @@ export function EventosBusca({
   const hoje = ehHoje(filters);
   const fds = ehFimDeSemana(filters);
   const gratis = filters.preco === "gratuito";
+  const acessivel = filters.acessivel === "1";
   const perto = Boolean(filters.lat && filters.lng);
-  const tudo = !filters.de && !filters.ate && !filters.preco && !filters.distancia && !perto;
+  const tudo = !filters.de && !filters.ate && !filters.preco && !filters.distancia && !perto && !acessivel;
   const maisAtivo = filters.preco === "pago" || Boolean((filters.de || filters.ate) && !hoje && !fds) || Boolean(filters.distancia);
   const chips = chipsAtivos(filters);
   const fim = fimDeSemana();
@@ -211,6 +212,10 @@ export function EventosBusca({
               </Pilula>
               <Pilula ativo={gratis} onClick={() => ir({ preco: gratis ? null : "gratuito" })}>
                 Grátis
+              </Pilula>
+              <Pilula ativo={acessivel} onClick={() => ir({ acessivel: acessivel ? null : "1" })}>
+                <Accessibility className="size-4" aria-hidden />
+                Acessível
               </Pilula>
               <Pilula ativo={perto} onClick={pertoDeMim} disabled={buscando}>
                 {buscando ? "Buscando localização…" : "Perto de mim"}
@@ -394,6 +399,7 @@ function chipsAtivos(filters: EventSearchParams): { id: string; rotulo: string; 
   }
   if (filters.preco === "gratuito") chips.push({ id: "gratis", rotulo: "Grátis", href: hrefBusca("/eventos", filters, { preco: null }) });
   if (filters.preco === "pago") chips.push({ id: "pago", rotulo: "Pago", href: hrefBusca("/eventos", filters, { preco: null }) });
+  if (filters.acessivel === "1") chips.push({ id: "acessivel", rotulo: "Acessível", href: hrefBusca("/eventos", filters, { acessivel: null }) });
   if (filters.lat && filters.lng) {
     chips.push({
       id: "perto",

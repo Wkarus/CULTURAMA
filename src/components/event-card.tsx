@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Category, Event } from "@prisma/client";
-import { Heart } from "lucide-react";
+import { Accessibility, Heart } from "lucide-react";
 import { toggleFavorite } from "@/actions/social";
 import { CapaCategoria } from "@/components/capa-categoria";
-import { dataDoCard, linhaDoLocal, seloRestricaoCard } from "@/lib/eventos";
+import { dataDoCard, linhaDoLocal, seloRestricaoCard, selosAcessibilidade } from "@/lib/eventos";
 import { cn } from "@/lib/utils";
 
 type CategoriaCard = Category & { parent?: { nome: string } | null };
@@ -75,6 +75,12 @@ export function EventCard({
             {restricao ? (
               <span className="inline-flex rounded-pill bg-warning-bg px-2.5 py-1 text-caption text-warning">{restricao}</span>
             ) : null}
+            {selosAcessibilidade(event).map((selo) => (
+              <span key={selo} className="inline-flex items-center gap-1 rounded-pill bg-muted px-2.5 py-1 text-caption text-on-light">
+                <Accessibility className="size-3.5" strokeWidth={1.75} aria-hidden />
+                {selo}
+              </span>
+            ))}
           </p>
         </div>
       </Link>

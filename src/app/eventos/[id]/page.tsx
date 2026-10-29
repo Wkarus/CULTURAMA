@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Accessibility, AtSign, ClipboardList, Globe } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -91,6 +92,35 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
         <div className="grid gap-3">
           <p className="whitespace-pre-wrap text-body-lg">{event.descricao}</p>
           {event.tags.length > 0 ? <p className="text-caption text-muted-foreground">{event.tags.join(" · ")}</p> : null}
+          {event.libras || event.audiodescricao || event.acessibilidade.length > 0 ? (
+            <section aria-labelledby="acessibilidade-titulo" className="mt-6 rounded-card bg-card p-5 shadow-card">
+              <h2 id="acessibilidade-titulo" className="flex items-center gap-2 font-display text-lg font-semibold">
+                <Accessibility className="size-5 text-accent-solid" strokeWidth={1.75} aria-hidden />
+                Acessibilidade
+              </h2>
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {[
+                  ...(event.libras ? ["Tradução em Libras"] : []),
+                  ...(event.audiodescricao ? ["Audiodescrição"] : []),
+                  ...event.acessibilidade,
+                ].map((item) => (
+                  <li key={item} className="rounded-pill bg-muted px-3 py-1.5 text-sm text-on-light">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-caption text-muted-foreground">Informado pela fonte. Na dúvida, confirme com o local.</p>
+            </section>
+          ) : null}
+          {event.inscricoes ? (
+            <section aria-labelledby="inscricoes-titulo" className="mt-2 rounded-card bg-card p-5 shadow-card">
+              <h2 id="inscricoes-titulo" className="flex items-center gap-2 font-display text-lg font-semibold">
+                <ClipboardList className="size-5 text-accent-solid" strokeWidth={1.75} aria-hidden />
+                Como se inscrever
+              </h2>
+              <p className="mt-2 text-body">{event.inscricoes}</p>
+            </section>
+          ) : null}
         </div>
         <aside className="grid h-fit gap-3 rounded-card bg-card p-6 shadow-card">
           <p className="text-body-lg">{event.gratuito ? "Entrada franca" : "Pago"}</p>
@@ -129,6 +159,22 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
                   {ctaLabel}
                 </a>
               )
+            ) : null}
+            {event.instagramEvento || event.siteEvento ? (
+              <div className="flex flex-wrap gap-2">
+                {event.instagramEvento ? (
+                  <a href={event.instagramEvento} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: "outline" }), "flex-1 gap-2")}>
+                    <AtSign className="size-4" aria-hidden />
+                    Instagram
+                  </a>
+                ) : null}
+                {event.siteEvento ? (
+                  <a href={event.siteEvento} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: "outline" }), "flex-1 gap-2")}>
+                    <Globe className="size-4" aria-hidden />
+                    Site do evento
+                  </a>
+                ) : null}
+              </div>
             ) : null}
             {event.fonte === "interno" && event.linkSaibaMais && event.linkSaibaMais !== event.linkIngresso ? (
               <a href={event.linkSaibaMais} target="_blank" rel="noreferrer" className={cn(buttonVariants({ variant: "outline" }), "w-full")}>

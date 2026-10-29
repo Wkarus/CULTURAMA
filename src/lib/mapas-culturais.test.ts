@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { CATEGORIAS_ARVORE } from "./categorias-dados";
 import {
   buscarEventos,
+  acessibilidadeDoEspaco,
   ClienteMapas,
   coletarInstancia,
   dentroDaRegiao,
@@ -12,6 +13,8 @@ import {
   listarOcorrencias,
   localParaUtc,
   lerOcorrencia,
+  linkExterno,
+  linkInstagram,
   montarEndereco,
   normalizarEvento,
   restricaoDe,
@@ -414,4 +417,33 @@ test("modo basico nem pede descrições e imagens à API", async () => {
   assert.equal(basico.get("@files"), null);
   assert.match(completo.get("@select") ?? "", /longDescription/);
   assert.ok(completo.get("@files"));
+});
+
+test("acessibilidade do espaço: lista de recursos, selo genérico com só Sim, nada com Não", () => {
+  const base = { id: 1 };
+  assert.deepEqual(acessibilidadeDoEspaco({ ...base, acessibilidade: "Sim", acessibilidade_fisica: ["Rampa de acesso", " Banheiros adaptados "] }), ["Rampa de acesso", "Banheiros adaptados"]);
+  assert.deepEqual(acessibilidadeDoEspaco({ ...base, acessibilidade_fisica: "Rampa de acesso;Elevador" }), ["Rampa de acesso", "Elevador"]);
+  assert.deepEqual(acessibilidadeDoEspaco({ ...base, acessibilidade: "Sim" }), ["Espaço acessível"]);
+  assert.deepEqual(acessibilidadeDoEspaco({ ...base, acessibilidade: "Não", acessibilidade_fisica: ["Não"] }), []);
+  assert.deepEqual(acessibilidadeDoEspaco(undefined), []);
+});
+
+test("links do evento: só http(s), Instagram por @perfil ou link", () => {
+  assert.equal(linkExterno("culturaz.santoandre.sp.gov.br/evento/1"), "https://culturaz.santoandre.sp.gov.br/evento/1");
+  assert.equal(linkExterno("javascript:alert(1)"), null);
+  assert.equal(linkExterno("sem site"), null);
+  assert.equal(linkInstagram("@batalhadaaldeia"), "https://www.instagram.com/batalhadaaldeia/");
+  assert.equal(linkInstagram("https://instagram.com/coletivo.x"), "https://instagram.com/coletivo.x");
+  assert.equal(linkInstagram("perfil com espaço"), null);
+});
+
+test("evento traz Libras, audiodescrição, inscrição e links; modo básico não traz o texto de inscrição", () => {
+  const extra = { ...EVENTO_197, traducaoLibras: "Sim", descricaoSonora: "Não", registrationInfo: "  gratuita,  pelo link ", site: "exemplo.org", instagram: "@coletivo" };
+  const n = normalizarEvento(extra, OCORRENCIAS_197, ESPACOS, PB, ANTES);
+  assert.equal(n.libras, true);
+  assert.equal(n.audiodescricao, false);
+  assert.equal(n.inscricoes, "gratuita, pelo link");
+  assert.equal(n.siteEvento, "https://exemplo.org/");
+  assert.equal(n.instagramEvento, "https://www.instagram.com/coletivo/");
+  assert.equal(normalizarEvento(extra, OCORRENCIAS_197, ESPACOS, { ...PB, basico: true }, ANTES).inscricoes, null);
 });

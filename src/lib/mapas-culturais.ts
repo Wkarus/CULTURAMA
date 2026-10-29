@@ -16,11 +16,13 @@ const POR_PAGINA = 200;
 const MAX_PAGINAS = 100;
 const IDS_POR_LOTE = 40;
 
-const CAMPOS_EVENTO = "id,name,subTitle,shortDescription,longDescription,classificacaoEtaria,singleUrl,terms";
+/** Acessibilidade e links do próprio evento. `telefonePublico` fica de fora de propósito: costuma ser celular pessoal. */
+const CAMPOS_EXTRAS = "traducaoLibras,descricaoSonora,site,instagram";
+const CAMPOS_EVENTO = `id,name,subTitle,shortDescription,longDescription,classificacaoEtaria,singleUrl,terms,registrationInfo,${CAMPOS_EXTRAS}`;
 const ARQUIVOS_EVENTO = "(avatar.avatarBig,header.header):url";
 /** Instância `basico`: nem pede descrições e imagens à API. */
-const CAMPOS_EVENTO_BASICO = "id,name,classificacaoEtaria,singleUrl,terms";
-const CAMPOS_ESPACO = "id,name,endereco,En_Nome_Logradouro,En_Num,En_Bairro,En_Municipio,En_Estado,location";
+const CAMPOS_EVENTO_BASICO = `id,name,classificacaoEtaria,singleUrl,terms,${CAMPOS_EXTRAS}`;
+const CAMPOS_ESPACO = "id,name,endereco,En_Nome_Logradouro,En_Num,En_Bairro,En_Municipio,En_Estado,location,acessibilidade,acessibilidade_fisica";
 
 type DataApi = string | { date?: string } | null | undefined;
 
@@ -46,6 +48,12 @@ export type EventoApi = {
   classificacaoEtaria?: string | null;
   singleUrl?: string | null;
   terms?: { linguagem?: string[]; tag?: string[] } | null;
+  registrationInfo?: string | null;
+  /** "Sim" quando o evento tem o recurso. */
+  traducaoLibras?: string | null;
+  descricaoSonora?: string | null;
+  site?: string | null;
+  instagram?: string | null;
   "@files:avatar.avatarBig"?: { url?: string } | null;
   "@files:header.header"?: { url?: string } | null;
 };
@@ -60,6 +68,10 @@ export type EspacoApi = {
   En_Municipio?: string | null;
   En_Estado?: string | null;
   location?: { latitude?: string | number; longitude?: string | number } | null;
+  /** "Sim" / "Não". */
+  acessibilidade?: string | null;
+  /** Lista de recursos ("Rampa de acesso", "Banheiros adaptados"…); algumas instâncias mandam texto separado por ";". */
+  acessibilidade_fisica?: string[] | string | null;
 };
 
 export type EventoNormalizado = {
@@ -83,6 +95,12 @@ export type EventoNormalizado = {
   gratuito: boolean;
   linkSaibaMais: string | null;
   imagemCapa: string | null;
+  libras: boolean;
+  audiodescricao: boolean;
+  acessibilidade: string[];
+  inscricoes: string | null;
+  siteEvento: string | null;
+  instagramEvento: string | null;
   /** Todas as ocorrências já terminaram. */
   encerrado: boolean;
 };
@@ -297,6 +315,40 @@ function limpo(valor: string | null | undefined): string {
   return (valor ?? "").replace(/\s+/g, " ").trim();
 }
 
+const sim = (valor: string | null | undefined) => /^\s*sim\s*$/i.test(valor ?? "");
+
+/** Recursos do espaço; com só "Sim" e sem lista, vira um selo genérico. "Não" e vazio não entram. */
+export function acessibilidadeDoEspaco(espaco: EspacoApi | undefined): string[] {
+  const bruto = espaco?.acessibilidade_fisica;
+  const lista = (Array.isArray(bruto) ? bruto : (bruto ?? "").split(/[;\n]/))
+    .map(limpo)
+    .filter((item) => item && !/^n[aã]o$/i.test(item));
+  const recursos = [...new Set(lista)].slice(0, 8).map((item) => item.slice(0, 60));
+  if (recursos.length) return recursos;
+  return sim(espaco?.acessibilidade) ? ["Espaço acessível"] : [];
+}
+
+/** Só http(s); sem esquema ganha https. Nada de javascript: nem link quebrado. */
+export function linkExterno(valor: string | null | undefined): string | null {
+  const texto = limpo(valor);
+  if (!texto) return null;
+  try {
+    const url = new URL(/^https?:\/\//i.test(texto) ? texto : `https://${texto}`);
+    return /^https?:$/.test(url.protocol) && url.hostname.includes(".") ? url.toString().slice(0, 300) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Aceita "@perfil", "perfil" ou o link inteiro do Instagram. */
+export function linkInstagram(valor: string | null | undefined): string | null {
+  const texto = limpo(valor);
+  if (!texto) return null;
+  if (/instagram\.com/i.test(texto)) return linkExterno(texto);
+  const perfil = texto.replace(/^@/, "");
+  return /^[A-Za-z0-9._]{1,30}$/.test(perfil) ? `https://www.instagram.com/${perfil}/` : null;
+}
+
 /** Converte horário de parede do fuso da instância para UTC (sem depender do fuso do servidor). */
 export function localParaUtc(dia: string, hora: string, fuso: string): Date | null {
   const d = dia.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -509,6 +561,12 @@ export function normalizarEvento(
     gratuito: precos.length > 0 && precos.every((preco) => GRATUITO.test(preco)),
     linkSaibaMais: linkDaFonte(evento.singleUrl, instancia),
     imagemCapa: instancia.basico ? null : imagemDe(evento),
+    libras: sim(evento.traducaoLibras),
+    audiodescricao: sim(evento.descricaoSonora),
+    acessibilidade: acessibilidadeDoEspaco(espaco),
+    inscricoes: instancia.basico ? null : limpo(evento.registrationInfo).slice(0, 300) || null,
+    siteEvento: linkExterno(evento.site),
+    instagramEvento: linkInstagram(evento.instagram),
     encerrado: vigentes.length === 0,
   };
 }

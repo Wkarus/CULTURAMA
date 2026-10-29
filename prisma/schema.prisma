@@ -161,6 +161,15 @@ model Event {
   tags                String[]
   restricaoIdade      RestricaoIdade    @map("restricao_idade")
   linkSaibaMais       String?           @map("link_saiba_mais")
+  /// Acessibilidade, como a fonte informa: tradução em Libras, audiodescrição e recursos do espaço ("Rampa de acesso").
+  libras              Boolean           @default(false)
+  audiodescricao      Boolean           @default(false)
+  acessibilidade      String[]          @default([])
+  /// Como se inscrever (oficinas, cursos), em texto curto da fonte.
+  inscricoes          String?
+  /// Links públicos do próprio evento. Telefone fica de fora: costuma ser o celular de quem cadastrou.
+  siteEvento          String?           @map("site_evento")
+  instagramEvento     String?           @map("instagram_evento")
   notaAdmin           String?           @map("nota_admin")
   status              EventStatus       @default(rascunho)
   destaque            Boolean           @default(false)

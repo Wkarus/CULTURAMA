@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cidadeDoEvento, dataDoCard, linhaDoLocal, misturarVitrine, seloRestricaoCard } from "./eventos";
+import { cidadeDoEvento, dataDoCard, linhaDoLocal, misturarVitrine, seloRestricaoCard, selosAcessibilidade } from "./eventos";
 
 test("data do card no fuso de São Paulo", () => {
   const sexta = dataDoCard(new Date("2026-10-17T01:00:00.000Z"));
@@ -62,4 +62,9 @@ test("vitrine: com foto só de uma fonte, as outras fontes ainda entram no fim",
   assert.equal(ids.length, 8);
   assert.ok(ids.slice(0, 6).every((id) => id.startsWith("t")), "6 primeiros com foto");
   assert.deepEqual(ids.slice(6), ["m0", "m1"], "2 últimos de outra fonte, categorias diferentes");
+});
+
+test("selos de acessibilidade em ordem fixa", () => {
+  assert.deepEqual(selosAcessibilidade({ libras: true, audiodescricao: true, acessibilidade: ["Rampa de acesso"] }), ["Libras", "Audiodescrição", "Acessível"]);
+  assert.deepEqual(selosAcessibilidade({ libras: false, audiodescricao: false, acessibilidade: [] }), []);
 });

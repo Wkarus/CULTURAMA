@@ -64,6 +64,12 @@ function conteudo(n: EventoNormalizado, categoriaId: string | undefined) {
     tags: n.tags,
     restricaoIdade: n.restricaoIdade,
     linkSaibaMais: n.linkSaibaMais,
+    libras: n.libras,
+    audiodescricao: n.audiodescricao,
+    acessibilidade: n.acessibilidade,
+    inscricoes: n.inscricoes,
+    siteEvento: n.siteEvento,
+    instagramEvento: n.instagramEvento,
   } satisfies Prisma.EventUncheckedUpdateInput;
 }
 

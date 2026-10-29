@@ -38,3 +38,8 @@ test("raio fora da faixa é ignorado", () => {
   assert.equal(raioDoFiltro("abc"), null);
   assert.equal(raioDoFiltro("25"), 25);
 });
+
+test("filtro Acessível pede Libras, audiodescrição ou espaço com recurso", () => {
+  assert.equal(eventWhereFromParams({}).OR, undefined);
+  assert.deepEqual(eventWhereFromParams({ acessivel: "1" }).OR, [{ libras: true }, { audiodescricao: true }, { NOT: { acessibilidade: { isEmpty: true } } }]);
+});
