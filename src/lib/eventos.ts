@@ -10,7 +10,8 @@ export const RESTRICOES: { value: RestricaoIdade; label: string }[] = [
   { value: "dezoito", label: "18+" },
 ];
 
-const FUSO_EVENTO = "America/Sao_Paulo";
+/** Horário de parede do evento. Sem fuso explícito, o servidor da Vercel (UTC) mostrava tudo 3 horas adiantado. */
+export const FUSO_EVENTO = "America/Sao_Paulo";
 
 export type DataCard = { mes: string; dia: string; quando: string };
 
@@ -49,6 +50,7 @@ export function seloRestricaoCard(value: RestricaoIdade): "16+" | "18+" | null {
 
 export function formatEventoQuando(date: Date): string {
   return date.toLocaleString("pt-BR", {
+    timeZone: FUSO_EVENTO,
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -58,8 +60,8 @@ export function formatEventoQuando(date: Date): string {
 }
 
 export function formatEventoCurto(date: Date): string {
-  const dia = date.toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" });
-  const hora = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const dia = date.toLocaleDateString("pt-BR", { timeZone: FUSO_EVENTO, weekday: "short", day: "numeric", month: "short" });
+  const hora = date.toLocaleTimeString("pt-BR", { timeZone: FUSO_EVENTO, hour: "2-digit", minute: "2-digit" });
   return `${dia.replace(/\./g, "")} · ${hora}`;
 }
 

@@ -10,7 +10,7 @@ import { hasValidCoords, SAO_PAULO } from "@/lib/geo";
 function MarkerWithInfo({ event, selectedId, onSelect }: { event: MapEventPin; selectedId: string | null; onSelect: (id: string | null) => void }) {
   const [markerRef, marker] = useAdvancedMarkerRef();
   const open = selectedId === event.id;
-  const data = new Date(event.dataIso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  const data = new Date(event.dataIso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", dateStyle: "short", timeStyle: "short" });
 
   return (
     <>

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cidadeDoEvento, dataDoCard, linhaDoLocal, misturarVitrine, seloRestricaoCard, selosAcessibilidade } from "./eventos";
+import { cidadeDoEvento, dataDoCard, formatEventoCurto, formatEventoQuando, linhaDoLocal, misturarVitrine, seloRestricaoCard, selosAcessibilidade } from "./eventos";
 
 test("data do card no fuso de São Paulo", () => {
   const sexta = dataDoCard(new Date("2026-10-17T01:00:00.000Z"));
@@ -67,4 +67,10 @@ test("vitrine: com foto só de uma fonte, as outras fontes ainda entram no fim",
 test("selos de acessibilidade em ordem fixa", () => {
   assert.deepEqual(selosAcessibilidade({ libras: true, audiodescricao: true, acessibilidade: ["Rampa de acesso"] }), ["Libras", "Audiodescrição", "Acessível"]);
   assert.deepEqual(selosAcessibilidade({ libras: false, audiodescricao: false, acessibilidade: [] }), []);
+});
+
+test("horário do evento sai no fuso de São Paulo, mesmo com o servidor em UTC", () => {
+  const show = new Date("2026-12-19T23:00:00Z");
+  assert.match(formatEventoQuando(show), /20:00/);
+  assert.match(formatEventoCurto(show), /20:00/);
 });

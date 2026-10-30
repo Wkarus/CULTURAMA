@@ -11,7 +11,7 @@ import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/socia
 import { buttonVariants } from "@/components/ui/button";
 import { getUsuarioPainel } from "@/lib/admin";
 import { EVENTO_PUBLICO, estaNoAr } from "@/lib/event-filters";
-import { formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
+import { FUSO_EVENTO, formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
 import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
@@ -39,7 +39,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
   if (foraDoAr && !isOwner && !(await getUsuarioPainel())) notFound();
 
   const data = formatEventoQuando(event.dataHora);
-  const dataLonga = event.dataHora.toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" });
+  const dataLonga = event.dataHora.toLocaleString("pt-BR", { timeZone: FUSO_EVENTO, dateStyle: "long", timeStyle: "short" });
   const instancia = event.fonte === "mapas_culturais" ? nomeDaInstancia(event.fonteInstancia) : null;
   const ctaHref = event.fonte === "ticketmaster" ? event.linkIngresso : event.linkIngresso || event.linkSaibaMais;
   const ctaLabel =
@@ -91,10 +91,15 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
 
       <div className="mt-16 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="grid gap-3">
-          {/* A Ticketmaster costuma mandar o próprio título como descrição: repetir não informa nada. */}
+          {/* Descrição igual ao título (Ticketmaster antiga) não informa nada: no lugar, um resumo com o que se sabe. */}
           {event.descricao.trim().toLowerCase() !== event.titulo.trim().toLowerCase() ? (
             <p className="whitespace-pre-wrap text-body-lg">{event.descricao}</p>
-          ) : null}
+          ) : (
+            <p className="text-body-lg">
+              {[event.category?.nome, event.endereco !== "Brasil" ? `Em ${event.endereco}` : null].filter(Boolean).join(". ")}.{" "}
+              {event.fonte === "ticketmaster" ? "Preço, setores e ingressos na página da Ticketmaster." : "Mais detalhes na página original do evento."}
+            </p>
+          )}
           {/* Etiquetas da Ticketmaster vêm em inglês ("Fine Art · Arts & Theatre"); a categoria já aparece no topo. */}
           {event.tags.length > 0 && event.fonte !== "ticketmaster" ? (
             <p className="text-caption text-muted-foreground">{event.tags.join(" · ")}</p>

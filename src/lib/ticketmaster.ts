@@ -13,7 +13,9 @@ type TmEvent = {
   images?: { url: string; width?: number }[];
   classifications?: TmClassificacao[];
   priceRanges?: { min?: number; max?: number }[];
+  sales?: { public?: { endDateTime?: string } };
   _embedded?: {
+    attractions?: { name?: string }[];
     venues?: {
       name?: string;
       address?: { line1?: string };
@@ -24,6 +26,30 @@ type TmEvent = {
     }[];
   };
 };
+
+/**
+ * No Brasil a Ticketmaster quase nunca manda `info` nem `pleaseNote`: sem isto, a descrição era o próprio título.
+ * Monta um texto curto em português só com dados que a API entrega (categoria, atração, local, fim das vendas).
+ */
+export function descricaoTicketmaster(event: TmEvent, categoria: string | null): string {
+  const propria = (event.info || event.pleaseNote || "").trim();
+  if (propria) return propria;
+
+  const atracoes = [...new Set((event._embedded?.attractions ?? []).map((a) => a.name?.trim()).filter((n): n is string => Boolean(n)))];
+  const venue = event._embedded?.venues?.[0];
+  const cidade = venue?.city?.name?.trim();
+  const local = [venue?.name?.trim(), cidade && cidade !== venue?.name?.trim() ? cidade : null].filter(Boolean).join(", ");
+  const fimVendas = event.sales?.public?.endDateTime ? new Date(event.sales.public.endDateTime) : null;
+
+  const frases = [
+    atracoes.length ? `${categoria ?? "Evento"} com ${atracoes.slice(0, 4).join(", ")}.` : categoria ? `${categoria}.` : null,
+    local ? `Em ${local}.` : null,
+    fimVendas && !Number.isNaN(fimVendas.getTime())
+      ? `Ingressos à venda na Ticketmaster até ${fimVendas.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", day: "numeric", month: "long" })}.`
+      : "Ingressos à venda na Ticketmaster.",
+  ];
+  return frases.filter(Boolean).join(" ");
+}
 
 function parseDataHora(event: TmEvent): Date | null {
   const start = event.dates?.start;
@@ -107,7 +133,7 @@ export async function syncTicketmaster(): Promise<{ ok: true; upserted: number }
         ),
       ),
     );
-    const descricao = item.info || item.pleaseNote || item.name;
+    const descricao = descricaoTicketmaster(item, category?.nome ?? null);
     const restricaoIdade: RestricaoIdade = "livre";
     const ranges = item.priceRanges ?? [];
     const gratuito = ranges.length > 0 && ranges.every((range) => (range.min ?? 1) === 0 && (range.max ?? 1) === 0);

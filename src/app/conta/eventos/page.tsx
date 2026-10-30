@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { cancelarEvento } from "@/actions/eventos";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { getOrganizerForUser, labelStatus } from "@/lib/eventos";
+import { FUSO_EVENTO, getOrganizerForUser, labelStatus } from "@/lib/eventos";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ export default async function MeusEventosPage() {
                   {event.titulo}
                 </Link>
                 <p className="text-sm text-muted-foreground">
-                  {labelStatus(event.status)} · {event.category?.nome} · {event.dataHora.toLocaleString("pt-BR")}
+                  {labelStatus(event.status)} · {event.category?.nome} · {event.dataHora.toLocaleString("pt-BR", { timeZone: FUSO_EVENTO })}
                 </p>
                 {event.revisaoResultado && event.mensagemOrganizador ? (
                   <p className="mt-2 max-w-prose rounded-md bg-warning-bg px-3 py-2 text-sm text-warning">
