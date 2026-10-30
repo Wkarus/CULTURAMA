@@ -19,7 +19,7 @@ const IDS_POR_LOTE = 40;
 /** Acessibilidade e links do próprio evento. `telefonePublico` fica de fora de propósito: costuma ser celular pessoal. */
 const CAMPOS_EXTRAS = "traducaoLibras,descricaoSonora,site,instagram";
 const CAMPOS_EVENTO = `id,name,subTitle,shortDescription,longDescription,classificacaoEtaria,singleUrl,terms,registrationInfo,${CAMPOS_EXTRAS}`;
-const ARQUIVOS_EVENTO = "(avatar.avatarBig,header.header):url";
+const ARQUIVOS_EVENTO = "(avatar.avatarBig,header.header,gallery):url";
 /** Instância `basico`: nem pede descrições e imagens à API. */
 const CAMPOS_EVENTO_BASICO = `id,name,classificacaoEtaria,singleUrl,terms,${CAMPOS_EXTRAS}`;
 const CAMPOS_ESPACO = "id,name,endereco,En_Nome_Logradouro,En_Num,En_Bairro,En_Municipio,En_Estado,location,acessibilidade,acessibilidade_fisica";
@@ -34,7 +34,8 @@ export type OcorrenciaApi = {
   starts_at?: DataApi;
   ends_on?: DataApi;
   ends_at?: DataApi;
-  rule?: { startsOn?: string; startsAt?: string; endsAt?: string; description?: string; price?: string; spaceId?: number | string };
+  /** `description` já vem pronto em português ("Toda segunda e quarta de 01 de Abril a 22 de Dezembro das 19:00 às 22:00"). */
+  rule?: { startsOn?: string; startsAt?: string; endsAt?: string; description?: string; price?: string; priceInfo?: string; spaceId?: number | string };
   space?: { id?: number } | number | null;
   _reccurrence_string?: string;
 };
@@ -56,6 +57,7 @@ export type EventoApi = {
   instagram?: string | null;
   "@files:avatar.avatarBig"?: { url?: string } | null;
   "@files:header.header"?: { url?: string } | null;
+  "@files:gallery"?: { url?: string }[] | { url?: string } | null;
 };
 
 export type EspacoApi = {
@@ -101,6 +103,8 @@ export type EventoNormalizado = {
   inscricoes: string | null;
   siteEvento: string | null;
   instagramEvento: string | null;
+  sessoes: Sessao[];
+  galeria: string[];
   /** Todas as ocorrências já terminaram. */
   encerrado: boolean;
 };
@@ -490,6 +494,74 @@ function linkDaFonte(url: string | null | undefined, instancia: InstanciaMapas):
   }
 }
 
+/** Uma sessão por regra de ocorrência, como o "Datas e horários" das instâncias. Fica no JSON `events.sessoes`. */
+export type Sessao = {
+  regra: string;
+  /** Próxima vez que acontece (ISO), para ordenar e para o evento recorrente não mostrar data já passada. */
+  proxima: string;
+  local: string | null;
+  endereco: string | null;
+  preco: string | null;
+  info: string | null;
+};
+
+/**
+ * Evento recorrente chega como várias linhas com a mesma regra; agrupa por `occurrence_id` e guarda a próxima data.
+ * Sem texto de regra, monta "Dia 12 de abril às 10:00". No máximo 8 sessões, da mais próxima para a mais distante.
+ */
+export function sessoesDe(linhas: OcorrenciaApi[], espacos: Map<number, EspacoApi>, fuso: string, agora = new Date()): Sessao[] {
+  const porRegra = new Map<string, { linha: OcorrenciaApi; ocorrencia: Ocorrencia }>();
+  for (const linha of linhas) {
+    const ocorrencia = lerOcorrencia(linha, fuso);
+    if (!ocorrencia) continue;
+    const chave = String(linha.occurrence_id ?? linha.rule?.description ?? ocorrencia.inicio.toISOString());
+    const atual = porRegra.get(chave);
+    const termina = (o: Ocorrencia) => (o.fim ?? o.inicio).getTime();
+    const melhor =
+      !atual ||
+      (termina(ocorrencia) >= agora.getTime() && (termina(atual.ocorrencia) < agora.getTime() || ocorrencia.inicio < atual.ocorrencia.inicio));
+    if (melhor) porRegra.set(chave, { linha, ocorrencia });
+  }
+  return [...porRegra.values()]
+    .sort((a, b) => a.ocorrencia.inicio.getTime() - b.ocorrencia.inicio.getTime())
+    .slice(0, 8)
+    .map(({ linha, ocorrencia }) => {
+      const { local, endereco } = montarEndereco(ocorrencia.espacoId !== null ? espacos.get(ocorrencia.espacoId) : undefined);
+      const regra =
+        limpo(linha.rule?.description) ||
+        `Dia ${ocorrencia.inicio.toLocaleString("pt-BR", { timeZone: fuso, day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).replace(",", " às")}`;
+      return {
+        regra: regra.slice(0, 200),
+        proxima: ocorrencia.inicio.toISOString(),
+        local,
+        endereco,
+        preco: limpo(ocorrencia.preco) || null,
+        info: limpo(linha.rule?.priceInfo).slice(0, 200) || null,
+      };
+    });
+}
+
+/** Lê `events.sessoes` (JSON do banco) com tolerância: item malformado é descartado em vez de quebrar a página. */
+export function lerSessoes(valor: unknown): Sessao[] {
+  if (!Array.isArray(valor)) return [];
+  const texto = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  return valor.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const s = item as Record<string, unknown>;
+    const regra = texto(s.regra);
+    const proxima = texto(s.proxima);
+    if (!regra || !proxima || Number.isNaN(new Date(proxima).getTime())) return [];
+    return [{ regra, proxima, local: texto(s.local), endereco: texto(s.endereco), preco: texto(s.preco), info: texto(s.info) }];
+  });
+}
+
+/** Fotos da galeria (só http/https), sem repetir e sem passar de 8. */
+export function galeriaDe(evento: EventoApi): string[] {
+  const bruto = evento["@files:gallery"];
+  const lista = Array.isArray(bruto) ? bruto : bruto ? [bruto] : [];
+  return [...new Set(lista.map((f) => f?.url ?? "").filter((url) => /^https?:\/\//.test(url)))].slice(0, 8);
+}
+
 function imagemDe(evento: EventoApi): string | null {
   for (const arquivo of [evento["@files:avatar.avatarBig"], evento["@files:header.header"]]) {
     if (arquivo?.url && /^https?:\/\//.test(arquivo.url)) return arquivo.url;
@@ -567,6 +639,8 @@ export function normalizarEvento(
     inscricoes: instancia.basico ? null : limpo(evento.registrationInfo).slice(0, 300) || null,
     siteEvento: linkExterno(evento.site),
     instagramEvento: linkInstagram(evento.instagram),
+    sessoes: sessoesDe(linhas, espacos, instancia.fuso, agora),
+    galeria: instancia.basico ? [] : galeriaDe(evento),
     encerrado: vigentes.length === 0,
   };
 }

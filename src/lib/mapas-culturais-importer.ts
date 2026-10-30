@@ -70,6 +70,8 @@ function conteudo(n: EventoNormalizado, categoriaId: string | undefined) {
     inscricoes: n.inscricoes,
     siteEvento: n.siteEvento,
     instagramEvento: n.instagramEvento,
+    sessoes: n.sessoes,
+    galeria: n.galeria,
   } satisfies Prisma.EventUncheckedUpdateInput;
 }
 

@@ -170,6 +170,10 @@ model Event {
   /// Links públicos do próprio evento. Telefone fica de fora: costuma ser o celular de quem cadastrou.
   siteEvento          String?           @map("site_evento")
   instagramEvento     String?           @map("instagram_evento")
+  /// Sessões da fonte, uma por regra de ocorrência: [{ regra, proxima, local, endereco, preco, info }]. Ver `Sessao` em mapas-culturais.ts.
+  sessoes             Json              @default("[]")
+  /// Fotos extras do evento (galeria da fonte), além da capa.
+  galeria             String[]          @default([])
   notaAdmin           String?           @map("nota_admin")
   status              EventStatus       @default(rascunho)
   destaque            Boolean           @default(false)

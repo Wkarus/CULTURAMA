@@ -7,6 +7,7 @@ import {
   ClienteMapas,
   coletarInstancia,
   dentroDaRegiao,
+  galeriaDe,
   descricaoBasica,
   ErroMapas,
   InstanciaPulada,
@@ -18,6 +19,7 @@ import {
   montarEndereco,
   normalizarEvento,
   restricaoDe,
+  sessoesDe,
   ufDoEspaco,
   type EspacoApi,
   type EventoApi,
@@ -446,4 +448,37 @@ test("evento traz Libras, audiodescrição, inscrição e links; modo básico n�
   assert.equal(n.siteEvento, "https://exemplo.org/");
   assert.equal(n.instagramEvento, "https://www.instagram.com/coletivo/");
   assert.equal(normalizarEvento(extra, OCORRENCIAS_197, ESPACOS, { ...PB, basico: true }, ANTES).inscricoes, null);
+});
+
+test("sessões: uma por regra, com o texto da fonte, local e preço, da mais próxima em diante", () => {
+  const espacos = new Map(ESPACOS);
+  const sessoes = sessoesDe(OCORRENCIAS_197, espacos, "America/Recife", ANTES);
+  assert.equal(sessoes.length, 3);
+  assert.equal(sessoes[0].regra, "Dia 26 de Novembro de 2026 das 10:00 às 22:00");
+  assert.equal(sessoes[0].local, "Mosteiro de São Bento");
+  assert.equal(sessoes[0].preco, "Gratuito");
+  assert.ok(sessoes[0].proxima < sessoes[1].proxima);
+});
+
+test("sessões: evento recorrente vira um cartão só, com a próxima data que ainda não passou", () => {
+  const recorrente = ["2026-10-05", "2026-10-07", "2026-10-09"].map((dia) => ({
+    occurrence_id: 9,
+    starts_on: dia,
+    starts_at: "19:00:00",
+    ends_at: "19:00:00",
+    rule: { description: "Toda segunda, quarta e sexta de 01 de Abril a 22 de Dezembro das 19:00 às 22:00", price: "Gratuito", priceInfo: "Roda de aniversário" },
+    space: { id: 6 },
+  }));
+  const [sessao, ...resto] = sessoesDe(recorrente, new Map(ESPACOS), "America/Recife", new Date("2026-10-06T12:00:00-03:00"));
+  assert.equal(resto.length, 0);
+  assert.match(sessao.regra, /^Toda segunda/);
+  assert.equal(sessao.proxima.slice(0, 10), "2026-10-07");
+  assert.equal(sessao.info, "Roda de aniversário");
+  assert.equal(sessao.endereco, "Avenida Cabo Branco, 3336 - Cabo Branco, João Pessoa - PB");
+});
+
+test("galeria: só links http(s), sem repetir", () => {
+  const evento = { id: 1, "@files:gallery": [{ url: "https://x/a.jpg" }, { url: "https://x/a.jpg" }, { url: "javascript:1" }, {}] };
+  assert.deepEqual(galeriaDe(evento), ["https://x/a.jpg"]);
+  assert.deepEqual(galeriaDe({ id: 2 }), []);
 });

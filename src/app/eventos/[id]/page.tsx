@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Accessibility, AtSign, ClipboardList, Globe } from "lucide-react";
+import { Accessibility, AtSign, CalendarDays, ClipboardList, Globe, Info, MapPin, Ticket } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { CapaCategoria } from "@/components/capa-categoria";
 import { CliqueExterno } from "@/components/clique-externo";
+import { CompartilharEvento } from "@/components/compartilhar-evento";
 import { RegistrarVisualizacao } from "@/components/registrar-visualizacao";
 import { RotaPainel } from "@/components/rota-painel";
 import { ComentarioForm, DenunciaForm, FavoriteButton } from "@/components/social-forms";
@@ -13,6 +14,7 @@ import { getUsuarioPainel } from "@/lib/admin";
 import { EVENTO_PUBLICO, estaNoAr } from "@/lib/event-filters";
 import { FUSO_EVENTO, formatEventoQuando, labelRestricao, labelStatus, seloDaFonte } from "@/lib/eventos";
 import { hasValidCoords } from "@/lib/geo";
+import { lerSessoes } from "@/lib/mapas-culturais";
 import { nomeDaInstancia } from "@/lib/mapas-culturais-config";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -59,6 +61,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
     orderBy: { criadoEm: "desc" },
   });
   const selo = instancia ? `via ${instancia}` : seloDaFonte(event.fonte);
+  const sessoes = lerSessoes(event.sessoes);
 
   return (
     <main className="mx-auto max-w-page px-4 py-16">
@@ -102,7 +105,55 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
           )}
           {/* Etiquetas da Ticketmaster vêm em inglês ("Fine Art · Arts & Theatre"); a categoria já aparece no topo. */}
           {event.tags.length > 0 && event.fonte !== "ticketmaster" ? (
-            <p className="text-caption text-muted-foreground">{event.tags.join(" · ")}</p>
+            <ul className="flex flex-wrap gap-2" aria-label="Linguagens e tags">
+              {event.tags.map((tag) => (
+                <li key={tag} className="rounded-pill bg-muted px-3 py-1 text-caption text-on-light">
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {sessoes.length > 0 ? (
+            <section aria-labelledby="sessoes-titulo" className="mt-6 grid gap-3">
+              <h2 id="sessoes-titulo" className="font-display text-xl font-semibold">
+                Datas e horários
+              </h2>
+              <ul className="grid gap-3">
+                {sessoes.map((sessao) => (
+                  <li key={`${sessao.regra}-${sessao.proxima}`} className="grid gap-2 rounded-card bg-card p-5 shadow-card">
+                    {sessao.local ? (
+                      <p className="flex items-start gap-2">
+                        <MapPin className="mt-0.5 size-4 shrink-0 text-accent-ink" strokeWidth={1.75} aria-hidden />
+                        <span>
+                          <span className="font-medium text-on-light">{sessao.local}</span>
+                          {sessao.endereco ? <span className="block text-caption text-muted-foreground">{sessao.endereco}</span> : null}
+                        </span>
+                      </p>
+                    ) : null}
+                    <p className="flex items-start gap-2 text-sm text-on-light">
+                      <CalendarDays className="mt-0.5 size-4 shrink-0 text-accent-ink" strokeWidth={1.75} aria-hidden />
+                      {sessao.regra}
+                    </p>
+                    {sessao.preco || sessao.info ? (
+                      <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-on-light">
+                        {sessao.preco ? (
+                          <span className="inline-flex items-center gap-2">
+                            <Ticket className="size-4 text-accent-ink" strokeWidth={1.75} aria-hidden />
+                            {sessao.preco}
+                          </span>
+                        ) : null}
+                        {sessao.info ? (
+                          <span className="inline-flex items-center gap-2">
+                            <Info className="size-4 text-accent-ink" strokeWidth={1.75} aria-hidden />
+                            {sessao.info}
+                          </span>
+                        ) : null}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
           {event.libras || event.audiodescricao || event.acessibilidade.length > 0 ? (
             <section aria-labelledby="acessibilidade-titulo" className="mt-6 rounded-card bg-card p-5 shadow-card">
@@ -131,6 +182,21 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
                 Como se inscrever
               </h2>
               <p className="mt-2 text-body">{event.inscricoes}</p>
+            </section>
+          ) : null}
+          {event.galeria.length > 0 ? (
+            <section aria-labelledby="galeria-titulo" className="mt-6 grid gap-3">
+              <h2 id="galeria-titulo" className="font-display text-xl font-semibold">
+                Galeria de fotos
+              </h2>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {event.galeria.map((foto, i) => (
+                  <li key={foto} className="aspect-[4/3] overflow-hidden rounded-card bg-muted">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={foto} alt={`Foto ${i + 1} de ${event.titulo}`} loading="lazy" decoding="async" className="size-full object-cover" />
+                  </li>
+                ))}
+              </ul>
             </section>
           ) : null}
         </div>
@@ -193,6 +259,7 @@ export default async function EventoDetalhePage({ params }: { params: { id: stri
                 Saiba mais
               </a>
             ) : null}
+            {!foraDoAr ? <CompartilharEvento titulo={event.titulo} caminho={`/eventos/${event.id}`} /> : null}
             {session?.user?.id ? (
               <FavoriteButton eventId={event.id} favorito={favorito} />
             ) : (
